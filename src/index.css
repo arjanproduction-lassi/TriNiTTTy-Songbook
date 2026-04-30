@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+}
+
+.print-surface {
+  display: none;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-surface,
+  .print-surface * {
+    visibility: visible;
+  }
+
+  .print-surface {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .print-surface .a4-print-surface {
+    width: 210mm !important;
+    min-height: 297mm !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 10mm !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    overflow: hidden;
+    background: white !important;
+  }
+}
