@@ -19,7 +19,155 @@ Critical rule:
 
 If anything breaks A4 truth consistency between editor, song detail, setlist preview, performance, print, or PDF, it is a critical defect.
 
-## Next Task: UI Compaction Pass For Desktop Admin Workspace
+## Next Task: Unsaved Canonical Data Warning + Dirty-State Workflow
+
+Priority:
+
+Do this before UI compaction. This protects canonical song/setlist data and prevents a false sense of safety.
+
+Problem:
+
+Peter can edit a song and save it inside the app, but still forget to save/export/publish the canonical database/shared JSON afterward. The song then looks saved in the UI, while the shared/canonical storage may still be outdated.
+
+Product decision:
+
+Do not rely on Peter's memory. The app must clearly distinguish:
+
+1. local/autosaved app state
+2. canonical saved/published state
+
+Goal:
+
+Make it impossible to miss that the current app state still has unpublished / unsaved canonical changes.
+
+Core rule:
+
+If the user changes songs, setlists, or canonical metadata, the app must enter a visible dirty state until the canonical database/file is explicitly saved.
+
+Scope guard:
+
+- Do not build cloud sync here.
+- Do not build full Google Drive integration here.
+- Do not redesign the whole app.
+- Do not remove existing local autosave.
+- Keep local autosave if present.
+- This is warning/status workflow for canonical save, not a new storage architecture.
+
+### Part A: Dirty State
+
+After any canonical change, mark app state as dirty:
+
+- song created
+- song edited
+- song deleted
+- setlist changed
+- setlist order changed
+- setlist renamed
+- canonical metadata changed
+
+Dirty means:
+
+- local state may be saved
+- canonical database/file is not yet saved/published
+
+### Part B: Visible Status
+
+Show a clear persistent status in the main header/top bar:
+
+- example: `Neuložené zmeny v databáze`
+- warning color
+- not tiny
+- not hidden in a submenu
+
+When canonical save succeeds, switch status to:
+
+- `Databáza uložená`
+- include timestamp if possible
+
+### Part C: Canonical Save Action
+
+Add one explicit main action for canonical save:
+
+- `Uložiť databázu`
+- or `Uložiť kanonický súbor`
+
+This action clears dirty state only after successful canonical save.
+
+If save fails, dirty state stays active.
+
+Important:
+
+- Do not pretend local save equals canonical save.
+- Do not auto-clear dirty state on song save only.
+- For current RC1, canonical save may map to the existing backup/export flow if that is the smallest safe path.
+
+### Part D: Before-Leave Protection
+
+If dirty state is active, warn on:
+
+- page reload
+- closing tab
+- leaving app route if relevant
+
+Use browser `beforeunload` warning where possible.
+
+Do not warn if nothing changed.
+
+### Optional Quality Improvement
+
+Track and show if easy:
+
+- `lastLocalAutosaveAt`
+- `lastCanonicalSaveAt`
+
+Example:
+
+- `Lokálne uložené: 15:42`
+- `Databáza uložená: 15:30`
+
+If that is too much for this pass, implement only:
+
+- dirty / saved canonical status
+- clear save button
+- leave warning
+
+### Strong UX Rule
+
+The user must always know which of these is true:
+
+- safe locally
+- not yet saved to canonical database/file
+- fully saved canonically
+
+Do not:
+
+- hide this behind technical wording
+- pretend local save equals canonical save
+- auto-clear dirty state on song save only
+- add broad new persistence systems
+
+### Definition Of Done
+
+1. Editing a song triggers visible dirty state.
+2. Changing setlist triggers visible dirty state.
+3. Dirty state stays until explicit canonical save succeeds.
+4. Header/top bar clearly shows unsaved canonical changes.
+5. Leaving/reloading while dirty warns the user.
+6. After successful canonical save, status changes to saved.
+7. No regression in current local autosave behavior.
+
+### Output Wanted
+
+When this task is implemented, report:
+
+- pass/fail
+- exact files changed
+- what events now mark dirty state
+- where the status is shown
+- what action clears dirty state
+- what remains manual for Peter to test
+
+## Next After That: UI Compaction Pass For Desktop Admin Workspace
 
 Goal:
 
