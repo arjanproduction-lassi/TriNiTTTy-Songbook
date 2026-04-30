@@ -2,214 +2,163 @@
 
 Date saved: 2026-04-30
 
-Status: not started. Use this as the first task when work resumes.
+Status: queued. Do not start until Peter finishes tablet testing and asks to continue.
 
-## Next Task: Google Drive Canonical File Memory + True A4 Print/PDF Fix
+## Current Product State
 
-Rules:
+T8 is the only source of truth.
 
-- Do not add unrelated features.
-- Do not redesign UI.
-- Do not refactor broadly.
-- Do not change song/setlist logic unless required by the task.
-- Preserve A4 preview as the only visual truth.
-- Keep transpose, zoom and local reading/practice state device-local only.
+Current RC1 baseline:
 
-## Part A: Google Drive Save/Load Memory
+- A4 preview / detail / setlist / performance use the shared canonical A4 renderer.
+- Native Chrome Print / Save as PDF mismatch was fixed and manually verified.
+- PWA update flow works on tablet.
+- Google Drive canonical file memory is deferred to a separate future task.
+
+Critical rule:
+
+If anything breaks A4 truth consistency between editor, song detail, setlist preview, performance, print, or PDF, it is a critical defect.
+
+## Next Task: UI Compaction Pass For Desktop Admin Workspace
 
 Goal:
 
-Use one user-chosen Google Drive JSON file as the interim canonical storage file.
+Make the existing desktop admin/edit workspace denser, cleaner, and more practical without changing song rendering or product behavior.
 
-Important rule:
+Product diagnosis:
 
-- Do not use a folder path string as the canonical identity.
-- Use the chosen Google Drive file ID as the stable identity.
+The app is functionally moving forward, but the shell has become visually bulky. There is too much vertical chrome, too many nested cards, helper boxes, and large controls. On desktop, important controls can still require unnecessary scrolling even on a wide monitor. On tablet, the same admin shell is not the priority and should not drive this pass.
 
-Required behavior:
+Core product decision:
 
-1. Let the user choose a Google Drive JSON file once.
-2. Store locally:
-   - `driveFileId`
-   - `driveFileName`
-   - optional parent/display path only for UI
-3. On next app start, use the remembered `driveFileId` for Load from Drive / Save to Drive.
-4. Show the remembered file in UI, for example: `Drive file: trinittty-songbook.json`.
-5. Allow `Change Drive file` explicitly.
-6. Admin flow only:
-   - Load from Drive
-   - Save to Drive
-   - Remember selected file for next use
-7. Do not build real-time multi-user sync.
-8. Do not treat Google Drive as a live database.
-9. Keep transpose / zoom / local reading state device-local only.
+- Desktop/PC = admin/edit workspace.
+- Tablet = setlist + concert mode first.
+- Same A4 renderer everywhere.
+- Different shell responsibilities are allowed.
+- Different song layout/rendering engines are not allowed.
 
-Definition of done for Part A:
+## Hard Rules
 
-1. User can choose one Drive JSON file and the app remembers it by file ID.
-2. Load from Drive / Save to Drive reuse that remembered file.
-3. Remembered file name is visible in the UI.
-4. User can explicitly change the Drive file.
-5. Canonical song data remains separate from local-only transpose/zoom/reading state.
+- Do not redesign the whole app.
+- Do not change the canonical A4 renderer.
+- Do not touch print/PDF logic.
+- Do not create a separate tablet/mobile song renderer.
+- Do not add unrelated product features.
+- Do not refactor broadly.
+- Do not create visual polish that increases scrolling.
+- Keep A4 preview as the only visual truth.
 
-## Part B: Fix True A4 Print/PDF Mismatch
+## Part A: Desktop Admin Workspace Compaction
 
-Problem:
+Observed desktop problems:
 
-Current PDF print can spill onto 2 A4 pages while the in-app preview looks like 1 page. Last verses can move to a second page. This breaks A4 truth.
+1. Top header area is too tall.
+2. Helper/info boxes consume too much vertical space.
+3. Nested rounded cards create visual noise.
+4. Important controls are pushed too far down.
+5. A4 preview does not get enough practical space.
+6. Wide desktop still involves too much page-level scrolling.
+7. Some layouts feel like cards inside cards rather than one working surface.
 
-Likely cause:
+Required desktop behavior:
 
-The A4 sheet dimensions are oversized in real print layout, probably because width/height and padding are combined without `box-sizing: border-box`.
+1. Reduce top chrome height.
+2. Make the top header/nav more compact.
+3. Reduce oversized padding, card radius, and helper-box dominance in desktop admin views.
+4. Keep the A4 preview visually important and spacious.
+5. Minimize unnecessary vertical stacking in desktop mode.
+6. Prefer stable split-workspace layout over stacked card layout.
+7. Avoid horizontal scrolling unless absolutely necessary.
+8. Keep selected-block editor and block list easy to reach.
+9. Make desktop admin workspace feel like a tool, not a landing page.
 
-Example problem:
+Preferred desktop layout direction:
 
-- `width: 210mm`
-- `min-height: 297mm`
-- `padding: 10mm`
-- without `box-sizing: border-box`
+- one compact top bar
+- below it, one main working surface
+- block editor view:
+  - left = block/section navigation
+  - middle = selected block editor
+  - right = A4 preview
+- each pane may scroll internally
+- avoid page-level scrolling as much as possible
+- give A4 preview the largest share of width on desktop
 
-That makes the real printed box larger than A4:
+Possible implementation direction:
 
-- `210mm + left/right padding`
-- `297mm + top/bottom padding`
+- reduce hero/header height significantly
+- reduce card padding in desktop mode
+- collapse helper texts into lighter inline hints
+- remove redundant repeated info boxes
+- make panes height-aware using viewport height
+- use sticky compact toolbar where useful
+- tune desktop column ratios for real editing, not presentation
 
-Required fix order:
+## Part B: Tablet Role Separation
 
-1. Fix the real print surface dimensions first.
-2. Use the same canonical A4 renderer for preview and print.
-3. Only if needed after that, add an explicit optional `Fit for print/PDF` control.
-4. Do not add hidden print-only reflow logic.
-5. Do not silently shrink only in PDF.
+Product rule:
 
-Concrete implementation guidance:
+Tablet is not the primary place for full editing comfort.
 
-### A4 Page Box Model
+Tablet priority:
 
-For the main printable A4 sheet element, ensure:
+1. Setlist
+2. Concert/performance mode
 
-```tsx
-style={{
-  width: "210mm",
-  minHeight: "297mm",
-  boxSizing: "border-box",
-  padding: "10mm",
-  maxWidth: "100%",
-  fontFamily: '"Courier New", "Liberation Mono", monospace',
-}}
-```
+Required direction:
 
-### Print Surface Class
+- do not optimize full admin editing for tablet in this pass
+- allow tablet editing to remain secondary
+- prioritize tablet comfort only in setlist and concert mode
+- do not spend time making raw/block import perfect on tablet right now
 
-Add a dedicated print surface class, for example:
+## What Not To Do
 
-```tsx
-className="a4-print-surface"
-```
+- Do not start mobile optimization now.
+- Do not rework the A4 layout engine.
+- Do not add new features.
+- Do not touch Google Drive in this task.
+- Do not modify print/PDF unless an actual regression is found.
+- Do not reopen pair-anchor transposition unless a regression is found.
 
-### Print CSS
+## Definition Of Done
 
-Add or verify:
+1. Desktop admin workspace is visibly denser and more practical.
+2. Top area is smaller and cleaner.
+3. A4 preview gets more usable space.
+4. Important controls are reachable with less scrolling on desktop.
+5. Block editor layout feels like a real workspace, not stacked marketing cards.
+6. Tablet remains focused on setlist + concert use, not full editor comfort.
+7. No regression in A4 truth.
 
-```css
-@page {
-  size: A4 portrait;
-  margin: 0;
-}
+## Manual Verification Wanted
 
-@media print {
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    background: white;
-  }
+- wide desktop monitor
+- import raw mode
+- block editor mode
+- setlist view
+- confirm less vertical hunting for controls
+- confirm preview has more space than before
+- confirm A4 truth still matches editor/detail/setlist/performance/print/PDF
 
-  body * {
-    visibility: hidden;
-  }
-
-  .print-root,
-  .print-root * {
-    visibility: visible;
-  }
-
-  .print-root {
-    position: absolute;
-    inset: 0;
-    margin: 0;
-    padding: 0;
-    background: white;
-  }
-
-  .a4-print-surface {
-    width: 210mm !important;
-    min-height: 297mm !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
-    padding: 10mm !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    overflow: hidden;
-    background: white !important;
-  }
-}
-```
-
-### Print Leakage Check
-
-Ensure outer preview wrappers do not leak into print:
-
-- no scroll container
-- no rounded frame
-- no gray background
-- no app controls
-- no parent padding
-- no default browser margins
-- no shadow/border
-- no transform/scale in print mode
-
-Only the real A4 surface should print.
-
-### Preserve Multi-Column Layout
-
-Inside the A4 surface keep:
-
-- `columns: 2`
-- `column-gap: 10mm`
-- `break-inside: avoid` on sections
-
-These styles must live inside the same canonical A4 component.
-
-Decision rule:
-
-- If songs that already fit in preview now fit in PDF too: done.
-- If some songs are genuinely too long: show them as too long, or later add an explicit visible print scale control.
-- Do not add hidden print-only shrink logic.
-
-Manual verification set:
-
-- Peniaze neklamú
-- Človečina
-- Stíchol som / bolesť otcov
-
-Expected result:
-
-If a song fits in the A4 preview, it must fit in Chrome Print Preview / Save as PDF on one A4 page too. If not, treat it as an A4 truth defect.
-
-Definition of done for Part B:
-
-1. PDF print no longer spills to a second A4 for songs that already fit in the A4 preview.
-2. Print/PDF uses the same A4 truth as preview.
-3. App controls do not appear in print.
-4. If a song is truly too long, it is either shown as too long or explicitly fit by a visible user-controlled print scale.
-5. No silent PDF-only alteration exists.
-
-## Output Wanted After Implementation
+## Output Wanted
 
 When this task is implemented, report:
 
 - pass/fail
 - exact files changed
-- exact cause of the 2-page PDF issue
-- what remains manual for Peter to test
+- what was compacted on desktop
+- what was intentionally left alone for tablet
+- what should be the next tablet-only task after this
+
+## Deferred Separate Task: Google Drive Canonical File Memory
+
+Keep this out of RC1 compaction work unless Peter explicitly starts the Drive task.
+
+Goal:
+
+Use one user-chosen Google Drive JSON file as interim canonical storage, remembered by Google Drive file ID, not by folder path.
+
+Scope guard:
+
+If direct Google Drive auth/file access is not already wired, do not build a full OAuth architecture as a side quest. Stop and report that Drive auth is a separate task.
