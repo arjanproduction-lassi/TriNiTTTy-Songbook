@@ -89,7 +89,17 @@ export function A4Sheet({ song, sections, selectedIndex, onSelectBlock, responsi
   );
 }
 
-export function FitA4Sheet({ song, sections, readerZoom }: { song: Song; sections: SectionGroup[]; readerZoom: number }) {
+export function FitA4Sheet({
+  song,
+  sections,
+  readerZoom,
+  className = "h-[100svh]",
+}: {
+  song: Song;
+  sections: SectionGroup[];
+  readerZoom: number;
+  className?: string;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -136,7 +146,7 @@ export function FitA4Sheet({ song, sections, readerZoom }: { song: Song; section
   const scaledHeight = pageSize.height * scale;
 
   return (
-    <div ref={containerRef} className="h-[100svh] w-full overflow-auto bg-zinc-100 p-2">
+    <div ref={containerRef} className={`${className} w-full overflow-auto bg-zinc-100 p-2`}>
       <div
         className="mx-auto"
         style={{

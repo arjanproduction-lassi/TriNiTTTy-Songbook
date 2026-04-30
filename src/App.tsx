@@ -621,6 +621,7 @@ export default function App() {
             setlistSongs={setlistSongs}
             performanceIndex={performanceIndex}
             renderedPerformance={renderedPerformance}
+            originalSong={performanceSong}
             performanceSections={performanceSections}
             setPerformanceIndex={setPerformanceIndex}
             setTranspose={setTranspose}

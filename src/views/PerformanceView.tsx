@@ -19,10 +19,12 @@ export function PerformanceView({
   setTranspose,
   transpose,
   onBackToSetlist,
+  originalSong,
 }: {
   setlistSongs: Song[];
   performanceIndex: number;
   renderedPerformance: Song | null;
+  originalSong: Song | null;
   performanceSections: SectionGroup[];
   setPerformanceIndex: Dispatch<SetStateAction<number>>;
   setTranspose: Dispatch<SetStateAction<number>>;
@@ -53,35 +55,69 @@ export function PerformanceView({
   const nextDisabled = performanceIndex >= setlistSongs.length - 1;
   const currentPosition = setlistSongs.length ? performanceIndex + 1 : 0;
   const changeZoom = (direction: number) => setReaderZoom((value) => Math.min(MAX_READER_ZOOM, Math.max(MIN_READER_ZOOM, value + direction * ZOOM_STEP)));
+  const transposeLabel = transpose > 0 ? `+${transpose}` : String(transpose);
+  const originalKey = normalizeKeyInput(originalSong?.key || renderedPerformance.key);
+  const renderedKey = normalizeKeyInput(renderedPerformance.key);
+  const keyLabel = originalKey === renderedKey ? renderedKey : `${originalKey} -> ${renderedKey}`;
 
   return (
-    <div className="relative h-[100svh] overflow-hidden bg-zinc-100">
-      <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} />
-
-      <div className="pointer-events-none fixed left-3 top-3 z-30 max-w-[calc(100vw-6rem)] rounded-2xl bg-white/90 px-3 py-2 text-xs font-semibold text-zinc-700 shadow-sm ring-1 ring-zinc-200 backdrop-blur sm:text-sm">
-        <div className="truncate">{currentPosition} / {setlistSongs.length} · {normalizeSongTitle(renderedPerformance.title)}</div>
-        <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-zinc-500">
-          <span>{normalizeKeyInput(renderedPerformance.key)}</span>
-          <span>{renderedPerformance.bpm} BPM</span>
-          <span>Reader {readerZoom}%</span>
+    <div className="flex h-[100svh] flex-col overflow-hidden bg-zinc-100">
+      <div
+        className="shrink-0 border-b border-zinc-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur sm:text-sm"
+        style={{ paddingTop: "max(0.375rem, env(safe-area-inset-top))" }}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="shrink-0">{currentPosition} / {setlistSongs.length}</span>
+          <span className="min-w-0 flex-1 truncate">{normalizeSongTitle(renderedPerformance.title)}</span>
+          <span className="shrink-0">Tónina: {keyLabel}</span>
+          <span className="shrink-0">Transpozícia: {transposeLabel}</span>
+          <span className="shrink-0">{renderedPerformance.bpm} BPM</span>
+          <span className="shrink-0">Reader {readerZoom}%</span>
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => setControlsOpen((open) => !open)}
-        className="fixed bottom-4 right-4 z-40 rounded-full bg-zinc-900 px-5 py-4 text-sm font-bold text-white shadow-xl ring-1 ring-zinc-700"
-        aria-expanded={controlsOpen}
+      <div className="min-h-0 flex-1">
+        <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} className="h-full" />
+      </div>
+
+      <div
+        className="shrink-0 border-t border-zinc-200 bg-white/95 px-3 py-2 shadow-sm"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
-        Ovládanie
-      </button>
+        <div className="mx-auto flex max-w-5xl items-center gap-2">
+          <button
+            type="button"
+            disabled={previousDisabled}
+            onClick={() => setPerformanceIndex((v) => Math.max(0, v - 1))}
+            className="rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            ← Späť
+          </button>
+          <button
+            type="button"
+            disabled={nextDisabled}
+            onClick={() => setPerformanceIndex((v) => Math.min(setlistSongs.length - 1, v + 1))}
+            className="rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Ďalšia →
+          </button>
+          <button
+            type="button"
+            onClick={() => setControlsOpen((open) => !open)}
+            className="ml-auto rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200"
+            aria-expanded={controlsOpen}
+          >
+            Ovládanie
+          </button>
+        </div>
+      </div>
 
       {controlsOpen && (
-        <div className="fixed bottom-20 right-4 z-40 w-[min(92vw,26rem)] rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-zinc-200">
+        <div className="fixed bottom-16 right-3 z-40 max-h-[min(72svh,34rem)] w-[min(92vw,26rem)] overflow-auto rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-zinc-200">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="truncate text-base font-bold">{normalizeSongTitle(renderedPerformance.title)}</div>
-              <div className="mt-1 text-sm font-semibold text-zinc-500">{currentPosition} / {setlistSongs.length} · {normalizeKeyInput(renderedPerformance.key)} · {renderedPerformance.duration}</div>
+              <div className="mt-1 text-sm font-semibold text-zinc-500">{currentPosition} / {setlistSongs.length} · {keyLabel} · {renderedPerformance.duration}</div>
             </div>
             <button type="button" onClick={() => setControlsOpen(false)} className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200">×</button>
           </div>
@@ -111,6 +147,8 @@ export function PerformanceView({
 
           <div className="mt-3 rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
             <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Transpozícia</div>
+            <div className="mt-1 text-sm font-bold text-zinc-800">Transpozícia: {transposeLabel}</div>
+            <div className="mt-0.5 text-sm font-semibold text-zinc-600">Tónina: {keyLabel}</div>
             <div className="mt-2"><TransposeControls compact transpose={transpose} onTranspose={setTranspose} /></div>
           </div>
 
