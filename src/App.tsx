@@ -21,6 +21,12 @@ import { APP_VERSION, BUILD_DATE, RC_MARKER } from "./buildInfo";
 
 const LEGACY_STORAGE_KEYS = ["trinittty-phase1-wide-t8", "trinittty-phase1-lean-t3"];
 const DEFAULT_SETLISTS: NamedSetlist[] = [{ id: 1, name: "Setlist 1", songIds: [1, 2] }];
+const CANONICAL_STATUS_KEY = "trinittty-canonical-save-status";
+
+type CanonicalSaveStatus = {
+  dirty: boolean;
+  lastCanonicalSaveAt: string | null;
+};
 
 export default function App() {
   const [songs, setSongs] = useState<Song[]>(INITIAL_SONGS);
@@ -45,6 +51,8 @@ export default function App() {
   const [copyStatus, setCopyStatus] = useState("");
   const [storageReady, setStorageReady] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Načítavam lokálnu databázu...");
+  const [canonicalSaveStatus, setCanonicalSaveStatus] = useState<CanonicalSaveStatus>(() => readCanonicalSaveStatus());
+  const [lastLocalAutosaveAt, setLastLocalAutosaveAt] = useState<string | null>(null);
   const [driveFile, setDriveFile] = useState<DriveFileMemory | null>(null);
   const [driveStatus, setDriveStatus] = useState("Drive admin sync je vypnutý.");
   const [serviceWorkerUpdateReady, setServiceWorkerUpdateReady] = useState(false);
@@ -103,6 +111,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    writeCanonicalSaveStatus(canonicalSaveStatus);
+  }, [canonicalSaveStatus]);
+
+  useEffect(() => {
+    if (!canonicalSaveStatus.dirty) return undefined;
+
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    return () => window.removeEventListener("beforeunload", warnBeforeUnload);
+  }, [canonicalSaveStatus.dirty]);
+
+  useEffect(() => {
     if (!printJob) return undefined;
 
     const afterPrint = () => setPrintJob(null);
@@ -119,7 +143,11 @@ export default function App() {
     if (!storageReady) return;
     const timer = window.setTimeout(() => {
       saveState(persistedState)
-        .then(() => setStorageStatus(`Uložené lokálne: ${songs.length} piesne, setlist ${setlist.length}.`))
+        .then(() => {
+          const now = new Date().toISOString();
+          setLastLocalAutosaveAt(now);
+          setStorageStatus(`Uložené lokálne: ${songs.length} piesne, setlist ${setlist.length}.`);
+        })
         .catch(() => setStorageStatus("Lokálne uloženie zlyhalo. Skús exportovať backup."));
     }, 250);
     return () => window.clearTimeout(timer);
@@ -197,6 +225,25 @@ export default function App() {
     setImportLines(parseImportText((state.draft || DEFAULT_DRAFT).rawText));
   }
 
+  function markCanonicalDirty() {
+    setCanonicalSaveStatus((current) => current.dirty ? current : { ...current, dirty: true });
+  }
+
+  function markCanonicalSaved(savedAt = new Date().toISOString()) {
+    setCanonicalSaveStatus({ dirty: false, lastCanonicalSaveAt: savedAt });
+  }
+
+  function saveCanonicalDatabase() {
+    try {
+      const savedAt = new Date().toISOString();
+      downloadBackup({ ...persistedState, savedAt });
+      markCanonicalSaved(savedAt);
+      setStorageStatus(`Databáza exportovaná: ${formatShortTime(savedAt)}.`);
+    } catch {
+      setStorageStatus("Export databázy zlyhal. Neuložené zmeny ostávajú aktívne.");
+    }
+  }
+
   function commitImportLines(nextLines: Line[]) {
     setImportLines(nextLines);
     setDraft((current) => ({ ...current, rawText: serializeLines(nextLines) }));
@@ -221,6 +268,7 @@ export default function App() {
 
       const updatedSong = makeSong(normalizedDraft, linesForSave, editingSongId);
       setSongs((prev) => prev.map((song) => (song.id === editingSongId ? updatedSong : song)));
+      markCanonicalDirty();
       setSelectedSongId(editingSongId);
       setSetlistPreviewSongId(editingSongId);
       setEditingSongId(null);
@@ -231,6 +279,7 @@ export default function App() {
     const newId = Math.max(...songs.map((song) => song.id), 0) + 1;
     const newSong = makeSong(normalizedDraft, linesForSave, newId);
     setSongs((prev) => [newSong, ...prev]);
+    markCanonicalDirty();
     setSelectedSongId(newId);
     setSetlistPreviewSongId(newId);
     setView("song");
@@ -285,11 +334,13 @@ export default function App() {
   }
 
   function toggleSetlist(songId: number) {
+    markCanonicalDirty();
     setSetlist((prev) => (prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]));
     setSetlistPreviewSongId(songId);
   }
 
   function toggleSongInNamedSetlist(songId: number, setlistId: number) {
+    markCanonicalDirty();
     setSetlists((prev) => prev.map((item) => {
       if (item.id !== setlistId) return item;
       const songIds = item.songIds.includes(songId)
@@ -314,6 +365,7 @@ export default function App() {
   }
 
   function createSetlist(name: string) {
+    markCanonicalDirty();
     const normalizedName = name.trim() || `Setlist ${setlists.length + 1}`;
     const id = Math.max(0, ...setlists.map((item) => item.id)) + 1;
     const nextSetlist: NamedSetlist = { id, name: normalizedName, songIds: [] };
@@ -327,12 +379,15 @@ export default function App() {
   function renameSetlist(name: string) {
     const normalizedName = name.trim();
     if (!normalizedName) return;
+    if (activeSetlist.name === normalizedName) return;
+    markCanonicalDirty();
     setSetlists((prev) => prev.map((item) => (item.id === activeSetlistId ? { ...item, name: normalizedName } : item)));
   }
 
   function deleteActiveSetlist() {
     if (setlists.length <= 1) return;
     if (!window.confirm(`Zmazať setlist "${activeSetlist.name}"? Skladby v knižnici ostanú zachované.`)) return;
+    markCanonicalDirty();
     const remaining = setlists.filter((item) => item.id !== activeSetlistId);
     const nextSetlist = remaining[0] ?? DEFAULT_SETLISTS[0];
     setSetlists(remaining);
@@ -343,9 +398,11 @@ export default function App() {
   }
 
   function moveSetlist(index: number, dir: number) {
+    const target = index + dir;
+    if (target < 0 || target >= setlist.length) return;
+    markCanonicalDirty();
     setSetlist((prev) => {
       const next = [...prev];
-      const target = index + dir;
       if (target < 0 || target >= next.length) return prev;
       [next[index], next[target]] = [next[target], next[index]];
       return next;
@@ -353,6 +410,7 @@ export default function App() {
   }
 
   function removeFromSetlist(index: number) {
+    markCanonicalDirty();
     setSetlist((prev) => prev.filter((_, i) => i !== index));
     setPerformanceIndex((current) => Math.max(0, Math.min(current, setlist.length - 2)));
   }
@@ -365,6 +423,7 @@ export default function App() {
     const nextSetlist = setlist.filter((id) => id !== songId);
     const fallbackId = nextSongs[0]?.id ?? 0;
     setSongs(nextSongs);
+    markCanonicalDirty();
     setSetlist(nextSetlist);
     if (selectedSongId === songId) setSelectedSongId(fallbackId);
     if (setlistPreviewSongId === songId) setSetlistPreviewSongId(nextSetlist[0] ?? fallbackId);
@@ -384,6 +443,7 @@ export default function App() {
     try {
       const state = await readBackupFile(file);
       applyPersistedState(state);
+      markCanonicalSaved(state.savedAt);
       setStorageStatus(`Backup importovaný: ${state.songs.length} piesne.`);
     } catch {
       setStorageStatus("Backup sa nepodarilo importovať. Súbor nevyzerá správne.");
@@ -406,6 +466,7 @@ export default function App() {
       const state = await loadBackupFromDrive(file.fileId);
       applyPersistedState(state);
       setDriveFile(file);
+      markCanonicalSaved(state.savedAt);
       setDriveStatus(`Načítané z Drive: ${file.fileName}`);
     } catch (error) {
       setDriveStatus(error instanceof Error ? error.message : "Load from Drive zlyhal.");
@@ -418,6 +479,7 @@ export default function App() {
       const stateForDrive: PersistedState = { ...persistedState, driveFile: file, savedAt: new Date().toISOString() };
       await saveBackupToDrive(file.fileId, stateForDrive);
       setDriveFile(file);
+      markCanonicalSaved(stateForDrive.savedAt);
       setDriveStatus(`Uložené do Drive: ${file.fileName}`);
     } catch (error) {
       setDriveStatus(error instanceof Error ? error.message : "Save to Drive zlyhal.");
@@ -449,6 +511,7 @@ export default function App() {
     setDraft(DEFAULT_DRAFT);
     setDriveFile(null);
     setDriveStatus("Drive admin sync je vypnutý.");
+    markCanonicalDirty();
     setStorageStatus("Dáta resetované na demo stav.");
   }
 
@@ -473,6 +536,13 @@ export default function App() {
     setView("setlist");
   };
   const performanceView = view === "performance";
+  const canonicalDirty = canonicalSaveStatus.dirty;
+  const canonicalStatusText = canonicalDirty
+    ? "Neuložené zmeny v databáze"
+    : canonicalSaveStatus.lastCanonicalSaveAt
+      ? `Databáza uložená: ${formatShortTime(canonicalSaveStatus.lastCanonicalSaveAt)}`
+      : "Databáza zatiaľ nebola exportovaná";
+  const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
@@ -486,6 +556,12 @@ export default function App() {
               {!online && <p className="mt-1 text-xs font-semibold text-amber-700">Offline režim: pracuješ z lokálnej databázy a cache.</p>}
               <p className="mt-1 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · build {BUILD_DATE}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span className={`rounded-2xl px-3 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-50 text-amber-900 ring-amber-300" : "bg-emerald-50 text-emerald-900 ring-emerald-200"}`}>
+                  {canonicalStatusText}
+                </span>
+                <span className="rounded-2xl bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">{localAutosaveText}</span>
+              </div>
               {installed && <p className="mt-1 text-xs font-semibold text-emerald-700">Appka je nainštalovaná.</p>}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -493,6 +569,7 @@ export default function App() {
               <NavButton current={view} target="import" onClick={setView}>Import</NavButton>
               <NavButton current={view} target="song" onClick={setView}>Náhľad</NavButton>
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
+              <button onClick={saveCanonicalDatabase} className={`rounded-2xl px-4 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>Uložiť databázu</button>
               {serviceWorkerUpdateReady && (
                 <button onClick={activateWaitingServiceWorker} className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Aktualizovať appku</button>
               )}
@@ -517,7 +594,7 @@ export default function App() {
             onToggleSongInSetlist={toggleSongInNamedSetlist}
             onDelete={deleteSong}
             onInstall={() => { void install(); }}
-            onExportBackup={() => downloadBackup(persistedState)}
+            onExportBackup={saveCanonicalDatabase}
             onImportBackup={(file) => { void importBackup(file); }}
             isInSetlist={isInSetlist}
             isSongInSetlist={isSongInSetlist}
@@ -643,6 +720,35 @@ export default function App() {
 function firstEditableIndex(lines: Line[]) {
   const firstNonSpace = lines.findIndex((line) => line.type !== "space");
   return firstNonSpace >= 0 ? firstNonSpace : 0;
+}
+
+function readCanonicalSaveStatus(): CanonicalSaveStatus {
+  try {
+    const raw = window.localStorage.getItem(CANONICAL_STATUS_KEY);
+    if (!raw) return { dirty: false, lastCanonicalSaveAt: null };
+
+    const parsed = JSON.parse(raw) as Partial<CanonicalSaveStatus>;
+    return {
+      dirty: Boolean(parsed.dirty),
+      lastCanonicalSaveAt: typeof parsed.lastCanonicalSaveAt === "string" ? parsed.lastCanonicalSaveAt : null,
+    };
+  } catch {
+    return { dirty: false, lastCanonicalSaveAt: null };
+  }
+}
+
+function writeCanonicalSaveStatus(status: CanonicalSaveStatus) {
+  try {
+    window.localStorage.setItem(CANONICAL_STATUS_KEY, JSON.stringify(status));
+  } catch {
+    // Local status is helpful, but the app can still run if localStorage is blocked.
+  }
+}
+
+function formatShortTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--:--";
+  return date.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
 }
 
 function loadLegacyState(): PersistedState | null {

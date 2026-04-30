@@ -1,4 +1,4 @@
-const VERSION = "t8-rc-2026-04-30-02";
+const VERSION = "t8-rc-2026-04-30-03";
 const STATIC_CACHE = `trinittty-static-${VERSION}`;
 const RUNTIME_CACHE = `trinittty-runtime-${VERSION}`;
 const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg", "/icon-192.png", "/icon-512.png"];
