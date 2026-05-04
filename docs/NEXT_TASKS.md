@@ -1,8 +1,8 @@
 # Next Tasks
 
-Date saved: 2026-04-30
+Date saved: 2026-05-04
 
-Status: queued. Do not start until Peter finishes tablet testing and asks to continue.
+Status: dirty-state workflow implemented; next queued task is desktop workspace compaction.
 
 ## Current Product State
 
@@ -13,13 +13,14 @@ Current RC1 baseline:
 - A4 preview / detail / setlist / performance use the shared canonical A4 renderer.
 - Native Chrome Print / Save as PDF mismatch was fixed and manually verified.
 - PWA update flow works on tablet.
+- Dirty-state workflow exists and currently maps canonical save to explicit JSON database export.
 - Google Drive canonical file memory is deferred to a separate future task.
 
 Critical rule:
 
 If anything breaks A4 truth consistency between editor, song detail, setlist preview, performance, print, or PDF, it is a critical defect.
 
-## Next Task: Unsaved Canonical Data Warning + Dirty-State Workflow
+## Completed Task: Unsaved Canonical Data Warning + Dirty-State Workflow
 
 Priority:
 
@@ -74,22 +75,22 @@ Dirty means:
 
 Show a clear persistent status in the main header/top bar:
 
-- example: `Neuložené zmeny v databáze`
+- example: `Neexportované zmeny v databáze`
 - warning color
 - not tiny
 - not hidden in a submenu
 
 When canonical save succeeds, switch status to:
 
-- `Databáza uložená`
+- `Databáza exportovaná`
 - include timestamp if possible
 
 ### Part C: Canonical Save Action
 
 Add one explicit main action for canonical save:
 
-- `Uložiť databázu`
-- or `Uložiť kanonický súbor`
+- `Exportovať databázu`
+- or later, when Drive exists: `Uložiť do Drive`
 
 This action clears dirty state only after successful canonical save.
 
@@ -123,7 +124,7 @@ Track and show if easy:
 Example:
 
 - `Lokálne uložené: 15:42`
-- `Databáza uložená: 15:30`
+- `Databáza exportovaná: 15:30`
 
 If that is too much for this pass, implement only:
 
@@ -167,7 +168,7 @@ When this task is implemented, report:
 - what action clears dirty state
 - what remains manual for Peter to test
 
-## Next After That: UI Compaction Pass For Desktop Admin Workspace
+## Next Task: UI Compaction Pass For Desktop Admin Workspace
 
 Goal:
 
@@ -301,7 +302,7 @@ When this task is implemented, report:
 
 ## Deferred Separate Task: Google Drive Canonical File Memory
 
-Keep this out of RC1 compaction work unless Peter explicitly starts the Drive task.
+Keep this out of RC1 compaction work unless Peter explicitly starts the Drive task. This remains important because Vercel/installed PWAs do not sync IndexedDB between PC and tablet.
 
 Goal:
 

@@ -233,7 +233,7 @@ export default function App() {
     setCanonicalSaveStatus({ dirty: false, lastCanonicalSaveAt: savedAt });
   }
 
-  function saveCanonicalDatabase() {
+  function exportCanonicalDatabase() {
     try {
       const savedAt = new Date().toISOString();
       downloadBackup({ ...persistedState, savedAt });
@@ -538,9 +538,9 @@ export default function App() {
   const performanceView = view === "performance";
   const canonicalDirty = canonicalSaveStatus.dirty;
   const canonicalStatusText = canonicalDirty
-    ? "Neuložené zmeny v databáze"
+    ? "Neexportované zmeny v databáze"
     : canonicalSaveStatus.lastCanonicalSaveAt
-      ? `Databáza uložená: ${formatShortTime(canonicalSaveStatus.lastCanonicalSaveAt)}`
+      ? `Databáza exportovaná: ${formatShortTime(canonicalSaveStatus.lastCanonicalSaveAt)}`
       : "Databáza zatiaľ nebola exportovaná";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
@@ -569,7 +569,7 @@ export default function App() {
               <NavButton current={view} target="import" onClick={setView}>Import</NavButton>
               <NavButton current={view} target="song" onClick={setView}>Náhľad</NavButton>
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
-              <button onClick={saveCanonicalDatabase} className={`rounded-2xl px-4 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>Uložiť databázu</button>
+              <button onClick={exportCanonicalDatabase} className={`rounded-2xl px-4 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>Exportovať databázu</button>
               {serviceWorkerUpdateReady && (
                 <button onClick={activateWaitingServiceWorker} className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Aktualizovať appku</button>
               )}
@@ -594,7 +594,7 @@ export default function App() {
             onToggleSongInSetlist={toggleSongInNamedSetlist}
             onDelete={deleteSong}
             onInstall={() => { void install(); }}
-            onExportBackup={saveCanonicalDatabase}
+            onExportBackup={exportCanonicalDatabase}
             onImportBackup={(file) => { void importBackup(file); }}
             isInSetlist={isInSetlist}
             isSongInSetlist={isSongInSetlist}
