@@ -81,45 +81,48 @@ export function SetlistView({
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+    <div className="grid gap-4 xl:grid-cols-[0.76fr_1.24fr]">
       <Card>
-        <h2 className="text-xl font-semibold">Setlist</h2>
-        <p className="mt-1 text-sm text-zinc-500">Klikni na skladbu vľavo a vpravo sa ukáže celý A4 paper.</p>
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Setlist</h2>
+            <p className="mt-1 text-sm text-zinc-500">Klikni na skladbu vľavo a vpravo sa ukáže celý A4 paper.</p>
+          </div>
+          <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200">
+            <div className="text-xs text-zinc-500">Celkový čas</div>
+            <div className="font-bold">{formatTotalDuration(setlistSongs)}</div>
+          </div>
+        </div>
 
-        <div className="mt-4 rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-200">
+        <div className="mt-3 rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
           <label className="mb-2 block text-sm font-medium text-zinc-700">Aktuálny setlist</label>
-          <select value={activeSetlistId} onChange={(e) => switchSetlist(Number(e.target.value))} className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm">
+          <select value={activeSetlistId} onChange={(e) => switchSetlist(Number(e.target.value))} className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm">
             {setlists.map((setlist) => <option key={setlist.id} value={setlist.id}>{setlist.name}</option>)}
           </select>
-          <div className="mt-3 grid gap-2">
+          <div className="mt-2 grid gap-2">
             <input
               value={setlistNameDraft}
               onChange={(e) => setSetlistNameDraft(e.target.value)}
               placeholder="Názov setlistu"
-              className="w-full rounded-2xl border border-zinc-300 bg-white px-4 py-3 text-sm"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm"
             />
             <div className="flex flex-wrap gap-2">
               <SoftButton onClick={createNextSetlist}>Nový setlist</SoftButton>
               <SoftButton disabled={!trimmedSetlistName} onClick={renameActiveSetlist} className="disabled:cursor-not-allowed disabled:opacity-40">Premenovať</SoftButton>
-              <button disabled={setlists.length <= 1} onClick={deleteActiveSetlist} className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800 ring-1 ring-rose-200 disabled:cursor-not-allowed disabled:opacity-40">Zmazať setlist</button>
+              <button disabled={setlists.length <= 1} onClick={deleteActiveSetlist} className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 ring-1 ring-rose-200 disabled:cursor-not-allowed disabled:opacity-40">Zmazať setlist</button>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-200">
-          <div className="text-sm text-zinc-500">Celkový čas setlistu</div>
-          <div className="mt-1 text-2xl font-bold">{formatTotalDuration(setlistSongs)}</div>
-        </div>
-
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-1">
+        <div className="mt-3 grid max-h-[calc(100vh-22rem)] gap-2 overflow-auto pr-1 md:grid-cols-2 xl:grid-cols-1">
           {!setlistSongs.length && (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">
               Setlist je zatiaľ prázdny. Pridaj skladby z knižnice.
             </div>
           )}
           {setlistSongs.map((song, index) => (
-            <div key={`${song.id}-${index}`} className={`w-full rounded-2xl border p-4 ${setlistPreviewSong?.id === song.id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-900"}`}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div key={`${song.id}-${index}`} className={`w-full rounded-xl border p-3 ${setlistPreviewSong?.id === song.id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-900"}`}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <button type="button" onClick={() => setSetlistPreviewSongId(song.id)} className="min-w-0 flex-1 text-left">
                   <div className="font-semibold">{index + 1}. {normalizeSongTitle(song.title)}</div>
                   <div className={`mt-1 text-sm ${setlistPreviewSong?.id === song.id ? "text-zinc-200" : "text-zinc-500"}`}>
@@ -137,12 +140,12 @@ export function SetlistView({
           ))}
         </div>
 
-        <div className="mt-4 rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-200">
+        <div className="mt-3 rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
           <div className="text-sm font-medium text-zinc-700">Transpozícia pre setlist / performance</div>
-          <div className="mt-3"><TransposeControls compact transpose={transpose} notation={notation} onTranspose={setTranspose} onNotation={setNotation} /></div>
+          <div className="mt-2"><TransposeControls compact transpose={transpose} notation={notation} onTranspose={setTranspose} onNotation={setNotation} /></div>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <PrimaryButton disabled={!setlistSongs.length} onClick={startPerformance}>Spustiť koncertný režim</PrimaryButton>
           {renderedSetlistPreview && <SoftButton onClick={() => printSong(renderedSetlistPreview)}>Tlačiť / PDF</SoftButton>}
           <SoftButton onClick={() => setView("songs")}>Pridať ďalšie piesne</SoftButton>
@@ -151,8 +154,8 @@ export function SetlistView({
 
       <Card>
         <h2 className="text-xl font-semibold">A4 náhľad vybratej skladby</h2>
-        <div className="mt-2 text-sm text-zinc-600">Reálny veľký papier vybratej položky zo setlistu.</div>
-        <div className="mt-4">
+        <div className="mt-1 text-sm text-zinc-600">Reálny veľký papier vybratej položky zo setlistu.</div>
+        <div className="mt-3">
           {renderedSetlistPreview ? (
             <A4Sheet song={renderedSetlistPreview} sections={setlistPreviewSections} />
           ) : (

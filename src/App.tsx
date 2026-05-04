@@ -546,21 +546,21 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <div className={performanceView ? "min-h-screen" : "mx-auto max-w-[1600px] p-4 md:p-6"}>
+      <div className={performanceView ? "min-h-screen" : "mx-auto max-w-[1760px] p-3 md:p-4"}>
         {!performanceView && (
-        <div className="mb-6 rounded-3xl bg-gradient-to-br from-white to-zinc-100 p-5 shadow-sm ring-1 ring-zinc-200">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="mb-4 rounded-2xl bg-gradient-to-br from-white to-zinc-100 p-3 shadow-sm ring-1 ring-zinc-200 md:p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">TriNiTTTy</div>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight">Songbook PWA MVP</h1>
+              <h1 className="mt-0.5 text-xl font-bold tracking-tight">Songbook PWA MVP</h1>
               {!online && <p className="mt-1 text-xs font-semibold text-amber-700">Offline režim: pracuješ z lokálnej databázy a cache.</p>}
-              <p className="mt-1 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
+              <p className="mt-0.5 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · build {BUILD_DATE}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className={`rounded-2xl px-3 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-50 text-amber-900 ring-amber-300" : "bg-emerald-50 text-emerald-900 ring-emerald-200"}`}>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`rounded-xl px-3 py-1.5 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-50 text-amber-900 ring-amber-300" : "bg-emerald-50 text-emerald-900 ring-emerald-200"}`}>
                   {canonicalStatusText}
                 </span>
-                <span className="rounded-2xl bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">{localAutosaveText}</span>
+                <span className="rounded-xl bg-zinc-50 px-3 py-1.5 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">{localAutosaveText}</span>
               </div>
               {installed && <p className="mt-1 text-xs font-semibold text-emerald-700">Appka je nainštalovaná.</p>}
             </div>
@@ -569,7 +569,7 @@ export default function App() {
               <NavButton current={view} target="import" onClick={setView}>Import</NavButton>
               <NavButton current={view} target="song" onClick={setView}>Náhľad</NavButton>
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
-              <button onClick={exportCanonicalDatabase} className={`rounded-2xl px-4 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>Exportovať databázu</button>
+              <button onClick={exportCanonicalDatabase} className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>Exportovať databázu</button>
               {serviceWorkerUpdateReady && (
                 <button onClick={activateWaitingServiceWorker} className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Aktualizovať appku</button>
               )}

@@ -1,13 +1,13 @@
 import type { ButtonHTMLAttributes } from "react";
 import type { ChildrenProps, View } from "../types";
 
-const buttonBase = "rounded-2xl px-4 py-3 text-sm font-semibold";
+const buttonBase = "rounded-xl px-3 py-2 text-sm font-semibold";
 
 export function NavButton({ current, target, onClick, children }: ChildrenProps & { current: View; target: View; onClick: (v: View) => void }) {
   return (
     <button
       onClick={() => onClick(target)}
-      className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${current === target ? "bg-zinc-900 text-white shadow" : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"}`}
+      className={`rounded-xl px-3 py-2 text-sm font-medium transition ${current === target ? "bg-zinc-900 text-white shadow" : "bg-white text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"}`}
     >
       {children}
     </button>
@@ -19,7 +19,7 @@ export function Chip({ children }: ChildrenProps) {
 }
 
 export function Card({ children, className = "" }: ChildrenProps & { className?: string }) {
-  return <div className={`rounded-3xl bg-white p-5 shadow-sm ring-1 ring-zinc-200 ${className}`}>{children}</div>;
+  return <div className={`rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 ${className}`}>{children}</div>;
 }
 
 export function InfoBox({ children, tone = "zinc" }: ChildrenProps & { tone?: "zinc" | "amber" | "sky" | "emerald" }) {
@@ -29,7 +29,7 @@ export function InfoBox({ children, tone = "zinc" }: ChildrenProps & { tone?: "z
     sky: "bg-sky-50 text-sky-900 ring-sky-200",
     emerald: "bg-emerald-50 text-emerald-900 ring-emerald-200",
   };
-  return <div className={`rounded-2xl p-4 text-sm ring-1 ${tones[tone]}`}>{children}</div>;
+  return <div className={`rounded-xl p-3 text-sm ring-1 ${tones[tone]}`}>{children}</div>;
 }
 
 export function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
