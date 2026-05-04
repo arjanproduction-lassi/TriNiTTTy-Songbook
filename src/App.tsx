@@ -44,8 +44,6 @@ export default function App() {
   const [selectedImportIndex, setSelectedImportIndex] = useState<number | null>(null);
   const [editingSongId, setEditingSongId] = useState<number | null>(null);
   const [importSplit, setImportSplit] = useState(30);
-  const [workSplit, setWorkSplit] = useState(47);
-  const [leftEditorSplit, setLeftEditorSplit] = useState(46);
   const [importLines, setImportLines] = useState<Line[]>(() => parseImportText(DEFAULT_IMPORT_TEXT));
   const [draft, setDraft] = useState<ImportDraft>(DEFAULT_DRAFT);
   const [copyStatus, setCopyStatus] = useState("");
@@ -308,8 +306,6 @@ export default function App() {
     setEditingSongId(null);
     setImportMode("raw");
     setImportSplit(30);
-    setWorkSplit(47);
-    setLeftEditorSplit(46);
     setImportLines(parseImportText(DEFAULT_IMPORT_TEXT));
     setSelectedImportIndex(null);
     setDraft(DEFAULT_DRAFT);
@@ -505,8 +501,6 @@ export default function App() {
     setSelectedImportIndex(null);
     setEditingSongId(null);
     setImportSplit(30);
-    setWorkSplit(47);
-    setLeftEditorSplit(46);
     setImportLines(parseImportText(DEFAULT_IMPORT_TEXT));
     setDraft(DEFAULT_DRAFT);
     setDriveFile(null);
@@ -619,8 +613,6 @@ export default function App() {
           <ImportView
             importMode={importMode}
             importSplit={importSplit}
-            workSplit={workSplit}
-            leftEditorSplit={leftEditorSplit}
             draft={draft}
             editingSongId={editingSongId}
             activeImportLines={activeImportLines}
@@ -629,8 +621,6 @@ export default function App() {
             selectedImportIndex={selectedImportIndex}
             selectedImportLine={selectedImportLine}
             setImportSplit={setImportSplit}
-            setWorkSplit={setWorkSplit}
-            setLeftEditorSplit={setLeftEditorSplit}
             setDraft={setDraft}
             setSelectedImportIndex={setSelectedImportIndex}
             enterBlockImportMode={enterBlockImportMode}

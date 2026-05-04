@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useRef, useState, type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction } from "react";
 import type { ImportDraft, ImportMode, Line, SectionGroup, Song } from "../types";
 import { A4Sheet } from "../components/A4Sheet";
 import { Card, Field, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
@@ -9,8 +9,6 @@ import { convertLine, importDiagnostics, normalizeSongTitle } from "../lib/impor
 type ImportViewProps = {
   importMode: ImportMode;
   importSplit: number;
-  workSplit: number;
-  leftEditorSplit: number;
   draft: ImportDraft;
   editingSongId: number | null;
   activeImportLines: Line[];
@@ -19,8 +17,6 @@ type ImportViewProps = {
   selectedImportIndex: number | null;
   selectedImportLine: Line | null;
   setImportSplit: (value: number) => void;
-  setWorkSplit: (value: number) => void;
-  setLeftEditorSplit: (value: number) => void;
   setDraft: Dispatch<SetStateAction<ImportDraft>>;
   setSelectedImportIndex: (index: number | null) => void;
   enterBlockImportMode: () => void;
@@ -32,6 +28,47 @@ type ImportViewProps = {
   insertImportLine: (index: number, direction: "above" | "below") => void;
   deleteImportLine: (index: number) => void;
 };
+
+type PaneWidths = {
+  left: number;
+  middle: number;
+};
+
+const EDITOR_PANE_WIDTHS_KEY = "trinittty-editor-pane-widths";
+const DEFAULT_PANE_WIDTHS: PaneWidths = { left: 300, middle: 440 };
+const MIN_LEFT_PANE = 240;
+const MIN_MIDDLE_PANE = 320;
+const MIN_RIGHT_PANE = 520;
+const SPLITTER_SPACE = 20;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), Math.max(min, max));
+}
+
+function readPaneWidths(): PaneWidths {
+  try {
+    const raw = window.localStorage.getItem(EDITOR_PANE_WIDTHS_KEY);
+    if (!raw) return DEFAULT_PANE_WIDTHS;
+    const parsed = JSON.parse(raw) as Partial<PaneWidths>;
+    return {
+      left: Number(parsed.left) || DEFAULT_PANE_WIDTHS.left,
+      middle: Number(parsed.middle) || DEFAULT_PANE_WIDTHS.middle,
+    };
+  } catch {
+    return DEFAULT_PANE_WIDTHS;
+  }
+}
+
+function clampPaneWidths(widths: PaneWidths, containerWidth = 0): PaneWidths {
+  const availableForLeftAndMiddle = containerWidth > 0
+    ? Math.max(MIN_LEFT_PANE + MIN_MIDDLE_PANE, containerWidth - MIN_RIGHT_PANE - SPLITTER_SPACE)
+    : widths.left + widths.middle;
+
+  const left = clamp(widths.left, MIN_LEFT_PANE, Math.max(MIN_LEFT_PANE, availableForLeftAndMiddle - MIN_MIDDLE_PANE));
+  const middle = clamp(widths.middle, MIN_MIDDLE_PANE, Math.max(MIN_MIDDLE_PANE, availableForLeftAndMiddle - left));
+
+  return { left, middle };
+}
 
 function DraftFields({
   draft,
@@ -104,6 +141,25 @@ function SplitControl({
       <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} className="w-full" />
       <span className="text-xs text-zinc-500">{rightLabel} {100 - value}%</span>
     </div>
+  );
+}
+
+function PaneSplitter({
+  label,
+  onPointerDown,
+}: {
+  label: string;
+  onPointerDown: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onPointerDown={onPointerDown}
+      className="hidden min-h-[calc(100vh-15rem)] w-2 cursor-col-resize rounded-full bg-zinc-100 ring-1 ring-zinc-200 transition hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-500 xl:block"
+    >
+      <span className="mx-auto block h-full w-px bg-zinc-300" />
+    </button>
   );
 }
 
@@ -206,8 +262,6 @@ export function ImportView(props: ImportViewProps) {
   const {
     importMode,
     importSplit,
-    workSplit,
-    leftEditorSplit,
     draft,
     editingSongId,
     activeImportLines,
@@ -216,8 +270,6 @@ export function ImportView(props: ImportViewProps) {
     selectedImportIndex,
     selectedImportLine,
     setImportSplit,
-    setWorkSplit,
-    setLeftEditorSplit,
     setDraft,
     setSelectedImportIndex,
     enterBlockImportMode,
@@ -229,6 +281,55 @@ export function ImportView(props: ImportViewProps) {
     insertImportLine,
     deleteImportLine,
   } = props;
+  const workspaceRef = useRef<HTMLDivElement | null>(null);
+  const [paneWidths, setPaneWidths] = useState<PaneWidths>(() => clampPaneWidths(readPaneWidths()));
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(EDITOR_PANE_WIDTHS_KEY, JSON.stringify(paneWidths));
+    } catch {
+      // Pane widths are device-local comfort state. The editor still works if storage is blocked.
+    }
+  }, [paneWidths]);
+
+  useEffect(() => {
+    const clampToContainer = () => setPaneWidths((current) => clampPaneWidths(current, workspaceRef.current?.clientWidth ?? 0));
+    clampToContainer();
+    window.addEventListener("resize", clampToContainer);
+    return () => window.removeEventListener("resize", clampToContainer);
+  }, []);
+
+  function startPaneResize(edge: "left" | "middle", event: ReactPointerEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidths = paneWidths;
+    const containerWidth = workspaceRef.current?.clientWidth ?? 0;
+
+    const handleMove = (moveEvent: PointerEvent) => {
+      const delta = moveEvent.clientX - startX;
+
+      setPaneWidths(() => {
+        if (edge === "left") {
+          const total = startWidths.left + startWidths.middle;
+          const left = clamp(startWidths.left + delta, MIN_LEFT_PANE, total - MIN_MIDDLE_PANE);
+          return clampPaneWidths({ left, middle: total - left }, containerWidth);
+        }
+
+        const maxMiddle = containerWidth > 0
+          ? containerWidth - startWidths.left - MIN_RIGHT_PANE - SPLITTER_SPACE
+          : startWidths.middle + delta;
+        return clampPaneWidths({ left: startWidths.left, middle: clamp(startWidths.middle + delta, MIN_MIDDLE_PANE, maxMiddle) }, containerWidth);
+      });
+    };
+
+    const stopResize = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", stopResize);
+    };
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", stopResize);
+  }
 
   if (importMode === "raw") {
     return (
@@ -302,21 +403,29 @@ export function ImportView(props: ImportViewProps) {
         <DraftFields draft={draft} setDraft={setDraft} minFieldWidth="6.5rem" />
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[0.23fr_0.29fr_0.48fr]">
-        <Card className="min-h-0 p-3">
+      <div
+        ref={workspaceRef}
+        className="space-y-4 xl:grid xl:space-y-0"
+        style={{ gridTemplateColumns: `${paneWidths.left}px 10px ${paneWidths.middle}px 10px minmax(${MIN_RIGHT_PANE}px, 1fr)` }}
+      >
+        <Card className="min-h-0 p-3 xl:h-[calc(100vh-15rem)]">
           <h3 className="text-base font-semibold">Sekcie a bloky</h3>
           <BlockNavigator sections={activeImportSections} selectedIndex={selectedImportIndex} onSelect={setSelectedImportIndex} />
         </Card>
 
-        <Card className="min-h-0 p-3">
+        <PaneSplitter label="Zmeniť šírku medzi sekciami a vybraným blokom" onPointerDown={(event) => startPaneResize("left", event)} />
+
+        <Card className="min-h-0 p-3 xl:h-[calc(100vh-15rem)]">
           <h3 className="text-base font-semibold">Vybraný blok</h3>
-          <div className="mt-3 max-h-[calc(100vh-15rem)] overflow-auto pr-1">
+          <div className="mt-3 max-h-[calc(100vh-20rem)] overflow-auto pr-1">
             <SelectedBlockEditor selectedImportLine={selectedImportLine} selectedImportIndex={selectedImportIndex} replaceImportLine={replaceImportLine} insertImportLine={insertImportLine} deleteImportLine={deleteImportLine} />
           </div>
           <div className="mt-3"><CollapsedDiagnostics lines={activeImportLines} /></div>
         </Card>
 
-        <Card className="min-h-0 p-3">
+        <PaneSplitter label="Zmeniť šírku medzi vybraným blokom a A4 preview" onPointerDown={(event) => startPaneResize("middle", event)} />
+
+        <Card className="min-h-0 p-3 xl:h-[calc(100vh-15rem)]">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-lg font-semibold">A4 master preview</h2>
