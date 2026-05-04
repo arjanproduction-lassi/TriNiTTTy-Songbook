@@ -20,6 +20,29 @@ Critical rule:
 
 If anything breaks A4 truth consistency between editor, song detail, setlist preview, performance, print, or PDF, it is a critical defect.
 
+## Product Direction: Desktop Admin vs Tablet Member Use
+
+Preserve this direction for future feature work. Do not turn it into an auth/account side project during UI cleanup tasks.
+
+1. Desktop/notebook is the primary admin workspace.
+2. Tablet is unlocked for band members for reading and playing.
+3. Tablet editor remains available only in admin mode.
+4. Keep admin mode simple for now.
+5. Do not build a large auth/account system yet.
+
+Meaning:
+
+- Band members on tablet should be able to use:
+  - setlist
+  - song preview
+  - concert/performance mode
+- Band members should not get access to editor actions on tablet.
+- Admin should still keep editor access on tablet.
+- Do not remove tablet editor from the product.
+- Do not build full login/cloud permissions architecture in this pass.
+
+For the desktop compaction pass, only preserve this product direction. Do not implement it as a large permissions feature yet.
+
 ## Completed Task: Unsaved Canonical Data Warning + Dirty-State Workflow
 
 Priority:
@@ -247,19 +270,24 @@ Possible implementation direction:
 
 Product rule:
 
-Tablet is not the primary place for full editing comfort.
+Tablet is not the primary place for full editing comfort, but tablet editor access remains part of the admin product.
 
 Tablet priority:
 
 1. Setlist
 2. Concert/performance mode
+3. Song preview / reading
 
 Required direction:
 
+- band-member tablet flow should focus on reading and playing
+- admin tablet flow may still access editing
+- do not expose editor actions to band-member tablet use in future role work
 - do not optimize full admin editing for tablet in this pass
-- allow tablet editing to remain secondary
+- allow tablet editing to remain secondary and admin-only
 - prioritize tablet comfort only in setlist and concert mode
 - do not spend time making raw/block import perfect on tablet right now
+- do not build full login/cloud permissions architecture here
 
 ## What Not To Do
 
