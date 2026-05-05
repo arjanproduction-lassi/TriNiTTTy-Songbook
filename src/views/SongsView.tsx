@@ -13,6 +13,7 @@ export function SongsView({
   storageStatus,
   canInstall,
   onQuery,
+  onCreateNewSong,
   onOpen,
   onEdit,
   onToggleSetlist,
@@ -42,6 +43,7 @@ export function SongsView({
   storageStatus: string;
   canInstall: boolean;
   onQuery: (value: string) => void;
+  onCreateNewSong: () => void;
   onOpen: (song: Song) => void;
   onEdit: (song: Song) => void;
   onToggleSetlist: (songId: number) => void;
@@ -88,7 +90,10 @@ export function SongsView({
         <Card>
           <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <h2 className="text-xl font-semibold">Knižnica piesní</h2>
-            <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Hľadať..." className="w-full rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm outline-none md:max-w-xs" />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button onClick={onCreateNewSong} className="rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">Pridať skladbu</button>
+              <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Hľadať..." className="w-full rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm outline-none sm:w-64" />
+            </div>
           </div>
           <div className="space-y-3">
             {!filteredSongs.length && (

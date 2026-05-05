@@ -48,6 +48,7 @@ export type DriveFileMemory = {
 
 export type View = "songs" | "import" | "song" | "setlist" | "performance";
 export type ImportMode = "raw" | "block";
+export type EditorMode = "create" | "edit";
 export type Notation = "intl" | "de";
 
 export type ImportDraft = {

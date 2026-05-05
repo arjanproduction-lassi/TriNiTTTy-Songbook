@@ -22,6 +22,10 @@ function formatTotalDuration(songs: Song[]) {
   return seconds ? `${minutes}:${String(seconds).padStart(2, "0")} min` : `${minutes} min`;
 }
 
+function formatTransposeLabel(transpose: number) {
+  return transpose > 0 ? `+${transpose}` : String(transpose);
+}
+
 export function SetlistView({
   setlists,
   activeSetlistId,
@@ -79,6 +83,9 @@ export function SetlistView({
   const renameActiveSetlist = () => {
     if (trimmedSetlistName) renameSetlist(trimmedSetlistName);
   };
+  const sourceKey = setlistPreviewSong ? normalizeKeyInput(setlistPreviewSong.key) : "";
+  const renderedKey = renderedSetlistPreview ? normalizeKeyInput(renderedSetlistPreview.key) : "";
+  const keyStatus = sourceKey && renderedKey ? `${sourceKey} -> ${renderedKey}` : "";
 
   return (
     <div className="grid gap-4 xl:grid-cols-[0.76fr_1.24fr]">
@@ -143,6 +150,10 @@ export function SetlistView({
         <div className="mt-3 rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
           <div className="text-sm font-medium text-zinc-700">Transpozícia pre setlist / performance</div>
           <div className="mt-2"><TransposeControls compact transpose={transpose} notation={notation} onTranspose={setTranspose} onNotation={setNotation} /></div>
+          <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-zinc-600">
+            <span className="rounded-lg bg-white px-2 py-1 ring-1 ring-zinc-200">Transpozícia: {formatTransposeLabel(transpose)}</span>
+            {keyStatus && <span className="rounded-lg bg-white px-2 py-1 ring-1 ring-zinc-200">Tónina: {keyStatus}</span>}
+          </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">

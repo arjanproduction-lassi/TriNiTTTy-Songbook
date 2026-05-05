@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import type { DriveFileMemory, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, Song, View } from "./types";
-import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT } from "./data/defaultImport";
+import type { DriveFileMemory, EditorMode, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, Song, View } from "./types";
+import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT, EMPTY_SONG_DRAFT } from "./data/defaultImport";
 import { INITIAL_SONGS } from "./data/songs";
 import { NavButton } from "./components/ui";
 import { A4Page } from "./components/A4Sheet";
@@ -41,6 +41,7 @@ export default function App() {
   const [setlistPreviewSongId, setSetlistPreviewSongId] = useState(1);
   const [performanceIndex, setPerformanceIndex] = useState(0);
   const [importMode, setImportMode] = useState<ImportMode>("raw");
+  const [editorMode, setEditorMode] = useState<EditorMode>("create");
   const [selectedImportIndex, setSelectedImportIndex] = useState<number | null>(null);
   const [editingSongId, setEditingSongId] = useState<number | null>(null);
   const [importSplit, setImportSplit] = useState(30);
@@ -221,6 +222,10 @@ export default function App() {
     setDraft(state.draft || DEFAULT_DRAFT);
     setDriveFile(state.driveFile || null);
     setImportLines(parseImportText((state.draft || DEFAULT_DRAFT).rawText));
+    setImportMode("raw");
+    setEditorMode("create");
+    setEditingSongId(null);
+    setSelectedImportIndex(null);
   }
 
   function markCanonicalDirty() {
@@ -247,6 +252,33 @@ export default function App() {
     setDraft((current) => ({ ...current, rawText: serializeLines(nextLines) }));
   }
 
+  function hasActiveEditorDraft() {
+    return Boolean(
+      editorMode === "edit" ||
+      editingSongId !== null ||
+      importMode === "block" ||
+      draft.title.trim() ||
+      draft.rawText.trim() ||
+      draft.bpm.trim() ||
+      draft.key.trim() ||
+      (draft.artist.trim() && draft.artist.trim() !== EMPTY_SONG_DRAFT.artist) ||
+      (draft.duration.trim() && draft.duration.trim() !== EMPTY_SONG_DRAFT.duration) ||
+      (draft.capo.trim() && draft.capo.trim() !== EMPTY_SONG_DRAFT.capo),
+    );
+  }
+
+  function startNewSongDraft() {
+    if (hasActiveEditorDraft() && !window.confirm("Rozpísaný editor sa nahradí čistou novou skladbou. Pokračovať?")) return;
+    setEditingSongId(null);
+    setEditorMode("create");
+    setImportMode("raw");
+    setImportSplit(30);
+    setImportLines([]);
+    setSelectedImportIndex(null);
+    setDraft(EMPTY_SONG_DRAFT);
+    setView("import");
+  }
+
   function enterBlockImportMode() {
     const cleaned = cleanImportText(draft.rawText);
     const parsed = parseImportText(cleaned);
@@ -260,17 +292,39 @@ export default function App() {
     const linesForSave = importMode === "block" ? importLines : parseImportText(cleanImportText(draft.rawText));
     const normalizedDraft = { ...draft, title: normalizeSongTitle(draft.title), rawText: serializeLines(linesForSave) };
 
-    if (editingSongId !== null) {
-      const title = normalizeSongTitle(normalizedDraft.title || songs.find((song) => song.id === editingSongId)?.title || "bez názvu");
+    if (editorMode === "edit") {
+      if (editingSongId === null) {
+        setStorageStatus("Bezpečnostná brzda: editor je v režime úpravy, ale chýba pôvodné ID skladby.");
+        return;
+      }
+
+      const originalSong = songs.find((song) => song.id === editingSongId);
+      if (!originalSong) {
+        setStorageStatus("Bezpečnostná brzda: pôvodná skladba už v databáze neexistuje. Uloženie bolo zastavené.");
+        return;
+      }
+
+      const title = normalizeSongTitle(normalizedDraft.title || originalSong.title || "bez názvu");
       if (!window.confirm(`Naozaj chceš prepísať skladbu "${title}"? Pôvodná verzia bude nahradená.`)) return;
 
       const updatedSong = makeSong(normalizedDraft, linesForSave, editingSongId);
+      if (updatedSong.id !== originalSong.id) {
+        setStorageStatus("Bezpečnostná brzda: ID upravovanej skladby sa nezhoduje. Uloženie bolo zastavené.");
+        return;
+      }
+
       setSongs((prev) => prev.map((song) => (song.id === editingSongId ? updatedSong : song)));
       markCanonicalDirty();
       setSelectedSongId(editingSongId);
       setSetlistPreviewSongId(editingSongId);
       setEditingSongId(null);
+      setEditorMode("create");
       setView("song");
+      return;
+    }
+
+    if (editingSongId !== null) {
+      setStorageStatus("Bezpečnostná brzda: nová skladba mala stále pôvodné ID. Klikni na Pridať skladbu a skús to znova.");
       return;
     }
 
@@ -280,6 +334,7 @@ export default function App() {
     markCanonicalDirty();
     setSelectedSongId(newId);
     setSetlistPreviewSongId(newId);
+    setEditorMode("create");
     setView("song");
   }
 
@@ -298,12 +353,14 @@ export default function App() {
     setImportLines(clonedLines);
     setSelectedImportIndex(firstEditableIndex(clonedLines));
     setImportMode("block");
+    setEditorMode("edit");
     setEditingSongId(song.id);
     setView("import");
   }
 
   function resetImportTemplate() {
     setEditingSongId(null);
+    setEditorMode("create");
     setImportMode("raw");
     setImportSplit(30);
     setImportLines(parseImportText(DEFAULT_IMPORT_TEXT));
@@ -498,6 +555,7 @@ export default function App() {
     setSetlistPreviewSongId(1);
     setPerformanceIndex(0);
     setImportMode("raw");
+    setEditorMode("create");
     setSelectedImportIndex(null);
     setEditingSongId(null);
     setImportSplit(30);
@@ -582,6 +640,7 @@ export default function App() {
             storageStatus={storageStatus}
             canInstall={canInstall}
             onQuery={setQuery}
+            onCreateNewSong={startNewSongDraft}
             onOpen={openSong}
             onEdit={startEditingSong}
             onToggleSetlist={toggleSetlist}
@@ -612,6 +671,7 @@ export default function App() {
         {view === "import" && (
           <ImportView
             importMode={importMode}
+            editorMode={editorMode}
             importSplit={importSplit}
             draft={draft}
             editingSongId={editingSongId}
@@ -624,6 +684,7 @@ export default function App() {
             setDraft={setDraft}
             setSelectedImportIndex={setSelectedImportIndex}
             enterBlockImportMode={enterBlockImportMode}
+            startNewSongDraft={startNewSongDraft}
             returnToRawImport={() => { setImportMode("raw"); setSelectedImportIndex(null); }}
             saveImportedSong={saveImportedSong}
             applyImportCleanup={() => setDraft((current) => ({ ...current, rawText: cleanImportText(current.rawText) }))}

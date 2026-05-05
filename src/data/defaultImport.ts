@@ -36,3 +36,13 @@ export const DEFAULT_DRAFT: ImportDraft = {
   capo: "-",
   rawText: DEFAULT_IMPORT_TEXT,
 };
+
+export const EMPTY_SONG_DRAFT: ImportDraft = {
+  title: "",
+  artist: "TriNiTTTy",
+  bpm: "",
+  key: "",
+  duration: "0:00",
+  capo: "-",
+  rawText: "",
+};

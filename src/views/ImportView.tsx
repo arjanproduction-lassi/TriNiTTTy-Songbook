@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction } from "react";
-import type { ImportDraft, ImportMode, Line, SectionGroup, Song } from "../types";
+import type { EditorMode, ImportDraft, ImportMode, Line, SectionGroup, Song } from "../types";
 import { A4Sheet } from "../components/A4Sheet";
 import { Card, Field, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { pairChordLine, withPairChords, withPairLyrics } from "../lib/chordAnchors";
@@ -8,6 +8,7 @@ import { convertLine, importDiagnostics, normalizeSongTitle } from "../lib/impor
 
 type ImportViewProps = {
   importMode: ImportMode;
+  editorMode: EditorMode;
   importSplit: number;
   draft: ImportDraft;
   editingSongId: number | null;
@@ -20,6 +21,7 @@ type ImportViewProps = {
   setDraft: Dispatch<SetStateAction<ImportDraft>>;
   setSelectedImportIndex: (index: number | null) => void;
   enterBlockImportMode: () => void;
+  startNewSongDraft: () => void;
   returnToRawImport: () => void;
   saveImportedSong: () => void;
   applyImportCleanup: () => void;
@@ -261,6 +263,7 @@ function SelectedBlockEditor({
 export function ImportView(props: ImportViewProps) {
   const {
     importMode,
+    editorMode,
     importSplit,
     draft,
     editingSongId,
@@ -273,6 +276,7 @@ export function ImportView(props: ImportViewProps) {
     setDraft,
     setSelectedImportIndex,
     enterBlockImportMode,
+    startNewSongDraft,
     returnToRawImport,
     saveImportedSong,
     applyImportCleanup,
@@ -347,7 +351,8 @@ export function ImportView(props: ImportViewProps) {
           <div className="grid min-w-[980px] gap-4 xl:min-w-0" style={{ gridTemplateColumns: `${importSplit}% ${100 - importSplit}%` }}>
             <Card className="self-start">
               <h2 className="text-xl font-semibold">Raw import</h2>
-              {editingSongId !== null && <div className="mt-3"><InfoBox tone="sky">Upravuješ existujúcu pieseň: <span className="font-semibold">{normalizeSongTitle(draft.title || "bez názvu")}</span>. Uloženie prepíše jej aktuálnu verziu.</InfoBox></div>}
+              {editorMode === "edit" && editingSongId !== null && <div className="mt-3"><InfoBox tone="sky">Upravuješ existujúcu pieseň: <span className="font-semibold">{normalizeSongTitle(draft.title || "bez názvu")}</span>. Uloženie prepíše jej aktuálnu verziu.</InfoBox></div>}
+              {editorMode === "create" && <div className="mt-2 text-xs font-semibold text-emerald-800">Režim: nová skladba. Prvé uloženie vytvorí nový záznam.</div>}
               <div className="mt-2 text-xs text-amber-900">Vlož text z Wordu, predčisti ho a prejdi do širokého A4 editora.</div>
               <DraftFields draft={draft} setDraft={setDraft} />
               <div className="mt-4">
@@ -360,6 +365,7 @@ export function ImportView(props: ImportViewProps) {
               <div className="mt-4 flex flex-wrap gap-2">
                 <PrimaryButton onClick={enterBlockImportMode}>Rozparsovať a prejsť do širokého editora</PrimaryButton>
                 <button onClick={applyImportCleanup} className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">Predčistiť import</button>
+                <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
                 <SoftButton onClick={resetImportTemplate}>Obnoviť šablónu</SoftButton>
               </div>
               <div className="mt-3"><CollapsedDiagnostics lines={activeImportLines} /></div>
@@ -389,15 +395,21 @@ export function ImportView(props: ImportViewProps) {
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold">Široký blokový editor</h2>
-            {editingSongId !== null && (
+            {editorMode === "edit" && editingSongId !== null && (
               <div className="mt-1 text-xs font-semibold text-sky-800">
                 Upravuješ: {normalizeSongTitle(draft.title || "bez názvu")} · uloženie prepíše pôvodnú verziu.
+              </div>
+            )}
+            {editorMode === "create" && (
+              <div className="mt-1 text-xs font-semibold text-emerald-800">
+                Režim: nová skladba · uloženie vytvorí nový stabilný záznam.
               </div>
             )}
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <SoftButton onClick={returnToRawImport}>Späť na raw import</SoftButton>
-            <PrimaryButton onClick={saveImportedSong}>{editingSongId !== null ? "Uložiť a prepísať skladbu" : "Uložiť ako novú pieseň"}</PrimaryButton>
+            <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
+            <PrimaryButton onClick={saveImportedSong}>{editorMode === "edit" ? "Uložiť a prepísať skladbu" : "Vytvoriť skladbu"}</PrimaryButton>
           </div>
         </div>
         <DraftFields draft={draft} setDraft={setDraft} minFieldWidth="6.5rem" />
