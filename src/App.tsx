@@ -8,7 +8,7 @@ import { makePairLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, songToWordText } from "./lib/export";
-import { clearState, downloadBackup, loadState, makePersistedBackup, readBackupFile, saveState } from "./pwa/db";
+import { clearState, createSongBeforeSaveBackup, downloadBackup, loadState, makePersistedBackup, readBackupFile, saveState } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
@@ -405,7 +405,7 @@ export default function App() {
     setSelectedImportIndex(null);
   }
 
-  function saveImportedSong() {
+  async function saveImportedSong() {
     const linesForSave = importMode === "block" ? importLines : parseImportText(cleanImportText(draft.rawText));
     const normalizedDraft = { ...draft, title: normalizeSongTitle(draft.title), rawText: serializeLines(linesForSave) };
 
@@ -430,8 +430,18 @@ export default function App() {
         return;
       }
 
+      let backupPath = "";
+      try {
+        const backup = await createSongBeforeSaveBackup(originalSong);
+        backupPath = backup.path;
+      } catch {
+        setStorageStatus("Záloha pred prepísaním zlyhala. Skladba nebola prepísaná.");
+        return;
+      }
+
       setSongs((prev) => prev.map((song) => (song.id === editingSongId ? updatedSong : song)));
       markCanonicalDirty();
+      setStorageStatus(`Záloha pred prepísaním vytvorená: ${backupPath}`);
       setSelectedSongId(editingSongId);
       setSetlistPreviewSongId(editingSongId);
       setEditingSongId(null);

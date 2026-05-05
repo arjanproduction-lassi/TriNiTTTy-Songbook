@@ -2,8 +2,9 @@ import type { DriveFileMemory, ImportDraft, Line, NamedSetlist, Notation, Persis
 import { makePairLine, normalizeChordAnchors, normalizePairLine, renderChordAnchors } from "../lib/chordAnchors";
 
 const DB_NAME = "trinittty-songbook";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE = "state";
+const SONG_BACKUP_STORE = "song-before-save-backups";
 const STATE_KEY = "app";
 
 const FALLBACK_DRAFT: ImportDraft = {
@@ -19,6 +20,18 @@ const FALLBACK_DRAFT: ImportDraft = {
 const TEXT_LINE_TYPES = new Set(["section", "chords", "lyrics", "cue", "repeat"]);
 
 type UnknownRecord = Record<string, unknown>;
+
+export type SongBeforeSaveBackup = {
+  version: 1;
+  id: string;
+  reason: "before-save";
+  path: string;
+  fileName: string;
+  timestamp: string;
+  songId: number;
+  songTitle: string;
+  song: Song;
+};
 
 function isRecord(value: unknown): value is UnknownRecord {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -200,17 +213,18 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      if (!db.objectStoreNames.contains(SONG_BACKUP_STORE)) db.createObjectStore(SONG_BACKUP_STORE, { keyPath: "id" });
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
 
-function runStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>) {
+function runObjectStore<T>(storeName: string, mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>) {
   return openDatabase().then((db) =>
     new Promise<T>((resolve, reject) => {
-      const tx = db.transaction(STORE, mode);
-      const request = action(tx.objectStore(STORE));
+      const tx = db.transaction(storeName, mode);
+      const request = action(tx.objectStore(storeName));
 
       request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
@@ -221,6 +235,10 @@ function runStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) =
       };
     }),
   );
+}
+
+function runStore<T>(mode: IDBTransactionMode, action: (store: IDBObjectStore) => IDBRequest<T>) {
+  return runObjectStore(STORE, mode, action);
 }
 
 export function loadState() {
@@ -264,6 +282,44 @@ export function readBackupFile(file: File): Promise<PersistedState> {
   return file.text().then((text) => normalizePersistedState(JSON.parse(text)));
 }
 
+export function createSongBeforeSaveBackup(song: Song): Promise<SongBeforeSaveBackup> {
+  if (!("indexedDB" in window)) return Promise.reject(new Error("IndexedDB nie je dostupné, záloha pred prepísaním sa nedá vytvoriť."));
+
+  const createdAt = new Date();
+  const timestamp = backupFileTimestamp(createdAt);
+  const id = `song-${song.id}-${timestamp}-${Math.random().toString(36).slice(2, 8)}`;
+  const fileName = `${timestamp}_before-save.json`;
+  const backup: SongBeforeSaveBackup = {
+    version: 1,
+    id,
+    reason: "before-save",
+    path: `backups/${song.id}/${fileName}`,
+    fileName,
+    timestamp: createdAt.toISOString(),
+    songId: song.id,
+    songTitle: song.title,
+    song: JSON.parse(JSON.stringify(song)) as Song,
+  };
+
+  return runObjectStore<IDBValidKey>(SONG_BACKUP_STORE, "readwrite", (store) => store.add(backup)).then(() => backup);
+}
+
+export function listSongBeforeSaveBackups(songId?: number): Promise<SongBeforeSaveBackup[]> {
+  if (!("indexedDB" in window)) return Promise.resolve([]);
+  return runObjectStore<SongBeforeSaveBackup[]>(SONG_BACKUP_STORE, "readonly", (store) => store.getAll())
+    .then((backups) => backups
+      .filter((backup) => songId === undefined || backup.songId === songId)
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp)));
+}
+
+export function getSongBeforeSaveBackup(id: string): Promise<SongBeforeSaveBackup | null> {
+  if (!("indexedDB" in window)) return Promise.resolve(null);
+  return runObjectStore<SongBeforeSaveBackup | undefined>(SONG_BACKUP_STORE, "readonly", (store) => store.get(id))
+    .then((backup) => backup ?? null);
+}
+
+// TODO: Add backup list view, restore action, export to JSON/ZIP, and optional user-chosen folder integration.
+
 function backupTimestamp(date: Date) {
   const pad = (value: number) => String(value).padStart(2, "0");
   return [
@@ -271,4 +327,13 @@ function backupTimestamp(date: Date) {
     pad(date.getMonth() + 1),
     pad(date.getDate()),
   ].join("-") + `-${pad(date.getHours())}${pad(date.getMinutes())}`;
+}
+
+function backupFileTimestamp(date: Date) {
+  const pad = (value: number, size = 2) => String(value).padStart(size, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-") + `-${pad(date.getHours())}${pad(date.getMinutes())}${pad(date.getSeconds())}-${pad(date.getMilliseconds(), 3)}`;
 }
