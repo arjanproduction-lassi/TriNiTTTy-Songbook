@@ -251,12 +251,20 @@ export default function App() {
     return cloneEditorSnapshot({ draft, importLines, importMode });
   }
 
-  function applyEditorSnapshot(snapshot: EditorDraftSnapshot) {
+  function applyEditorSnapshot(snapshot: EditorDraftSnapshot, nextSelectedIndex?: number | null) {
     const next = cloneEditorSnapshot(snapshot);
     setDraft(next.draft);
     setImportLines(next.importLines);
     setImportMode(next.importMode);
-    setSelectedImportIndex(next.importMode === "block" ? firstEditableIndex(next.importLines) : null);
+    if (next.importMode !== "block") {
+      setSelectedImportIndex(null);
+      return;
+    }
+
+    const preservedIndex = typeof nextSelectedIndex === "number" && nextSelectedIndex >= 0 && nextSelectedIndex < next.importLines.length
+      ? nextSelectedIndex
+      : firstEditableIndex(next.importLines);
+    setSelectedImportIndex(preservedIndex);
   }
 
   function applyEditorSnapshotWithHistory(nextSnapshot: EditorDraftSnapshot) {
@@ -264,7 +272,7 @@ export default function App() {
     const next = cloneEditorSnapshot(nextSnapshot);
     if (sameEditorSnapshot(current, next)) return;
     pushUndoSnapshot(current);
-    applyEditorSnapshot(next);
+    applyEditorSnapshot(next, selectedImportIndex);
   }
 
   function pushUndoSnapshot(snapshot: EditorDraftSnapshot) {
@@ -288,7 +296,7 @@ export default function App() {
     const current = currentEditorSnapshot();
     setUndoStack((stack) => stack.slice(0, -1));
     setRedoStack((stack) => appendEditorSnapshot(stack, current));
-    applyEditorSnapshot(previous);
+    applyEditorSnapshot(previous, selectedImportIndex);
   }
 
   function redoEditorDraft() {
@@ -297,7 +305,7 @@ export default function App() {
     const current = currentEditorSnapshot();
     setRedoStack((stack) => stack.slice(0, -1));
     setUndoStack((stack) => appendEditorSnapshot(stack, current));
-    applyEditorSnapshot(next);
+    applyEditorSnapshot(next, selectedImportIndex);
   }
 
   function applyPersistedState(state: PersistedState) {
