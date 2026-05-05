@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type SetStateAction } from "react";
 import type { DriveFileMemory, EditorMode, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, Song, View } from "./types";
 import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT, EMPTY_SONG_DRAFT } from "./data/defaultImport";
 import { INITIAL_SONGS } from "./data/songs";
@@ -28,6 +28,14 @@ type CanonicalSaveStatus = {
   lastCanonicalSaveAt: string | null;
 };
 
+type EditorDraftSnapshot = {
+  draft: ImportDraft;
+  importLines: Line[];
+  importMode: ImportMode;
+};
+
+const EDITOR_HISTORY_LIMIT = 50;
+
 export default function App() {
   const [songs, setSongs] = useState<Song[]>(INITIAL_SONGS);
   const [view, setView] = useState<View>("songs");
@@ -47,6 +55,8 @@ export default function App() {
   const [importSplit, setImportSplit] = useState(30);
   const [importLines, setImportLines] = useState<Line[]>(() => parseImportText(DEFAULT_IMPORT_TEXT));
   const [draft, setDraft] = useState<ImportDraft>(DEFAULT_DRAFT);
+  const [undoStack, setUndoStack] = useState<EditorDraftSnapshot[]>([]);
+  const [redoStack, setRedoStack] = useState<EditorDraftSnapshot[]>([]);
   const [copyStatus, setCopyStatus] = useState("");
   const [storageReady, setStorageReady] = useState(false);
   const [storageStatus, setStorageStatus] = useState("Načítavam lokálnu databázu...");
@@ -126,6 +136,40 @@ export default function App() {
   }, [canonicalSaveStatus.dirty]);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (view !== "import") return;
+      if (!event.ctrlKey && !event.metaKey) return;
+
+      const target = event.target as HTMLElement | null;
+      const nativeEditable = target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        Boolean(target?.isContentEditable);
+
+      if (nativeEditable) return;
+
+      const key = event.key.toLowerCase();
+      if (key === "z" && event.shiftKey) {
+        event.preventDefault();
+        redoEditorDraft();
+        return;
+      }
+      if (key === "z") {
+        event.preventDefault();
+        undoEditorDraft();
+        return;
+      }
+      if (key === "y") {
+        event.preventDefault();
+        redoEditorDraft();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [view, draft, importLines, importMode, undoStack, redoStack]);
+
+  useEffect(() => {
     if (!printJob) return undefined;
 
     const afterPrint = () => setPrintJob(null);
@@ -203,6 +247,59 @@ export default function App() {
   const renderedPerformance = useMemo(() => performanceSong ? transposeSong(performanceSong, transpose, notation) : null, [performanceSong, transpose, notation]);
   const performanceSections = useMemo(() => renderedPerformance ? buildSections(renderedPerformance.lines) : [], [renderedPerformance]);
 
+  function currentEditorSnapshot(): EditorDraftSnapshot {
+    return cloneEditorSnapshot({ draft, importLines, importMode });
+  }
+
+  function applyEditorSnapshot(snapshot: EditorDraftSnapshot) {
+    const next = cloneEditorSnapshot(snapshot);
+    setDraft(next.draft);
+    setImportLines(next.importLines);
+    setImportMode(next.importMode);
+    setSelectedImportIndex(next.importMode === "block" ? firstEditableIndex(next.importLines) : null);
+  }
+
+  function applyEditorSnapshotWithHistory(nextSnapshot: EditorDraftSnapshot) {
+    const current = currentEditorSnapshot();
+    const next = cloneEditorSnapshot(nextSnapshot);
+    if (sameEditorSnapshot(current, next)) return;
+    pushUndoSnapshot(current);
+    applyEditorSnapshot(next);
+  }
+
+  function pushUndoSnapshot(snapshot: EditorDraftSnapshot) {
+    setUndoStack((current) => appendEditorSnapshot(current, snapshot));
+    setRedoStack([]);
+  }
+
+  function resetEditorHistory() {
+    setUndoStack([]);
+    setRedoStack([]);
+  }
+
+  function updateDraftWithHistory(action: SetStateAction<ImportDraft>) {
+    const nextDraft = typeof action === "function" ? action(draft) : action;
+    applyEditorSnapshotWithHistory({ draft: nextDraft, importLines, importMode });
+  }
+
+  function undoEditorDraft() {
+    if (!undoStack.length) return;
+    const previous = undoStack[undoStack.length - 1];
+    const current = currentEditorSnapshot();
+    setUndoStack((stack) => stack.slice(0, -1));
+    setRedoStack((stack) => appendEditorSnapshot(stack, current));
+    applyEditorSnapshot(previous);
+  }
+
+  function redoEditorDraft() {
+    if (!redoStack.length) return;
+    const next = redoStack[redoStack.length - 1];
+    const current = currentEditorSnapshot();
+    setRedoStack((stack) => stack.slice(0, -1));
+    setUndoStack((stack) => appendEditorSnapshot(stack, current));
+    applyEditorSnapshot(next);
+  }
+
   function applyPersistedState(state: PersistedState) {
     const safeSongs = state.songs;
     const safeIds = new Set(safeSongs.map((song) => song.id));
@@ -226,6 +323,7 @@ export default function App() {
     setEditorMode("create");
     setEditingSongId(null);
     setSelectedImportIndex(null);
+    resetEditorHistory();
   }
 
   function markCanonicalDirty() {
@@ -248,8 +346,11 @@ export default function App() {
   }
 
   function commitImportLines(nextLines: Line[]) {
-    setImportLines(nextLines);
-    setDraft((current) => ({ ...current, rawText: serializeLines(nextLines) }));
+    applyEditorSnapshotWithHistory({
+      draft: { ...draft, rawText: serializeLines(nextLines) },
+      importLines: nextLines,
+      importMode,
+    });
   }
 
   function hasActiveEditorDraft() {
@@ -276,16 +377,24 @@ export default function App() {
     setImportLines([]);
     setSelectedImportIndex(null);
     setDraft(EMPTY_SONG_DRAFT);
+    resetEditorHistory();
     setView("import");
   }
 
   function enterBlockImportMode() {
     const cleaned = cleanImportText(draft.rawText);
     const parsed = parseImportText(cleaned);
-    setDraft((current) => ({ ...current, rawText: cleaned }));
-    setImportLines(parsed);
-    setImportMode("block");
+    applyEditorSnapshotWithHistory({
+      draft: { ...draft, rawText: cleaned },
+      importLines: parsed,
+      importMode: "block",
+    });
     setSelectedImportIndex(firstEditableIndex(parsed));
+  }
+
+  function returnToRawImport() {
+    applyEditorSnapshotWithHistory({ draft, importLines, importMode: "raw" });
+    setSelectedImportIndex(null);
   }
 
   function saveImportedSong() {
@@ -319,6 +428,7 @@ export default function App() {
       setSetlistPreviewSongId(editingSongId);
       setEditingSongId(null);
       setEditorMode("create");
+      resetEditorHistory();
       setView("song");
       return;
     }
@@ -335,6 +445,7 @@ export default function App() {
     setSelectedSongId(newId);
     setSetlistPreviewSongId(newId);
     setEditorMode("create");
+    resetEditorHistory();
     setView("song");
   }
 
@@ -355,6 +466,7 @@ export default function App() {
     setImportMode("block");
     setEditorMode("edit");
     setEditingSongId(song.id);
+    resetEditorHistory();
     setView("import");
   }
 
@@ -366,6 +478,7 @@ export default function App() {
     setImportLines(parseImportText(DEFAULT_IMPORT_TEXT));
     setSelectedImportIndex(null);
     setDraft(DEFAULT_DRAFT);
+    resetEditorHistory();
   }
 
   function replaceImportLine(index: number, nextLine: Line) {
@@ -561,6 +674,7 @@ export default function App() {
     setImportSplit(30);
     setImportLines(parseImportText(DEFAULT_IMPORT_TEXT));
     setDraft(DEFAULT_DRAFT);
+    resetEditorHistory();
     setDriveFile(null);
     setDriveStatus("Drive admin sync je vypnutý.");
     markCanonicalDirty();
@@ -680,18 +794,22 @@ export default function App() {
             activeImportSections={activeImportSections}
             selectedImportIndex={selectedImportIndex}
             selectedImportLine={selectedImportLine}
+            canUndo={undoStack.length > 0}
+            canRedo={redoStack.length > 0}
             setImportSplit={setImportSplit}
-            setDraft={setDraft}
+            setDraft={updateDraftWithHistory}
             setSelectedImportIndex={setSelectedImportIndex}
             enterBlockImportMode={enterBlockImportMode}
             startNewSongDraft={startNewSongDraft}
-            returnToRawImport={() => { setImportMode("raw"); setSelectedImportIndex(null); }}
+            returnToRawImport={returnToRawImport}
             saveImportedSong={saveImportedSong}
-            applyImportCleanup={() => setDraft((current) => ({ ...current, rawText: cleanImportText(current.rawText) }))}
+            applyImportCleanup={() => updateDraftWithHistory((current) => ({ ...current, rawText: cleanImportText(current.rawText) }))}
             resetImportTemplate={resetImportTemplate}
             replaceImportLine={replaceImportLine}
             insertImportLine={insertImportLine}
             deleteImportLine={deleteImportLine}
+            undoEditorDraft={undoEditorDraft}
+            redoEditorDraft={redoEditorDraft}
           />
         )}
 
@@ -771,6 +889,25 @@ export default function App() {
 function firstEditableIndex(lines: Line[]) {
   const firstNonSpace = lines.findIndex((line) => line.type !== "space");
   return firstNonSpace >= 0 ? firstNonSpace : 0;
+}
+
+function cloneEditorSnapshot(snapshot: EditorDraftSnapshot): EditorDraftSnapshot {
+  return JSON.parse(JSON.stringify(snapshot)) as EditorDraftSnapshot;
+}
+
+function editorSnapshotKey(snapshot: EditorDraftSnapshot) {
+  return JSON.stringify(snapshot);
+}
+
+function sameEditorSnapshot(a: EditorDraftSnapshot, b: EditorDraftSnapshot) {
+  return editorSnapshotKey(a) === editorSnapshotKey(b);
+}
+
+function appendEditorSnapshot(stack: EditorDraftSnapshot[], snapshot: EditorDraftSnapshot) {
+  const nextSnapshot = cloneEditorSnapshot(snapshot);
+  const last = stack[stack.length - 1];
+  if (last && sameEditorSnapshot(last, nextSnapshot)) return stack;
+  return [...stack, nextSnapshot].slice(-EDITOR_HISTORY_LIMIT);
 }
 
 function readCanonicalSaveStatus(): CanonicalSaveStatus {

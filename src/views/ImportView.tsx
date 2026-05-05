@@ -17,6 +17,8 @@ type ImportViewProps = {
   activeImportSections: SectionGroup[];
   selectedImportIndex: number | null;
   selectedImportLine: Line | null;
+  canUndo: boolean;
+  canRedo: boolean;
   setImportSplit: (value: number) => void;
   setDraft: Dispatch<SetStateAction<ImportDraft>>;
   setSelectedImportIndex: (index: number | null) => void;
@@ -29,6 +31,8 @@ type ImportViewProps = {
   replaceImportLine: (index: number, line: Line) => void;
   insertImportLine: (index: number, direction: "above" | "below") => void;
   deleteImportLine: (index: number) => void;
+  undoEditorDraft: () => void;
+  redoEditorDraft: () => void;
 };
 
 type PaneWidths = {
@@ -272,6 +276,8 @@ export function ImportView(props: ImportViewProps) {
     activeImportSections,
     selectedImportIndex,
     selectedImportLine,
+    canUndo,
+    canRedo,
     setImportSplit,
     setDraft,
     setSelectedImportIndex,
@@ -284,6 +290,8 @@ export function ImportView(props: ImportViewProps) {
     replaceImportLine,
     insertImportLine,
     deleteImportLine,
+    undoEditorDraft,
+    redoEditorDraft,
   } = props;
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const [paneWidths, setPaneWidths] = useState<PaneWidths>(() => clampPaneWidths(readPaneWidths()));
@@ -363,6 +371,8 @@ export function ImportView(props: ImportViewProps) {
                 <textarea value={draft.rawText} onChange={(e) => setDraft((d) => ({ ...d, rawText: e.target.value }))} spellCheck={false} className="min-h-[58vh] w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm leading-5" />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
+                <SoftButton disabled={!canUndo} onClick={undoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Undo</SoftButton>
+                <SoftButton disabled={!canRedo} onClick={redoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Redo</SoftButton>
                 <PrimaryButton onClick={enterBlockImportMode}>Rozparsovať a prejsť do širokého editora</PrimaryButton>
                 <button onClick={applyImportCleanup} className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">Predčistiť import</button>
                 <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
@@ -407,6 +417,8 @@ export function ImportView(props: ImportViewProps) {
             )}
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
+            <SoftButton disabled={!canUndo} onClick={undoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Undo</SoftButton>
+            <SoftButton disabled={!canRedo} onClick={redoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Redo</SoftButton>
             <SoftButton onClick={returnToRawImport}>Späť na raw import</SoftButton>
             <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
             <PrimaryButton onClick={saveImportedSong}>{editorMode === "edit" ? "Uložiť a prepísať skladbu" : "Vytvoriť skladbu"}</PrimaryButton>
