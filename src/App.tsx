@@ -4,7 +4,7 @@ import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT, EMPTY_SONG_DRAFT } from "./data/def
 import { INITIAL_SONGS } from "./data/songs";
 import { NavButton } from "./components/ui";
 import { A4Page } from "./components/A4Sheet";
-import { makePairLine } from "./lib/chordAnchors";
+import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, songToWordText } from "./lib/export";
@@ -33,6 +33,11 @@ type EditorDraftSnapshot = {
   importLines: Line[];
   importMode: ImportMode;
 };
+
+type SplitBlockRequest = {
+  field: "text" | "chords" | "lyrics";
+  caret: number | null;
+} | null;
 
 const EDITOR_HISTORY_LIMIT = 50;
 
@@ -602,6 +607,22 @@ export default function App() {
     setSelectedImportIndex(Math.min(index, next.length - 1));
   }
 
+  function splitImportLine(index: number, request: SplitBlockRequest) {
+    const line = importLines[index];
+    if (!line) return;
+
+    const result = splitSelectedLine(line, request);
+    if (!result.ok) {
+      setStorageStatus(result.message);
+      window.alert(result.message);
+      return;
+    }
+
+    commitImportLines([...importLines.slice(0, index), ...result.lines, ...importLines.slice(index + 1)]);
+    setSelectedImportIndex(index + 1);
+    setStorageStatus("Blok rozdelený. Undo vráti pôvodný blok.");
+  }
+
   function toggleSetlist(songId: number) {
     markCanonicalDirty();
     setSetlist((prev) => (prev.includes(songId) ? prev.filter((id) => id !== songId) : [...prev, songId]));
@@ -914,6 +935,7 @@ export default function App() {
             replaceImportLine={replaceImportLine}
             insertImportLine={insertImportLine}
             deleteImportLine={deleteImportLine}
+            splitImportLine={splitImportLine}
             undoEditorDraft={undoEditorDraft}
             redoEditorDraft={redoEditorDraft}
             refreshSongBackups={() => { void refreshEditorBackups(); }}
@@ -1017,6 +1039,62 @@ function appendEditorSnapshot(stack: EditorDraftSnapshot[], snapshot: EditorDraf
   const last = stack[stack.length - 1];
   if (last && sameEditorSnapshot(last, nextSnapshot)) return stack;
   return [...stack, nextSnapshot].slice(-EDITOR_HISTORY_LIMIT);
+}
+
+type SplitResult = { ok: true; lines: [Line, Line] } | { ok: false; message: string };
+type TextSplit = { index: number; left: string; right: string };
+
+function splitSelectedLine(line: Line, request: SplitBlockRequest): SplitResult {
+  if (line.type === "lyrics" || line.type === "chords") {
+    const split = splitTextByMarkerOrCaret(line.text, request?.field === "text" ? request.caret : null);
+    if (!split) return { ok: false, message: "Umiestni kurzor alebo použi znak | tam, kde chceš blok rozdeliť." };
+    return { ok: true, lines: [{ ...line, text: split.left }, { ...line, text: split.right }] };
+  }
+
+  if (line.type === "pair") {
+    const chordLine = pairChordLine(line);
+    const lyricSplit = splitTextByMarkerOrCaret(line.lyrics, request?.field === "lyrics" ? request.caret : null);
+    if (lyricSplit) {
+      const chordSplit = splitTextAtIndex(chordLine, lyricSplit.index);
+      return { ok: true, lines: [makePairLine(chordSplit.left, lyricSplit.left), makePairLine(chordSplit.right, lyricSplit.right)] };
+    }
+
+    const chordSplit = splitTextByMarkerOrCaret(chordLine, request?.field === "chords" ? request.caret : null);
+    if (chordSplit) {
+      const splitLyrics = splitTextAtIndex(line.lyrics, chordSplit.index);
+      return { ok: true, lines: [makePairLine(chordSplit.left, splitLyrics.left), makePairLine(chordSplit.right, splitLyrics.right)] };
+    }
+
+    return { ok: false, message: "Umiestni kurzor v akordovom/textovom riadku alebo použi znak | tam, kde chceš pár rozdeliť." };
+  }
+
+  return { ok: false, message: `Typ bloku "${line.type}" sa zatiaľ nedá bezpečne rozdeliť.` };
+}
+
+function splitTextByMarkerOrCaret(text: string, caret: number | null | undefined): TextSplit | null {
+  const markerIndex = text.indexOf("|");
+  if (markerIndex >= 0) return splitTextAtIndex(text, markerIndex, true);
+  if (typeof caret === "number" && caret > 0 && caret < text.length) return splitTextAtIndex(text, caret);
+  return null;
+}
+
+function splitTextAtIndex(text: string, index: number, removeMarker = false): TextSplit {
+  const safeIndex = Math.max(0, Math.min(index, text.length));
+  const leftSource = text.slice(0, safeIndex);
+  const rightSource = text.slice(removeMarker ? safeIndex + 1 : safeIndex);
+  return {
+    index: safeIndex,
+    left: trimSplitLeft(leftSource.replace(/\|/g, "")),
+    right: trimSplitRight(rightSource.replace(/\|/g, "")),
+  };
+}
+
+function trimSplitLeft(value: string) {
+  return value.replace(/[ \t]+$/g, "");
+}
+
+function trimSplitRight(value: string) {
+  return value.replace(/^[ \t]+/g, "");
 }
 
 function readCanonicalSaveStatus(): CanonicalSaveStatus {

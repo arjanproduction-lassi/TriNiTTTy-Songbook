@@ -35,12 +35,18 @@ type ImportViewProps = {
   replaceImportLine: (index: number, line: Line) => void;
   insertImportLine: (index: number, direction: "above" | "below") => void;
   deleteImportLine: (index: number) => void;
+  splitImportLine: (index: number, request: SplitBlockRequest) => void;
   undoEditorDraft: () => void;
   redoEditorDraft: () => void;
   refreshSongBackups: () => void;
   restoreSongBackupAsCopy: (backupId: string) => void;
   deleteSongBackup: (backupId: string) => void;
 };
+
+type SplitBlockRequest = {
+  field: "text" | "chords" | "lyrics";
+  caret: number | null;
+} | null;
 
 type PaneWidths = {
   left: number;
@@ -256,6 +262,19 @@ function blockLabel(line: Line) {
   return line.text || line.type;
 }
 
+function focusedSplitRequest(): SplitBlockRequest {
+  const target = document.activeElement;
+  if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement)) return null;
+
+  const field = target.dataset.splitField;
+  if (field !== "text" && field !== "chords" && field !== "lyrics") return null;
+
+  return {
+    field,
+    caret: typeof target.selectionStart === "number" ? target.selectionStart : null,
+  };
+}
+
 function BlockNavigator({
   sections,
   selectedIndex,
@@ -294,7 +313,8 @@ function SelectedBlockEditor({
   replaceImportLine,
   insertImportLine,
   deleteImportLine,
-}: Pick<ImportViewProps, "selectedImportLine" | "selectedImportIndex" | "replaceImportLine" | "insertImportLine" | "deleteImportLine">) {
+  splitImportLine,
+}: Pick<ImportViewProps, "selectedImportLine" | "selectedImportIndex" | "replaceImportLine" | "insertImportLine" | "deleteImportLine" | "splitImportLine">) {
   if (!selectedImportLine || selectedImportIndex === null) {
     return <InfoBox>Klikni na blok vľavo alebo v A4 preview a otvorí sa jeho presná editácia.</InfoBox>;
   }
@@ -320,11 +340,11 @@ function SelectedBlockEditor({
         <>
           <div>
             <label className="mb-2 block text-sm font-medium text-zinc-600">Akordový riadok</label>
-            <textarea rows={3} spellCheck={false} value={pairChordLine(selectedImportLine)} onChange={(e) => replaceImportLine(selectedImportIndex, withPairChords(selectedImportLine, e.target.value))} className="min-h-[5.5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm" />
+            <textarea data-split-field="chords" rows={3} spellCheck={false} value={pairChordLine(selectedImportLine)} onChange={(e) => replaceImportLine(selectedImportIndex, withPairChords(selectedImportLine, e.target.value))} className="min-h-[5.5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm" />
           </div>
           <div>
             <label className="mb-2 block text-sm font-medium text-zinc-600">Textový riadok</label>
-            <textarea rows={3} spellCheck={false} value={selectedImportLine.lyrics} onChange={(e) => replaceImportLine(selectedImportIndex, withPairLyrics(selectedImportLine, e.target.value))} className="min-h-[5.5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm" />
+            <textarea data-split-field="lyrics" rows={3} spellCheck={false} value={selectedImportLine.lyrics} onChange={(e) => replaceImportLine(selectedImportIndex, withPairLyrics(selectedImportLine, e.target.value))} className="min-h-[5.5rem] w-full resize-y rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm" />
           </div>
         </>
       ) : selectedImportLine.type === "space" ? (
@@ -332,13 +352,14 @@ function SelectedBlockEditor({
       ) : (
         <div>
           <label className="mb-2 block text-sm font-medium text-zinc-600">Obsah bloku</label>
-          <textarea spellCheck={false} autoFocus value={selectedImportLine.text} onChange={(e) => replaceImportLine(selectedImportIndex, { ...selectedImportLine, text: e.target.value })} className="min-h-[240px] w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm xl:min-h-[320px]" />
+          <textarea data-split-field="text" spellCheck={false} autoFocus value={selectedImportLine.text} onChange={(e) => replaceImportLine(selectedImportIndex, { ...selectedImportLine, text: e.target.value })} className="min-h-[240px] w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 font-mono text-sm xl:min-h-[320px]" />
           {selectedImportLine.type === "section" && <div className="mt-2 text-xs text-zinc-500">Píš len názov sekcie bez hranatých zátvoriek.</div>}
         </div>
       )}
       <div className="flex flex-wrap gap-2">
         <SoftButton onClick={() => insertImportLine(selectedImportIndex, "above")}>Pridať nad</SoftButton>
         <SoftButton onClick={() => insertImportLine(selectedImportIndex, "below")}>Pridať pod</SoftButton>
+        <SoftButton onMouseDown={(event) => event.preventDefault()} onClick={() => splitImportLine(selectedImportIndex, focusedSplitRequest())}>Rozdeliť blok</SoftButton>
         <button onClick={() => deleteImportLine(selectedImportIndex)} className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white">Zmazať blok</button>
       </div>
     </div>
@@ -374,6 +395,7 @@ export function ImportView(props: ImportViewProps) {
     replaceImportLine,
     insertImportLine,
     deleteImportLine,
+    splitImportLine,
     undoEditorDraft,
     redoEditorDraft,
     refreshSongBackups,
@@ -545,7 +567,7 @@ export function ImportView(props: ImportViewProps) {
         <Card className="min-h-0 p-3 xl:h-[calc(100vh-15rem)]">
           <h3 className="text-base font-semibold">Vybraný blok</h3>
           <div className="mt-3 max-h-[calc(100vh-20rem)] overflow-auto pr-1">
-            <SelectedBlockEditor selectedImportLine={selectedImportLine} selectedImportIndex={selectedImportIndex} replaceImportLine={replaceImportLine} insertImportLine={insertImportLine} deleteImportLine={deleteImportLine} />
+            <SelectedBlockEditor selectedImportLine={selectedImportLine} selectedImportIndex={selectedImportIndex} replaceImportLine={replaceImportLine} insertImportLine={insertImportLine} deleteImportLine={deleteImportLine} splitImportLine={splitImportLine} />
           </div>
           <div className="mt-3"><CollapsedDiagnostics lines={activeImportLines} /></div>
         </Card>
