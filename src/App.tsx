@@ -8,7 +8,7 @@ import { makePairLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, songToWordText } from "./lib/export";
-import { clearState, createSongBeforeSaveBackup, downloadBackup, loadState, makePersistedBackup, readBackupFile, saveState } from "./pwa/db";
+import { clearState, createSongBeforeSaveBackup, downloadBackup, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
@@ -64,6 +64,9 @@ export default function App() {
   const [lastLocalAutosaveAt, setLastLocalAutosaveAt] = useState<string | null>(null);
   const [driveFile, setDriveFile] = useState<DriveFileMemory | null>(null);
   const [driveStatus, setDriveStatus] = useState("Drive admin sync je vypnutý.");
+  const [songBackups, setSongBackups] = useState<SongBeforeSaveBackup[]>([]);
+  const [songBackupsLoading, setSongBackupsLoading] = useState(false);
+  const [songBackupStatus, setSongBackupStatus] = useState("");
   const [serviceWorkerUpdateReady, setServiceWorkerUpdateReady] = useState(false);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [printJob, setPrintJob] = useState<Song | null>(null);
@@ -195,6 +198,17 @@ export default function App() {
     }, 250);
     return () => window.clearTimeout(timer);
   }, [storageReady, persistedState, songs.length, setlist.length]);
+
+  useEffect(() => {
+    if (view !== "import" || editorMode !== "edit" || editingSongId === null) {
+      setSongBackups([]);
+      setSongBackupsLoading(false);
+      setSongBackupStatus("");
+      return;
+    }
+
+    void refreshEditorBackups(editingSongId);
+  }, [view, editorMode, editingSongId]);
 
   useEffect(() => {
     setSetlists((current) => {
@@ -497,6 +511,64 @@ export default function App() {
     setSelectedImportIndex(null);
     setDraft(DEFAULT_DRAFT);
     resetEditorHistory();
+  }
+
+  async function refreshEditorBackups(songId = editingSongId) {
+    if (songId === null) {
+      setSongBackups([]);
+      setSongBackupStatus("");
+      return;
+    }
+
+    setSongBackupsLoading(true);
+    try {
+      const backups = await listSongBeforeSaveBackups(songId);
+      setSongBackups(backups);
+      setSongBackupStatus(backups.length ? `${backups.length} záloh pre túto skladbu.` : "Pre túto skladbu ešte nie sú zálohy.");
+    } catch {
+      setSongBackupStatus("Zálohy sa nepodarilo načítať.");
+    } finally {
+      setSongBackupsLoading(false);
+    }
+  }
+
+  async function restoreSongBackupAsCopy(backupId: string) {
+    if (hasActiveEditorDraft() && !window.confirm("Aktuálny editor sa nahradí kópiou zo zálohy. Pokračovať?")) return;
+
+    try {
+      const backup = await getSongBeforeSaveBackup(backupId);
+      if (!backup) {
+        setSongBackupStatus("Záloha sa nenašla.");
+        return;
+      }
+
+      const restoredSong = backup.song;
+      const restoredLines = JSON.parse(JSON.stringify(restoredSong.lines)) as Line[];
+      const rawText = serializeLines(restoredLines);
+      const title = `${normalizeSongTitle(restoredSong.title || "Bez názvu")} - obnovená záloha`;
+
+      setEditingSongId(null);
+      setEditorMode("create");
+      setImportMode("block");
+      setImportLines(restoredLines);
+      setSelectedImportIndex(firstEditableIndex(restoredLines));
+      setDraft({
+        title,
+        artist: restoredSong.artist,
+        bpm: String(restoredSong.bpm),
+        key: normalizeKeyInput(restoredSong.key),
+        duration: restoredSong.duration,
+        capo: restoredSong.capo,
+        rawText,
+      });
+      setSongBackups([]);
+      setSongBackupStatus("");
+      resetEditorHistory();
+      setStorageStatus(`Záloha "${normalizeSongTitle(restoredSong.title)}" otvorená ako nová kópia. Skontroluj ju a ulož ako novú skladbu.`);
+      setView("import");
+    } catch {
+      setSongBackupStatus("Zálohu sa nepodarilo obnoviť.");
+    }
   }
 
   function replaceImportLine(index: number, nextLine: Line) {
@@ -814,6 +886,9 @@ export default function App() {
             selectedImportLine={selectedImportLine}
             canUndo={undoStack.length > 0}
             canRedo={redoStack.length > 0}
+            songBackups={songBackups}
+            songBackupsLoading={songBackupsLoading}
+            songBackupStatus={songBackupStatus}
             setImportSplit={setImportSplit}
             setDraft={updateDraftWithHistory}
             setSelectedImportIndex={setSelectedImportIndex}
@@ -828,6 +903,8 @@ export default function App() {
             deleteImportLine={deleteImportLine}
             undoEditorDraft={undoEditorDraft}
             redoEditorDraft={redoEditorDraft}
+            refreshSongBackups={() => { void refreshEditorBackups(); }}
+            restoreSongBackupAsCopy={(backupId) => { void restoreSongBackupAsCopy(backupId); }}
           />
         )}
 

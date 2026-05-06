@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type Dispatch, type PointerEvent as ReactPointerEvent, type SetStateAction } from "react";
 import type { EditorMode, ImportDraft, ImportMode, Line, SectionGroup, Song } from "../types";
+import type { SongBeforeSaveBackup } from "../pwa/db";
 import { A4Sheet } from "../components/A4Sheet";
 import { Card, Field, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { pairChordLine, withPairChords, withPairLyrics } from "../lib/chordAnchors";
@@ -19,6 +20,9 @@ type ImportViewProps = {
   selectedImportLine: Line | null;
   canUndo: boolean;
   canRedo: boolean;
+  songBackups: SongBeforeSaveBackup[];
+  songBackupsLoading: boolean;
+  songBackupStatus: string;
   setImportSplit: (value: number) => void;
   setDraft: Dispatch<SetStateAction<ImportDraft>>;
   setSelectedImportIndex: (index: number | null) => void;
@@ -33,6 +37,8 @@ type ImportViewProps = {
   deleteImportLine: (index: number) => void;
   undoEditorDraft: () => void;
   redoEditorDraft: () => void;
+  refreshSongBackups: () => void;
+  restoreSongBackupAsCopy: (backupId: string) => void;
 };
 
 type PaneWidths = {
@@ -121,6 +127,73 @@ function CollapsedDiagnostics({ lines }: { lines: Line[] }) {
         <Diagnostics lines={lines} />
       </div>
     </details>
+  );
+}
+
+function formatBackupDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("sk-SK", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
+function BackupPanel({
+  backups,
+  loading,
+  status,
+  onRefresh,
+  onRestore,
+}: {
+  backups: SongBeforeSaveBackup[];
+  loading: boolean;
+  status: string;
+  onRefresh: () => void;
+  onRestore: (backupId: string) => void;
+}) {
+  return (
+    <div className="mt-3 rounded-xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <div className="font-semibold text-zinc-900">Zálohy tejto skladby</div>
+          <div className="text-xs text-zinc-500">Obnova vždy otvorí kópiu ako novú rozpracovanú skladbu.</div>
+        </div>
+        <SoftButton onClick={onRefresh} disabled={loading} className="disabled:cursor-not-allowed disabled:opacity-50">
+          {loading ? "Načítavam..." : "Obnoviť zoznam"}
+        </SoftButton>
+      </div>
+
+      {status && <div className="mt-2 text-xs font-semibold text-zinc-600">{status}</div>}
+
+      {!loading && backups.length === 0 && (
+        <div className="mt-3 rounded-xl bg-white p-3 text-zinc-600 ring-1 ring-zinc-200">Pre túto skladbu ešte nie sú zálohy.</div>
+      )}
+
+      {backups.length > 0 && (
+        <div className="mt-3 max-h-64 space-y-2 overflow-auto pr-1">
+          {backups.map((backup) => (
+            <div key={backup.id} className="rounded-xl bg-white p-3 ring-1 ring-zinc-200">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0">
+                  <div className="font-semibold text-zinc-900">{formatBackupDate(backup.timestamp)}</div>
+                  <div className="mt-1 truncate text-zinc-700">{backup.songTitle}</div>
+                  <div className="mt-1 text-xs text-zinc-500">Dôvod: {backup.reason}</div>
+                  <div className="mt-1 truncate font-mono text-[11px] text-zinc-500">{backup.path}</div>
+                </div>
+                <button onClick={() => onRestore(backup.id)} className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white">
+                  Obnoviť ako kópiu
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -278,6 +351,9 @@ export function ImportView(props: ImportViewProps) {
     selectedImportLine,
     canUndo,
     canRedo,
+    songBackups,
+    songBackupsLoading,
+    songBackupStatus,
     setImportSplit,
     setDraft,
     setSelectedImportIndex,
@@ -292,9 +368,12 @@ export function ImportView(props: ImportViewProps) {
     deleteImportLine,
     undoEditorDraft,
     redoEditorDraft,
+    refreshSongBackups,
+    restoreSongBackupAsCopy,
   } = props;
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const [paneWidths, setPaneWidths] = useState<PaneWidths>(() => clampPaneWidths(readPaneWidths()));
+  const [backupsOpen, setBackupsOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -343,6 +422,13 @@ export function ImportView(props: ImportViewProps) {
     window.addEventListener("pointerup", stopResize);
   }
 
+  function toggleBackupsOpen() {
+    setBackupsOpen((current) => {
+      if (!current) refreshSongBackups();
+      return !current;
+    });
+  }
+
   if (importMode === "raw") {
     return (
       <div className="space-y-4">
@@ -373,11 +459,15 @@ export function ImportView(props: ImportViewProps) {
               <div className="mt-4 flex flex-wrap gap-2">
                 <SoftButton disabled={!canUndo} onClick={undoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Undo</SoftButton>
                 <SoftButton disabled={!canRedo} onClick={redoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Redo</SoftButton>
+                {editorMode === "edit" && editingSongId !== null && <SoftButton onClick={toggleBackupsOpen}>Zálohy ({songBackups.length})</SoftButton>}
                 <PrimaryButton onClick={enterBlockImportMode}>Rozparsovať a prejsť do širokého editora</PrimaryButton>
                 <button onClick={applyImportCleanup} className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">Predčistiť import</button>
                 <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
                 <SoftButton onClick={resetImportTemplate}>Obnoviť šablónu</SoftButton>
               </div>
+              {backupsOpen && editorMode === "edit" && editingSongId !== null && (
+                <BackupPanel backups={songBackups} loading={songBackupsLoading} status={songBackupStatus} onRefresh={refreshSongBackups} onRestore={restoreSongBackupAsCopy} />
+              )}
               <div className="mt-3"><CollapsedDiagnostics lines={activeImportLines} /></div>
             </Card>
             <Card className="p-4">
@@ -419,12 +509,16 @@ export function ImportView(props: ImportViewProps) {
           <div className="flex shrink-0 flex-wrap gap-2">
             <SoftButton disabled={!canUndo} onClick={undoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Undo</SoftButton>
             <SoftButton disabled={!canRedo} onClick={redoEditorDraft} className="disabled:cursor-not-allowed disabled:opacity-40">Redo</SoftButton>
+            {editorMode === "edit" && editingSongId !== null && <SoftButton onClick={toggleBackupsOpen}>Zálohy ({songBackups.length})</SoftButton>}
             <SoftButton onClick={returnToRawImport}>Späť na raw import</SoftButton>
             <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
             <PrimaryButton onClick={saveImportedSong}>{editorMode === "edit" ? "Uložiť a prepísať skladbu" : "Vytvoriť skladbu"}</PrimaryButton>
           </div>
         </div>
         <DraftFields draft={draft} setDraft={setDraft} minFieldWidth="6.5rem" />
+        {backupsOpen && editorMode === "edit" && editingSongId !== null && (
+          <BackupPanel backups={songBackups} loading={songBackupsLoading} status={songBackupStatus} onRefresh={refreshSongBackups} onRestore={restoreSongBackupAsCopy} />
+        )}
       </Card>
 
       <div

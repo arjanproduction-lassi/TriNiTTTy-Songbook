@@ -318,7 +318,7 @@ export function getSongBeforeSaveBackup(id: string): Promise<SongBeforeSaveBacku
     .then((backup) => backup ?? null);
 }
 
-// TODO: Add backup list view, restore action, export to JSON/ZIP, and optional user-chosen folder integration.
+// TODO: Add full backup management, restore-over-current, export to JSON/ZIP, and optional user-chosen folder integration.
 
 function backupTimestamp(date: Date) {
   const pad = (value: number) => String(value).padStart(2, "0");
