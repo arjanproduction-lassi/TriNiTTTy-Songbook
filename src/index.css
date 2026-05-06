@@ -17,35 +17,41 @@ body {
 
 @media print {
   html,
+  #root,
   body {
     margin: 0;
     padding: 0;
+    width: 210mm;
+    height: 297mm;
+    overflow: hidden;
     background: white;
   }
 
-  body * {
-    visibility: hidden;
-  }
-
-  .print-surface,
-  .print-surface * {
-    visibility: visible;
+  .screen-surface {
+    display: none !important;
   }
 
   .print-surface {
     display: block;
-    position: absolute;
-    inset: 0;
+    position: fixed;
+    left: 0;
+    top: 0;
     width: 210mm;
-    min-height: 297mm;
+    height: 297mm;
     margin: 0;
     padding: 0;
+    overflow: hidden;
     background: white;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    page-break-after: avoid;
   }
 
   .print-surface .a4-print-surface {
     width: 210mm !important;
+    height: 297mm !important;
     min-height: 297mm !important;
+    max-height: 297mm !important;
     box-sizing: border-box !important;
     margin: 0 !important;
     padding: 10mm !important;
@@ -53,5 +59,7 @@ body {
     border: 0 !important;
     overflow: hidden;
     background: white !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }

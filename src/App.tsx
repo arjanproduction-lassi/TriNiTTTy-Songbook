@@ -875,7 +875,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
-      <div className={performanceView ? "min-h-screen" : "mx-auto max-w-[1760px] p-3 md:p-4"}>
+      <div className={`screen-surface ${performanceView ? "min-h-screen" : "mx-auto max-w-[1760px] p-3 md:p-4"}`}>
         {!performanceView && (
         <div className="mb-4 rounded-2xl bg-gradient-to-br from-white to-zinc-100 p-3 shadow-sm ring-1 ring-zinc-200 md:p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -1048,12 +1048,12 @@ export default function App() {
           />
         )}
 
-        {printJob && (
-          <div className="print-surface">
-            <A4Page song={printJob} sections={buildSections(printJob.lines)} responsive={false} />
-          </div>
-        )}
       </div>
+      {printJob && (
+        <div className="print-surface">
+          <A4Page song={printJob} sections={buildSections(printJob.lines)} responsive={false} />
+        </div>
+      )}
     </div>
   );
 }
