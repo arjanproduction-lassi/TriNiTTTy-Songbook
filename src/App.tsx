@@ -8,7 +8,7 @@ import { makePairLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, songToWordText } from "./lib/export";
-import { clearState, createSongBeforeSaveBackup, downloadBackup, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
+import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
@@ -571,6 +571,19 @@ export default function App() {
     }
   }
 
+  async function deleteSongBackup(backupId: string) {
+    const confirmed = window.confirm("Naozaj trvalo zmazať túto zálohu? Túto akciu nie je možné vrátiť.");
+    if (!confirmed) return;
+
+    try {
+      await deleteSongBeforeSaveBackup(backupId);
+      setSongBackupStatus("Záloha bola zmazaná.");
+      await refreshEditorBackups();
+    } catch {
+      setSongBackupStatus("Zálohu sa nepodarilo zmazať.");
+    }
+  }
+
   function replaceImportLine(index: number, nextLine: Line) {
     commitImportLines(importLines.map((line, i) => (i === index ? nextLine : line)));
   }
@@ -905,6 +918,7 @@ export default function App() {
             redoEditorDraft={redoEditorDraft}
             refreshSongBackups={() => { void refreshEditorBackups(); }}
             restoreSongBackupAsCopy={(backupId) => { void restoreSongBackupAsCopy(backupId); }}
+            deleteSongBackup={(backupId) => { void deleteSongBackup(backupId); }}
           />
         )}
 

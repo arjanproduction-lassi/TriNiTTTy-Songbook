@@ -318,6 +318,11 @@ export function getSongBeforeSaveBackup(id: string): Promise<SongBeforeSaveBacku
     .then((backup) => backup ?? null);
 }
 
+export function deleteSongBeforeSaveBackup(id: string): Promise<void> {
+  if (!("indexedDB" in window)) return Promise.reject(new Error("IndexedDB nie je dostupné, zálohu sa nedá zmazať."));
+  return runObjectStore<undefined>(SONG_BACKUP_STORE, "readwrite", (store) => store.delete(id)).then(() => undefined);
+}
+
 // TODO: Add full backup management, restore-over-current, export to JSON/ZIP, and optional user-chosen folder integration.
 
 function backupTimestamp(date: Date) {

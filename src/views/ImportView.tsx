@@ -39,6 +39,7 @@ type ImportViewProps = {
   redoEditorDraft: () => void;
   refreshSongBackups: () => void;
   restoreSongBackupAsCopy: (backupId: string) => void;
+  deleteSongBackup: (backupId: string) => void;
 };
 
 type PaneWidths = {
@@ -149,12 +150,14 @@ function BackupPanel({
   status,
   onRefresh,
   onRestore,
+  onDelete,
 }: {
   backups: SongBeforeSaveBackup[];
   loading: boolean;
   status: string;
   onRefresh: () => void;
   onRestore: (backupId: string) => void;
+  onDelete: (backupId: string) => void;
 }) {
   return (
     <div className="mt-3 rounded-xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200">
@@ -185,9 +188,14 @@ function BackupPanel({
                   <div className="mt-1 text-xs text-zinc-500">Dôvod: {backup.reason}</div>
                   <div className="mt-1 truncate font-mono text-[11px] text-zinc-500">{backup.path}</div>
                 </div>
-                <button onClick={() => onRestore(backup.id)} className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white">
-                  Obnoviť ako kópiu
-                </button>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <button onClick={() => onRestore(backup.id)} className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white">
+                    Obnoviť ako kópiu
+                  </button>
+                  <button onClick={() => onDelete(backup.id)} className="rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 ring-1 ring-rose-200 hover:bg-rose-100">
+                    Zmazať zálohu
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -370,6 +378,7 @@ export function ImportView(props: ImportViewProps) {
     redoEditorDraft,
     refreshSongBackups,
     restoreSongBackupAsCopy,
+    deleteSongBackup,
   } = props;
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const [paneWidths, setPaneWidths] = useState<PaneWidths>(() => clampPaneWidths(readPaneWidths()));
@@ -466,7 +475,7 @@ export function ImportView(props: ImportViewProps) {
                 <SoftButton onClick={resetImportTemplate}>Obnoviť šablónu</SoftButton>
               </div>
               {backupsOpen && editorMode === "edit" && editingSongId !== null && (
-                <BackupPanel backups={songBackups} loading={songBackupsLoading} status={songBackupStatus} onRefresh={refreshSongBackups} onRestore={restoreSongBackupAsCopy} />
+                <BackupPanel backups={songBackups} loading={songBackupsLoading} status={songBackupStatus} onRefresh={refreshSongBackups} onRestore={restoreSongBackupAsCopy} onDelete={deleteSongBackup} />
               )}
               <div className="mt-3"><CollapsedDiagnostics lines={activeImportLines} /></div>
             </Card>
@@ -517,7 +526,7 @@ export function ImportView(props: ImportViewProps) {
         </div>
         <DraftFields draft={draft} setDraft={setDraft} minFieldWidth="6.5rem" />
         {backupsOpen && editorMode === "edit" && editingSongId !== null && (
-          <BackupPanel backups={songBackups} loading={songBackupsLoading} status={songBackupStatus} onRefresh={refreshSongBackups} onRestore={restoreSongBackupAsCopy} />
+          <BackupPanel backups={songBackups} loading={songBackupsLoading} status={songBackupStatus} onRefresh={refreshSongBackups} onRestore={restoreSongBackupAsCopy} onDelete={deleteSongBackup} />
         )}
       </Card>
 
