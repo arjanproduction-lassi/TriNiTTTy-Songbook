@@ -406,6 +406,7 @@ export default function App() {
       draft.rawText.trim() ||
       draft.bpm.trim() ||
       draft.key.trim() ||
+      draft.timeSignature.trim() ||
       (draft.artist.trim() && draft.artist.trim() !== EMPTY_SONG_DRAFT.artist) ||
       (draft.duration.trim() && draft.duration.trim() !== EMPTY_SONG_DRAFT.duration) ||
       (draft.capo.trim() && draft.capo.trim() !== EMPTY_SONG_DRAFT.capo),
@@ -511,6 +512,7 @@ export default function App() {
       artist: song.artist,
       bpm: String(song.bpm),
       key: normalizeKeyInput(song.key),
+      timeSignature: song.timeSignature || "",
       duration: song.duration,
       capo: song.capo,
       rawText,
@@ -579,6 +581,7 @@ export default function App() {
         artist: restoredSong.artist,
         bpm: String(restoredSong.bpm),
         key: normalizeKeyInput(restoredSong.key),
+        timeSignature: restoredSong.timeSignature || "",
         duration: restoredSong.duration,
         capo: restoredSong.capo,
         rawText,
@@ -1253,7 +1256,7 @@ function readLegacyState(key: string): PersistedState | null {
       performanceIndex: typeof parsed.performanceIndex === "number" ? parsed.performanceIndex : 0,
       transpose: typeof parsed.transpose === "number" ? parsed.transpose : 0,
       notation: parsed.notation === "de" ? "de" : "intl",
-      draft: parsed.draft || DEFAULT_DRAFT,
+      draft: { ...DEFAULT_DRAFT, ...(parsed.draft || {}) },
       driveFile: null,
     });
   } catch {
@@ -1291,6 +1294,7 @@ function normalizeLegacySong(value: unknown): Song | null {
     artist: String(song.artist ?? "TriNiTTTy"),
     bpm: Number(song.bpm) || 80,
     key: normalizeKeyInput(String(song.key ?? "Am")),
+    timeSignature: typeof song.timeSignature === "string" ? song.timeSignature : undefined,
     duration: String(song.duration ?? "0:00"),
     capo: String(song.capo ?? "-"),
     lines: lines.length ? lines : [{ type: "lyrics", text: "" }],

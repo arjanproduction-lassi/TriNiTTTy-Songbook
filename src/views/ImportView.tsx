@@ -100,6 +100,7 @@ function DraftFields({
       <Field label="Názov" value={draft.title} onChange={update("title")} />
       <Field label="Interpret" value={draft.artist} onChange={update("artist")} />
       <Field label="BPM" value={draft.bpm} onChange={update("bpm")} />
+      <Field label="Takt" value={draft.timeSignature} onChange={update("timeSignature")} />
       <Field label="Tónina" value={draft.key} onChange={update("key")} />
       <Field label="Capo" value={draft.capo} onChange={update("capo")} />
       <Field label="Dĺžka" value={draft.duration} onChange={update("duration")} />

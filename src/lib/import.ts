@@ -113,6 +113,7 @@ export function makeSong(draft: ImportDraft, lines: Line[], id: number): Song {
     artist: draft.artist || "TriNiTTTy",
     bpm: Number(draft.bpm) || 80,
     key: normalizeKeyInput(draft.key || "Am"),
+    timeSignature: draft.timeSignature.trim() || undefined,
     duration: draft.duration || "0:00",
     capo: draft.capo || "-",
     lines,

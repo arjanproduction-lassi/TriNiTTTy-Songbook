@@ -28,6 +28,7 @@ export type Song = {
   artist: string;
   bpm: number;
   key: string;
+  timeSignature?: string;
   duration: string;
   capo: string;
   lines: Line[];
@@ -57,6 +58,7 @@ export type ImportDraft = {
   artist: string;
   bpm: string;
   key: string;
+  timeSignature: string;
   duration: string;
   capo: string;
   rawText: string;
