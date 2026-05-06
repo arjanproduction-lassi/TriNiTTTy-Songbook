@@ -14,7 +14,7 @@ function durationSeconds(duration: string) {
 }
 
 function formatTotalDuration(songs: Song[]) {
-  const total = songs.reduce((sum, song) => sum + durationSeconds(song.duration), 0);
+  const total = songs.filter((song) => !song.deletedAt).reduce((sum, song) => sum + durationSeconds(song.duration), 0);
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   const seconds = total % 60;
@@ -128,16 +128,16 @@ export function SetlistView({
             </div>
           )}
           {setlistSongs.map((song, index) => (
-            <div key={`${song.id}-${index}`} className={`w-full rounded-xl border p-3 ${setlistPreviewSong?.id === song.id ? "border-zinc-900 bg-zinc-900 text-white" : "border-zinc-200 bg-zinc-50 text-zinc-900"}`}>
+            <div key={`${song.id}-${index}`} className={`w-full rounded-xl border p-3 ${setlistPreviewSong?.id === song.id ? "border-zinc-900 bg-zinc-900 text-white" : song.deletedAt ? "border-amber-200 bg-amber-50 text-amber-950" : "border-zinc-200 bg-zinc-50 text-zinc-900"}`}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                <button type="button" onClick={() => setSetlistPreviewSongId(song.id)} className="min-w-0 flex-1 text-left">
-                  <div className="font-semibold">{index + 1}. {normalizeSongTitle(song.title)}</div>
-                  <div className={`mt-1 text-sm ${setlistPreviewSong?.id === song.id ? "text-zinc-200" : "text-zinc-500"}`}>
-                    {normalizeKeyInput(song.key)} • {song.bpm} BPM • {song.duration}
+                <button type="button" disabled={Boolean(song.deletedAt)} onClick={() => setSetlistPreviewSongId(song.id)} className="min-w-0 flex-1 text-left disabled:cursor-not-allowed">
+                  <div className="font-semibold">{index + 1}. {song.deletedAt ? "Odstránená skladba" : normalizeSongTitle(song.title)}</div>
+                  <div className={`mt-1 text-sm ${setlistPreviewSong?.id === song.id ? "text-zinc-200" : song.deletedAt ? "text-amber-800" : "text-zinc-500"}`}>
+                    {song.deletedAt ? normalizeSongTitle(song.title) : `${normalizeKeyInput(song.key)} • ${song.bpm} BPM • ${song.duration}`}
                   </div>
                 </button>
                 <div className="flex shrink-0 flex-wrap gap-2">
-                  <button type="button" onClick={() => startPerformanceAt(index)} className="rounded-xl bg-sky-600 px-3 py-1 text-sm font-semibold text-white">Čítať</button>
+                  <button type="button" disabled={Boolean(song.deletedAt)} onClick={() => startPerformanceAt(index)} className="rounded-xl bg-sky-600 px-3 py-1 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Čítať</button>
                   <button type="button" onClick={() => moveSetlist(index, -1)} className="rounded-xl bg-white px-3 py-1 text-sm text-zinc-800 ring-1 ring-zinc-200">↑</button>
                   <button type="button" onClick={() => moveSetlist(index, 1)} className="rounded-xl bg-white px-3 py-1 text-sm text-zinc-800 ring-1 ring-zinc-200">↓</button>
                   <button type="button" onClick={() => removeFromSetlist(index)} className="rounded-xl bg-white px-3 py-1 text-sm text-zinc-800 ring-1 ring-zinc-200">×</button>

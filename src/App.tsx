@@ -231,38 +231,44 @@ export default function App() {
       return;
     }
     const validIds = new Set(songs.map((song) => song.id));
+    const activeIds = new Set(songs.filter((song) => !song.deletedAt).map((song) => song.id));
+    const firstActiveId = songs.find((song) => !song.deletedAt)?.id ?? 0;
     setSetlists((current) => current.map((item) => ({ ...item, songIds: item.songIds.filter((id) => validIds.has(id)) })));
     const cleanedSetlist = setlist.filter((id) => validIds.has(id));
     if (cleanedSetlist.length !== setlist.length) {
       setSetlist(cleanedSetlist);
       return;
     }
-    if (!validIds.has(selectedSongId)) setSelectedSongId(songs[0].id);
-    if (!validIds.has(setlistPreviewSongId)) setSetlistPreviewSongId(cleanedSetlist[0] ?? songs[0].id);
-    if (performanceIndex > Math.max(0, cleanedSetlist.length - 1)) setPerformanceIndex(Math.max(0, cleanedSetlist.length - 1));
+    if (!activeIds.has(selectedSongId)) setSelectedSongId(firstActiveId);
+    if (!activeIds.has(setlistPreviewSongId)) setSetlistPreviewSongId(cleanedSetlist.find((id) => activeIds.has(id)) ?? firstActiveId);
+    const activeSetlistLength = cleanedSetlist.filter((id) => activeIds.has(id)).length;
+    if (performanceIndex > Math.max(0, activeSetlistLength - 1)) setPerformanceIndex(Math.max(0, activeSetlistLength - 1));
   }, [songs, setlist, selectedSongId, setlistPreviewSongId, performanceIndex]);
 
+  const activeSongs = useMemo(() => songs.filter((song) => !song.deletedAt), [songs]);
+  const deletedSongs = useMemo(() => songs.filter((song) => song.deletedAt).sort((a, b) => (b.deletedAt || "").localeCompare(a.deletedAt || "")), [songs]);
   const filteredSongs = useMemo(() => {
     const q = query.toLowerCase().trim();
-    return q ? songs.filter((song) => `${normalizeSongTitle(song.title)} ${song.artist}`.toLowerCase().includes(q)) : songs;
-  }, [songs, query]);
+    return q ? activeSongs.filter((song) => `${normalizeSongTitle(song.title)} ${song.artist}`.toLowerCase().includes(q)) : activeSongs;
+  }, [activeSongs, query]);
 
   const activeImportLines = useMemo(() => importMode === "block" ? importLines : parseImportText(draft.rawText), [importMode, importLines, draft.rawText]);
   const activeImportSections = useMemo(() => buildSections(activeImportLines), [activeImportLines]);
   const activeImportSong = useMemo(() => makeSong(draft, activeImportLines, 999), [draft, activeImportLines]);
   const selectedImportLine = importMode === "block" && selectedImportIndex !== null ? importLines[selectedImportIndex] ?? null : null;
 
-  const selectedSong = songs.find((song) => song.id === selectedSongId) || songs[0] || null;
+  const selectedSong = activeSongs.find((song) => song.id === selectedSongId) || activeSongs[0] || null;
   const renderedSong = useMemo(() => selectedSong ? transposeSong(selectedSong, transpose, notation) : null, [selectedSong, transpose, notation]);
   const selectedSongSections = useMemo(() => renderedSong ? buildSections(renderedSong.lines) : [], [renderedSong]);
 
   const setlistSongs = setlist.map((id) => songs.find((song) => song.id === id)).filter(Boolean) as Song[];
+  const activeSetlistSongs = setlistSongs.filter((song) => !song.deletedAt);
   const activeSetlist = setlists.find((item) => item.id === activeSetlistId) ?? setlists[0] ?? DEFAULT_SETLISTS[0];
-  const setlistPreviewSong = songs.find((song) => song.id === setlistPreviewSongId) || setlistSongs[0] || songs[0] || null;
+  const setlistPreviewSong = activeSongs.find((song) => song.id === setlistPreviewSongId) || activeSetlistSongs[0] || activeSongs[0] || null;
   const renderedSetlistPreview = useMemo(() => setlistPreviewSong ? transposeSong(setlistPreviewSong, transpose, notation) : null, [setlistPreviewSong, transpose, notation]);
   const setlistPreviewSections = useMemo(() => renderedSetlistPreview ? buildSections(renderedSetlistPreview.lines) : [], [renderedSetlistPreview]);
 
-  const performanceSong = setlistSongs[performanceIndex] || setlistSongs[0] || songs[0] || null;
+  const performanceSong = activeSetlistSongs[performanceIndex] || activeSetlistSongs[0] || activeSongs[0] || null;
   const renderedPerformance = useMemo(() => performanceSong ? transposeSong(performanceSong, transpose, notation) : null, [performanceSong, transpose, notation]);
   const performanceSections = useMemo(() => renderedPerformance ? buildSections(renderedPerformance.lines) : [], [renderedPerformance]);
 
@@ -333,14 +339,15 @@ export default function App() {
     const safeSetlists = normalizeNamedSetlists(state.setlists, state.setlist, safeIds);
     const safeActiveSetlistId = safeSetlists.some((item) => item.id === state.activeSetlistId) ? state.activeSetlistId : safeSetlists[0].id;
     const safeSetlist = (safeSetlists.find((item) => item.id === safeActiveSetlistId)?.songIds ?? []).filter((id) => safeIds.has(id));
-    const fallbackId = safeSongs[0]?.id ?? 0;
+    const safeActiveSongs = safeSongs.filter((song) => !song.deletedAt);
+    const fallbackId = safeActiveSongs[0]?.id ?? 0;
     setSongs(safeSongs);
     setSetlists(safeSetlists);
     setActiveSetlistId(safeActiveSetlistId);
     setSetlist(safeSetlist);
-    setSelectedSongId(safeIds.has(state.selectedSongId) ? state.selectedSongId : fallbackId);
-    setSetlistPreviewSongId(safeIds.has(state.setlistPreviewSongId) ? state.setlistPreviewSongId : safeSetlist[0] ?? fallbackId);
-    setPerformanceIndex(Math.min(state.performanceIndex || 0, Math.max(0, safeSetlist.length - 1)));
+    setSelectedSongId(safeActiveSongs.some((song) => song.id === state.selectedSongId) ? state.selectedSongId : fallbackId);
+    setSetlistPreviewSongId(safeActiveSongs.some((song) => song.id === state.setlistPreviewSongId) ? state.setlistPreviewSongId : safeSetlist.find((id) => safeActiveSongs.some((song) => song.id === id)) ?? fallbackId);
+    setPerformanceIndex(Math.min(state.performanceIndex || 0, Math.max(0, safeSetlist.filter((id) => safeActiveSongs.some((song) => song.id === id)).length - 1)));
     setTranspose(state.transpose || 0);
     setNotation(state.notation === "de" ? "de" : "intl");
     setDraft(state.draft || DEFAULT_DRAFT);
@@ -662,7 +669,7 @@ export default function App() {
     setSetlists((prev) => [...prev, nextSetlist]);
     setActiveSetlistId(id);
     setSetlist([]);
-    setSetlistPreviewSongId(songs[0]?.id ?? 0);
+    setSetlistPreviewSongId(activeSongs[0]?.id ?? 0);
     setPerformanceIndex(0);
   }
 
@@ -707,17 +714,46 @@ export default function App() {
 
   function deleteSong(songId: number) {
     const song = songs.find((item) => item.id === songId);
-    if (song && !window.confirm(`Zmazať skladbu "${normalizeSongTitle(song.title)}"?`)) return;
+    if (!song) return;
 
-    const nextSongs = songs.filter((item) => item.id !== songId);
-    const nextSetlist = setlist.filter((id) => id !== songId);
-    const fallbackId = nextSongs[0]?.id ?? 0;
+    const usedInSetlists = setlists.filter((item) => item.songIds.includes(songId)).map((item) => item.name);
+    const setlistWarning = usedInSetlists.length
+      ? `\n\nSkladba je v setliste: ${usedInSetlists.join(", ")}. Referencia ostane zachovaná a po obnove bude znova použiteľná.`
+      : "";
+    if (!window.confirm(`Odstrániť skladbu "${normalizeSongTitle(song.title)}" do koša? Dá sa obnoviť.${setlistWarning}`)) return;
+
+    const deletedAt = new Date().toISOString();
+    const nextSongs = songs.map((item) => (item.id === songId ? { ...item, deletedAt } : item));
+    const fallbackId = nextSongs.find((item) => !item.deletedAt)?.id ?? 0;
     setSongs(nextSongs);
     markCanonicalDirty();
-    setSetlist(nextSetlist);
     if (selectedSongId === songId) setSelectedSongId(fallbackId);
-    if (setlistPreviewSongId === songId) setSetlistPreviewSongId(nextSetlist[0] ?? fallbackId);
-    setPerformanceIndex((index) => Math.min(index, Math.max(0, nextSetlist.length - 1)));
+    if (setlistPreviewSongId === songId) setSetlistPreviewSongId(setlist.find((id) => id !== songId && nextSongs.some((item) => item.id === id && !item.deletedAt)) ?? fallbackId);
+    setPerformanceIndex((index) => Math.min(index, Math.max(0, setlist.filter((id) => nextSongs.some((item) => item.id === id && !item.deletedAt)).length - 1)));
+    if (editingSongId === songId) {
+      setEditingSongId(null);
+      setEditorMode("create");
+      setSelectedImportIndex(null);
+      resetEditorHistory();
+      setView("songs");
+    }
+    setStorageStatus(`Skladba "${normalizeSongTitle(song.title)}" presunutá do koša.`);
+  }
+
+  function restoreDeletedSong(songId: number) {
+    const song = songs.find((item) => item.id === songId);
+    if (!song?.deletedAt) return;
+
+    setSongs((current) => current.map((item) => {
+      if (item.id !== songId) return item;
+      const { deletedAt, ...restored } = item;
+      return restored;
+    }));
+    markCanonicalDirty();
+    setSelectedSongId(songId);
+    setSetlistPreviewSongId(songId);
+    setStorageStatus(`Skladba "${normalizeSongTitle(song.title)}" obnovená z koša.`);
+    setView("songs");
   }
 
   async function copySong(song: Song) {
@@ -812,16 +848,19 @@ export default function App() {
   const openInSetlist = (songId: number) => { setSetlistPreviewSongId(songId); setView("setlist"); };
   const printA4Song = (song: Song) => setPrintJob(song);
   const startPerformance = () => {
-    const selectedIndex = setlistPreviewSong ? setlist.findIndex((id) => id === setlistPreviewSong.id) : -1;
+    const selectedIndex = setlistPreviewSong ? activeSetlistSongs.findIndex((song) => song.id === setlistPreviewSong.id) : -1;
     setPerformanceIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setView("performance");
   };
   const startPerformanceAt = (index: number) => {
-    setPerformanceIndex(Math.max(0, Math.min(index, setlistSongs.length - 1)));
+    const song = setlistSongs[index];
+    if (!song || song.deletedAt) return;
+    const activeIndex = activeSetlistSongs.findIndex((item) => item.id === song.id);
+    setPerformanceIndex(Math.max(0, Math.min(activeIndex, activeSetlistSongs.length - 1)));
     setView("performance");
   };
   const backToSetlistFromPerformance = () => {
-    const currentSong = setlistSongs[performanceIndex];
+    const currentSong = activeSetlistSongs[performanceIndex];
     if (currentSong) setSetlistPreviewSongId(currentSong.id);
     setView("setlist");
   };
@@ -871,7 +910,8 @@ export default function App() {
 
         {view === "songs" && (
           <SongsView
-            songs={songs}
+            songs={activeSongs}
+            deletedSongs={deletedSongs}
             filteredSongs={filteredSongs}
             query={query}
             selectedSong={selectedSong}
@@ -884,6 +924,7 @@ export default function App() {
             onToggleSetlist={toggleSetlist}
             onToggleSongInSetlist={toggleSongInNamedSetlist}
             onDelete={deleteSong}
+            onRestoreDeleted={restoreDeletedSong}
             onInstall={() => { void install(); }}
             onExportBackup={exportCanonicalDatabase}
             onImportBackup={(file) => { void importBackup(file); }}
@@ -946,7 +987,7 @@ export default function App() {
 
         {view === "song" && (
           <SongView
-            songs={songs}
+            songs={activeSongs}
             selectedSongId={selectedSongId}
             selectedSong={selectedSong}
             renderedSong={renderedSong}
@@ -995,7 +1036,7 @@ export default function App() {
 
         {view === "performance" && (
           <PerformanceView
-            setlistSongs={setlistSongs}
+            setlistSongs={activeSetlistSongs}
             performanceIndex={performanceIndex}
             renderedPerformance={renderedPerformance}
             originalSong={performanceSong}
@@ -1224,6 +1265,7 @@ function normalizeLegacySong(value: unknown): Song | null {
     duration: String(song.duration ?? "0:00"),
     capo: String(song.capo ?? "-"),
     lines: lines.length ? lines : [{ type: "lyrics", text: "" }],
+    deletedAt: typeof song.deletedAt === "string" ? song.deletedAt : undefined,
   };
 }
 

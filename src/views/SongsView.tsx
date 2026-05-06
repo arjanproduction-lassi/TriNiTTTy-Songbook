@@ -7,6 +7,7 @@ import { buildSections, normalizeSongTitle } from "../lib/import";
 
 export function SongsView({
   songs,
+  deletedSongs,
   filteredSongs,
   query,
   selectedSong,
@@ -19,6 +20,7 @@ export function SongsView({
   onToggleSetlist,
   onToggleSongInSetlist,
   onDelete,
+  onRestoreDeleted,
   onInstall,
   onExportBackup,
   onImportBackup,
@@ -37,6 +39,7 @@ export function SongsView({
   onForgetDriveFile,
 }: {
   songs: Song[];
+  deletedSongs: Song[];
   filteredSongs: Song[];
   query: string;
   selectedSong: Song | null;
@@ -49,6 +52,7 @@ export function SongsView({
   onToggleSetlist: (songId: number) => void;
   onToggleSongInSetlist: (songId: number, setlistId: number) => void;
   onDelete: (songId: number) => void;
+  onRestoreDeleted: (songId: number) => void;
   onInstall: () => void;
   onExportBackup: () => void;
   onImportBackup: (file: File) => void;
@@ -158,7 +162,7 @@ export function SongsView({
                   ) : (
                     <button onClick={() => onToggleSetlist(song.id)} className={`rounded-2xl px-4 py-2 text-sm font-semibold ring-1 ${isInSetlist(song.id) ? "bg-rose-50 text-rose-800 ring-rose-200" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}>{isInSetlist(song.id) ? "Odobrať zo setlistu" : "Pridať do setlistu"}</button>
                   )}
-                  <button onClick={() => onDelete(song.id)} className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white">Zmazať</button>
+                  <button onClick={() => onDelete(song.id)} className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white">Odstrániť</button>
                 </div>
                 {hasMultipleSetlists && songSetlists.length > 0 && (
                   <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
@@ -170,6 +174,28 @@ export function SongsView({
               );
             })}
           </div>
+        </Card>
+
+        <Card>
+          <details>
+            <summary className="cursor-pointer text-lg font-semibold">Kôš ({deletedSongs.length})</summary>
+            <div className="mt-3 space-y-2">
+              {!deletedSongs.length && (
+                <div className="rounded-2xl bg-zinc-50 p-4 text-sm text-zinc-600 ring-1 ring-zinc-200">Kôš je prázdny.</div>
+              )}
+              {deletedSongs.map((song) => (
+                <div key={song.id} className="rounded-2xl bg-zinc-50 p-4 ring-1 ring-zinc-200">
+                  <div className="font-semibold">{normalizeSongTitle(song.title)}</div>
+                  <div className="mt-1 text-sm text-zinc-500">
+                    Odstránené: {song.deletedAt ? new Date(song.deletedAt).toLocaleString("sk-SK") : "neznáme"}
+                  </div>
+                  <div className="mt-3">
+                    <SoftButton onClick={() => onRestoreDeleted(song.id)}>Obnoviť</SoftButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
         </Card>
 
         <Card>

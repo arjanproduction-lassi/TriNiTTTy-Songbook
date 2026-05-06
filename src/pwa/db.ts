@@ -88,6 +88,7 @@ function normalizeSong(value: unknown, fallbackId: number): Song | null {
     duration: stringValue(value.duration, "0:00") || "0:00",
     capo: stringValue(value.capo, "-") || "-",
     lines: lines.length ? lines : [{ type: "lyrics", text: "" }],
+    deletedAt: stringValue(value.deletedAt).trim() || undefined,
   };
 }
 

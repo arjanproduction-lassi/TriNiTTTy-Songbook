@@ -31,6 +31,7 @@ export type Song = {
   duration: string;
   capo: string;
   lines: Line[];
+  deletedAt?: string;
 };
 
 export type NamedSetlist = {
