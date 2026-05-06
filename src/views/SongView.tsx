@@ -89,7 +89,9 @@ export function SongView({
           </div>
         </Card>
       </div>
-      <A4Sheet song={renderedSong} sections={sections} />
+      <div className="min-w-0">
+        <A4Sheet song={renderedSong} sections={sections} />
+      </div>
     </div>
   );
 }
