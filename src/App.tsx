@@ -180,13 +180,23 @@ export default function App() {
   useEffect(() => {
     if (!printJob) return undefined;
 
-    const afterPrint = () => setPrintJob(null);
+    const previousTitle = document.title || "TriNiTTTy Songbook";
+    document.title = makePrintDocumentTitle(printJob);
+
+    const restoreTitle = () => {
+      document.title = previousTitle;
+    };
+    const afterPrint = () => {
+      restoreTitle();
+      setPrintJob(null);
+    };
     window.addEventListener("afterprint", afterPrint);
     const timer = window.setTimeout(() => window.print(), 50);
 
     return () => {
       window.clearTimeout(timer);
       window.removeEventListener("afterprint", afterPrint);
+      restoreTitle();
     };
   }, [printJob]);
 
@@ -1061,6 +1071,25 @@ export default function App() {
 function firstEditableIndex(lines: Line[]) {
   const firstNonSpace = lines.findIndex((line) => line.type !== "space");
   return firstNonSpace >= 0 ? firstNonSpace : 0;
+}
+
+function makePrintDocumentTitle(song: Song) {
+  const parts = [
+    normalizeSongTitle(song.title),
+    song.artist.trim(),
+    normalizeKeyInput(song.key),
+  ]
+    .map(sanitizeFilenamePart)
+    .filter(Boolean);
+
+  return parts.length ? parts.join(" - ") : "TriNiTTTy Songbook";
+}
+
+function sanitizeFilenamePart(value: string) {
+  return value
+    .replace(/[<>:"/\\|?*]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function cloneEditorSnapshot(snapshot: EditorDraftSnapshot): EditorDraftSnapshot {
