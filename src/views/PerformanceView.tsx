@@ -59,6 +59,7 @@ export function PerformanceView({
   const originalKey = normalizeKeyInput(originalSong?.key || renderedPerformance.key);
   const renderedKey = normalizeKeyInput(renderedPerformance.key);
   const keyLabel = originalKey === renderedKey ? renderedKey : `${originalKey} -> ${renderedKey}`;
+  const timeSignature = renderedPerformance.timeSignature?.trim();
 
   return (
     <div className="flex h-[100svh] flex-col overflow-hidden bg-zinc-100">
@@ -72,6 +73,7 @@ export function PerformanceView({
           <span className="shrink-0">Tónina: {keyLabel}</span>
           <span className="shrink-0">Transpozícia: {transposeLabel}</span>
           <span className="shrink-0">{renderedPerformance.bpm} BPM</span>
+          {timeSignature && <span className="shrink-0">Takt: {timeSignature}</span>}
           <span className="shrink-0">Reader {readerZoom}%</span>
         </div>
       </div>

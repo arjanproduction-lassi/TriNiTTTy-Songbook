@@ -18,6 +18,7 @@ type A4PageProps = {
 };
 
 export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsive = true, pageRef }: A4PageProps) {
+  const timeSignature = song.timeSignature?.trim();
   const pageStyle: CSSProperties = {
     width: "210mm",
     minHeight: "297mm",
@@ -35,6 +36,7 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
         <div className="mt-1 flex flex-wrap gap-4 font-semibold text-zinc-700" style={{ fontSize: "9pt" }}>
           <span>BPM {song.bpm}</span>
           <span>{normalizeKeyInput(song.key)}</span>
+          {timeSignature && <span>Takt: {timeSignature}</span>}
           <span>Capo {song.capo || "-"}</span>
           <span>{song.duration}</span>
         </div>
