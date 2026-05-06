@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { Notation, SectionGroup, Song } from "../types";
-import { A4Sheet } from "../components/A4Sheet";
+import { A4Sheet, FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, PrimaryButton, SoftButton, TransposeControls } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
 import { normalizeSongTitle } from "../lib/import";
@@ -89,7 +89,10 @@ export function SongView({
           </div>
         </Card>
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 xl:hidden">
+        <FitA4Sheet song={renderedSong} sections={sections} readerZoom={100} className="h-[82svh] rounded-3xl ring-1 ring-zinc-200" />
+      </div>
+      <div className="hidden min-w-0 xl:block">
         <A4Sheet song={renderedSong} sections={sections} />
       </div>
     </div>
