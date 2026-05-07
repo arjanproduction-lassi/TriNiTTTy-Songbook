@@ -7,7 +7,16 @@ body {
 }
 
 .print-surface {
-  display: none;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 210mm;
+  min-height: 297mm;
+  overflow: visible;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
 }
 
 @page {
@@ -19,12 +28,13 @@ body {
   html,
   #root,
   body {
-    margin: 0;
-    padding: 0;
-    width: 210mm;
-    height: 297mm;
-    overflow: hidden;
-    background: white;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
   }
 
   .screen-surface {
@@ -32,19 +42,23 @@ body {
   }
 
   .print-surface {
-    display: block;
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 210mm;
-    height: 297mm;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: white;
-    break-inside: avoid;
-    page-break-inside: avoid;
-    page-break-after: avoid;
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    display: block !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: none !important;
+    z-index: 9999 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
   }
 
   .print-surface .a4-print-surface {
@@ -57,9 +71,10 @@ body {
     padding: 10mm !important;
     box-shadow: none !important;
     border: 0 !important;
-    overflow: hidden;
+    overflow: hidden !important;
     background: white !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    transform: none !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }

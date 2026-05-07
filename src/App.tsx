@@ -193,9 +193,13 @@ export default function App() {
       setPrintJob(null);
     };
     window.addEventListener("afterprint", afterPrint);
-    const timer = window.setTimeout(() => window.print(), 50);
+    let timer = 0;
+    const frame = window.requestAnimationFrame(() => {
+      timer = window.setTimeout(() => window.print(), 250);
+    });
 
     return () => {
+      window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
       window.removeEventListener("afterprint", afterPrint);
       restoreTitle();
