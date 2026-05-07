@@ -74,11 +74,12 @@ export function SongView({
               <button onClick={() => toggleSetlist(selectedSong.id)} className={`rounded-2xl px-4 py-3 text-sm font-semibold ${isInSetlist(selectedSong.id) ? "bg-rose-600 text-white" : "bg-emerald-600 text-white"}`}>{isInSetlist(selectedSong.id) ? "Odobrať zo setlistu" : "Pridať do setlistu"}</button>
               <button onClick={() => startEditingSong(selectedSong)} className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white">Upraviť skladbu</button>
               <SoftButton onClick={() => openInSetlist(selectedSong.id)}>Otvoriť v setliste</SoftButton>
-              <PrimaryButton onClick={() => copySong(renderedSong)}>Kopírovať do Wordu</PrimaryButton>
+              <PrimaryButton onClick={() => copySong(renderedSong)}>Kopírovať TXT</PrimaryButton>
               <SoftButton onClick={() => exportSongText(renderedSong)}>Export TXT</SoftButton>
               <SoftButton onClick={() => printSong(renderedSong)}>Tlačiť / PDF</SoftButton>
               <button onClick={() => deleteSong(selectedSong.id)} className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white">Zmazať skladbu</button>
             </div>
+            <div className="text-xs text-zinc-500">Vlož do Wordu/Docs ako čistý text a použi monospace font, napr. Courier New alebo Consolas.</div>
             {copyStatus && <div className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600 ring-1 ring-zinc-200">{copyStatus}</div>}
           </div>
         </Card>

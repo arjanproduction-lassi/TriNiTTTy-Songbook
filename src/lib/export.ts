@@ -21,7 +21,7 @@ function lineToText(line: Line) {
   return line.text;
 }
 
-export function songToWordText(song: Song) {
+export function songToClipboardText(song: Song) {
   const metadata = [
     `BPM ${song.bpm}`,
     normalizeKeyInput(song.key),
@@ -55,7 +55,7 @@ function songBodyLines(song: Song) {
 }
 
 export function downloadSongText(song: Song) {
-  const blob = new Blob([songToMonospaceText(song)], { type: "text/plain;charset=utf-8" });
+  const blob = new Blob([`\uFEFF${songToMonospaceText(song)}`], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   const parts = [

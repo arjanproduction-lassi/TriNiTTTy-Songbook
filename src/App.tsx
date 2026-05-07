@@ -7,7 +7,7 @@ import { A4Page } from "./components/A4Sheet";
 import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
-import { copyText, downloadSongText, songToWordText } from "./lib/export";
+import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
 import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
@@ -777,7 +777,7 @@ export default function App() {
 
   async function copySong(song: Song) {
     try {
-      const ok = await copyText(songToWordText(song));
+      const ok = await copyText(songToClipboardText(song));
       setCopyStatus(ok ? "Skopírované do schránky." : "Kopírovanie sa nepodarilo.");
     } catch {
       setCopyStatus("Kopírovanie sa nepodarilo.");
