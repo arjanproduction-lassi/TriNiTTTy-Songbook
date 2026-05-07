@@ -79,7 +79,7 @@ export function SongView({
               <SoftButton onClick={() => printSong(renderedSong)}>Tlačiť / PDF</SoftButton>
               <button onClick={() => deleteSong(selectedSong.id)} className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white">Zmazať skladbu</button>
             </div>
-            <div className="text-xs text-zinc-500">Vlož do Wordu/Docs ako čistý text a použi monospace font, napr. Courier New alebo Consolas.</div>
+            <div className="text-xs text-zinc-500">Po vložení do Wordu/Docs nastav font Courier New a veľkosť 9 pt, aby akordy ostali zarovnané.</div>
             {copyStatus && <div className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600 ring-1 ring-zinc-200">{copyStatus}</div>}
           </div>
         </Card>
