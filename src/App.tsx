@@ -194,12 +194,16 @@ export default function App() {
     };
     window.addEventListener("afterprint", afterPrint);
     let timer = 0;
-    const frame = window.requestAnimationFrame(() => {
-      timer = window.setTimeout(() => window.print(), 250);
+    let frameTwo = 0;
+    const frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(() => {
+        timer = window.setTimeout(() => window.print(), 150);
+      });
     });
 
     return () => {
-      window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(frameOne);
+      window.cancelAnimationFrame(frameTwo);
       window.clearTimeout(timer);
       window.removeEventListener("afterprint", afterPrint);
       restoreTitle();
@@ -930,7 +934,28 @@ export default function App() {
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
+    <div className={`min-h-screen ${printJob ? "bg-white" : "bg-zinc-50"} text-zinc-900`}>
+      {printJob ? (
+        <div className="print-surface">
+          <div className="print-mode-controls">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Tlač / PDF</div>
+              <div className="mt-0.5 font-semibold text-zinc-900">{normalizeSongTitle(printJob.title)}</div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => window.print()} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
+                Tlačiť / PDF
+              </button>
+              <button type="button" onClick={() => setPrintJob(null)} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
+                Zavrieť
+              </button>
+            </div>
+          </div>
+          <div className="print-a4-stage">
+            <A4Page song={printJob} sections={buildSections(printJob.lines)} responsive={false} />
+          </div>
+        </div>
+      ) : (
       <div className={`screen-surface ${performanceView ? "min-h-screen" : "mx-auto max-w-[1760px] p-3 md:p-4"}`}>
         {!performanceView && (
         <div className="mb-4 rounded-2xl bg-gradient-to-br from-white to-zinc-100 p-3 shadow-sm ring-1 ring-zinc-200 md:p-4">
@@ -1106,10 +1131,6 @@ export default function App() {
         )}
 
       </div>
-      {printJob && (
-        <div className="print-surface">
-          <A4Page song={printJob} sections={buildSections(printJob.lines)} responsive={false} />
-        </div>
       )}
     </div>
   );
