@@ -55,6 +55,14 @@ export function PerformanceView({
   const nextDisabled = performanceIndex >= setlistSongs.length - 1;
   const currentPosition = setlistSongs.length ? performanceIndex + 1 : 0;
   const changeZoom = (direction: number) => setReaderZoom((value) => Math.min(MAX_READER_ZOOM, Math.max(MIN_READER_ZOOM, value + direction * ZOOM_STEP)));
+  const goPrevious = () => {
+    setTranspose(0);
+    setPerformanceIndex((value) => Math.max(0, value - 1));
+  };
+  const goNext = () => {
+    setTranspose(0);
+    setPerformanceIndex((value) => Math.min(setlistSongs.length - 1, value + 1));
+  };
   const transposeLabel = transpose > 0 ? `+${transpose}` : String(transpose);
   const originalKey = normalizeKeyInput(originalSong?.key || renderedPerformance.key);
   const renderedKey = normalizeKeyInput(renderedPerformance.key);
@@ -90,7 +98,7 @@ export function PerformanceView({
           <button
             type="button"
             disabled={previousDisabled}
-            onClick={() => setPerformanceIndex((v) => Math.max(0, v - 1))}
+            onClick={goPrevious}
             className="rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ← Späť
@@ -98,7 +106,7 @@ export function PerformanceView({
           <button
             type="button"
             disabled={nextDisabled}
-            onClick={() => setPerformanceIndex((v) => Math.min(setlistSongs.length - 1, v + 1))}
+            onClick={goNext}
             className="rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             Ďalšia →
@@ -127,14 +135,14 @@ export function PerformanceView({
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button
               disabled={previousDisabled}
-              onClick={() => setPerformanceIndex((v) => Math.max(0, v - 1))}
+              onClick={goPrevious}
               className="rounded-2xl bg-zinc-100 px-4 py-4 text-base font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
             >
               ← Späť
             </button>
             <button
               disabled={nextDisabled}
-              onClick={() => setPerformanceIndex((v) => Math.min(setlistSongs.length - 1, v + 1))}
+              onClick={goNext}
               className="rounded-2xl bg-zinc-900 px-4 py-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
             >
               Ďalšia →

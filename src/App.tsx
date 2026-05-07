@@ -291,6 +291,11 @@ export default function App() {
   const performanceSong = activeSetlistSongs[performanceIndex] || activeSetlistSongs[0] || activeSongs[0] || null;
   const renderedPerformance = useMemo(() => performanceSong ? transposeSong(performanceSong, transpose, notation) : null, [performanceSong, transpose, notation]);
   const performanceSections = useMemo(() => renderedPerformance ? buildSections(renderedPerformance.lines) : [], [renderedPerformance]);
+  const performanceSongId = performanceSong?.id ?? 0;
+
+  useEffect(() => {
+    if (view === "performance") setTranspose(0);
+  }, [view, performanceSongId]);
 
   function currentEditorSnapshot(): EditorDraftSnapshot {
     return cloneEditorSnapshot({ draft, importLines, importMode });
@@ -991,6 +996,7 @@ export default function App() {
   const printA4Song = (song: Song) => setPrintJob(song);
   const startPerformance = () => {
     const selectedIndex = setlistPreviewSong ? activeSetlistSongs.findIndex((song) => song.id === setlistPreviewSong.id) : -1;
+    setTranspose(0);
     setPerformanceIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setView("performance");
   };
@@ -998,6 +1004,7 @@ export default function App() {
     const song = setlistSongs[index];
     if (!song || song.deletedAt) return;
     const activeIndex = activeSetlistSongs.findIndex((item) => item.id === song.id);
+    setTranspose(0);
     setPerformanceIndex(Math.max(0, Math.min(activeIndex, activeSetlistSongs.length - 1)));
     setView("performance");
   };
