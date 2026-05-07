@@ -196,21 +196,8 @@ export default function App() {
       setPrintJob(null);
     };
     window.addEventListener("afterprint", afterPrint);
-    let timer = 0;
-    let frameTwo = 0;
-    const frameOne = window.requestAnimationFrame(() => {
-      frameTwo = window.requestAnimationFrame(() => {
-        timer = window.setTimeout(() => {
-          enterBrowserPrintMode();
-          window.print();
-        }, 150);
-      });
-    });
 
     return () => {
-      window.cancelAnimationFrame(frameOne);
-      window.cancelAnimationFrame(frameTwo);
-      window.clearTimeout(timer);
       window.removeEventListener("afterprint", afterPrint);
       leaveBrowserPrintMode();
       restoreTitle();
@@ -950,7 +937,7 @@ export default function App() {
               <div className="mt-0.5 font-semibold text-zinc-900">{normalizeSongTitle(printJob.title)}</div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => { enterBrowserPrintMode(); window.print(); }} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
+              <button type="button" onClick={printVisibleA4Mode} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
                 Tlačiť / PDF
               </button>
               <button type="button" onClick={() => setPrintJob(null)} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
@@ -1151,6 +1138,15 @@ function firstEditableIndex(lines: Line[]) {
 function enterBrowserPrintMode() {
   document.documentElement.classList.add("app-printing");
   document.body.classList.add("app-printing");
+}
+
+function printVisibleA4Mode() {
+  enterBrowserPrintMode();
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      window.print();
+    });
+  });
 }
 
 function leaveBrowserPrintMode() {
