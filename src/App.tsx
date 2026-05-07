@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type SetStateAction } from "react";
-import type { DriveFileMemory, EditorMode, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, Song, View } from "./types";
+import type { DriveFileMemory, EditorMode, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, RemoteDatabaseCheck, Song, View } from "./types";
 import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT, EMPTY_SONG_DRAFT } from "./data/defaultImport";
 import { INITIAL_SONGS } from "./data/songs";
 import { NavButton } from "./components/ui";
@@ -8,7 +8,7 @@ import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
-import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
+import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
@@ -22,6 +22,8 @@ import { APP_VERSION, BUILD_DATE, RC_MARKER } from "./buildInfo";
 const LEGACY_STORAGE_KEYS = ["trinittty-phase1-wide-t8", "trinittty-phase1-lean-t3"];
 const DEFAULT_SETLISTS: NamedSetlist[] = [{ id: 1, name: "Setlist 1", songIds: [1, 2] }];
 const CANONICAL_STATUS_KEY = "trinittty-canonical-save-status";
+const REMOTE_DATABASE_URL_KEY = "trinittty-remote-database-url";
+const REMOTE_DATABASE_APP_NAME = "TriNiTTTy Songbook";
 
 type CanonicalSaveStatus = {
   dirty: boolean;
@@ -69,6 +71,10 @@ export default function App() {
   const [lastLocalAutosaveAt, setLastLocalAutosaveAt] = useState<string | null>(null);
   const [driveFile, setDriveFile] = useState<DriveFileMemory | null>(null);
   const [driveStatus, setDriveStatus] = useState("Drive admin sync je vypnutý.");
+  const [remoteDatabaseUrl, setRemoteDatabaseUrl] = useState(() => readRemoteDatabaseUrl());
+  const [remoteDatabaseUrlDraft, setRemoteDatabaseUrlDraft] = useState(() => readRemoteDatabaseUrl());
+  const [remoteDatabaseStatus, setRemoteDatabaseStatus] = useState(() => readRemoteDatabaseUrl() ? "Zdroj databázy je uložený lokálne." : "Remote databáza nie je nastavená.");
+  const [remoteDatabaseCheck, setRemoteDatabaseCheck] = useState<RemoteDatabaseCheck | null>(null);
   const [songBackups, setSongBackups] = useState<SongBeforeSaveBackup[]>([]);
   const [songBackupsLoading, setSongBackupsLoading] = useState(false);
   const [songBackupStatus, setSongBackupStatus] = useState("");
@@ -829,6 +835,88 @@ export default function App() {
     }
   }
 
+  function saveRemoteDatabaseUrl() {
+    try {
+      const url = normalizeRemoteDatabaseUrl(remoteDatabaseUrlDraft);
+      writeRemoteDatabaseUrl(url);
+      setRemoteDatabaseUrl(url);
+      setRemoteDatabaseUrlDraft(url);
+      setRemoteDatabaseCheck(null);
+      setRemoteDatabaseStatus("Zdroj databázy uložený lokálne.");
+    } catch (error) {
+      setRemoteDatabaseStatus(error instanceof Error ? error.message : "URL zdroja databázy nie je platná.");
+    }
+  }
+
+  function clearRemoteDatabaseUrl() {
+    writeRemoteDatabaseUrl("");
+    setRemoteDatabaseUrl("");
+    setRemoteDatabaseUrlDraft("");
+    setRemoteDatabaseCheck(null);
+    setRemoteDatabaseStatus("Zdroj databázy bol vymazaný z tohto zariadenia.");
+  }
+
+  async function checkRemoteDatabaseUpdate() {
+    try {
+      const url = normalizeRemoteDatabaseUrl(remoteDatabaseUrlDraft.trim() || remoteDatabaseUrl);
+      setRemoteDatabaseStatus("Kontrolujem kapelový zdroj databázy...");
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Zdroj databázy vrátil chybu ${response.status}.`);
+
+      const payload = JSON.parse(await response.text()) as unknown;
+      const state = validateRemoteDatabasePayload(payload);
+      const status: RemoteDatabaseCheck["status"] = state.databaseVersion > databaseVersion
+        ? "newer"
+        : state.databaseVersion < databaseVersion ? "older" : "same";
+
+      setRemoteDatabaseCheck({ checkedAt: new Date().toISOString(), status, state });
+      if (status === "newer") setRemoteDatabaseStatus("Nová databáza dostupná.");
+      else if (status === "older") setRemoteDatabaseStatus("Pozor: dostupná databáza je staršia než lokálna.");
+      else setRemoteDatabaseStatus("Databáza je aktuálna.");
+    } catch (error) {
+      setRemoteDatabaseCheck(null);
+      setRemoteDatabaseStatus(error instanceof Error ? error.message : "Kontrola zdroja databázy zlyhala.");
+    }
+  }
+
+  async function importRemoteDatabaseUpdate() {
+    if (!remoteDatabaseCheck) {
+      setRemoteDatabaseStatus("Najprv skontroluj zdroj databázy.");
+      return;
+    }
+
+    const state = remoteDatabaseCheck.state;
+    const importedOlder = state.databaseVersion < databaseVersion;
+    const importedSame = state.databaseVersion === databaseVersion;
+    const importSummary = [
+      `Aktuálna verzia: ${formatDatabaseVersion(databaseVersion)}`,
+      `Dostupná verzia: ${formatDatabaseVersion(state.databaseVersion)}`,
+      `Exportované: ${formatBackupDateTime(state.exportedAt || state.savedAt)}`,
+      `Skladby: ${state.songCount}`,
+      `Setlisty: ${state.setlistCount}`,
+      importedOlder ? "Pozor: dostupná verzia je staršia než aktuálna lokálna databáza." : "",
+      importedSame ? "Dostupná verzia je rovnaká ako lokálna databáza." : "",
+      "",
+      "Pred importom sa vytvorí záloha aktuálnej lokálnej databázy.",
+      "Naozaj importovať túto verziu?",
+    ].filter(Boolean).join("\n");
+
+    if (!window.confirm(importSummary)) return;
+
+    try {
+      const backupAt = new Date().toISOString();
+      downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt));
+    } catch {
+      setRemoteDatabaseStatus("Import zastavený: nepodarilo sa vytvoriť zálohu aktuálnej databázy.");
+      return;
+    }
+
+    applyPersistedState(state);
+    markCanonicalSaved(state.exportedAt || state.savedAt);
+    setRemoteDatabaseCheck({ checkedAt: new Date().toISOString(), status: "same", state });
+    setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)}.`);
+  }
+
   async function chooseDriveFile() {
     try {
       const file = await chooseDriveJsonFile();
@@ -1008,6 +1096,16 @@ export default function App() {
             setlistNamesForSong={setlistNamesForSong}
             setlists={setlists}
             activeSetlistId={activeSetlistId}
+            databaseVersion={databaseVersion}
+            remoteDatabaseUrl={remoteDatabaseUrl}
+            remoteDatabaseUrlDraft={remoteDatabaseUrlDraft}
+            remoteDatabaseStatus={remoteDatabaseStatus}
+            remoteDatabaseCheck={remoteDatabaseCheck}
+            onRemoteDatabaseUrlDraftChange={setRemoteDatabaseUrlDraft}
+            onSaveRemoteDatabaseUrl={saveRemoteDatabaseUrl}
+            onClearRemoteDatabaseUrl={clearRemoteDatabaseUrl}
+            onCheckRemoteDatabaseUpdate={() => { void checkRemoteDatabaseUpdate(); }}
+            onImportRemoteDatabaseUpdate={() => { void importRemoteDatabaseUpdate(); }}
             driveFile={driveFile}
             driveStatus={driveStatus}
             driveConfigured={isGoogleDriveConfigured()}
@@ -1269,6 +1367,56 @@ function writeCanonicalSaveStatus(status: CanonicalSaveStatus) {
   } catch {
     // Local status is helpful, but the app can still run if localStorage is blocked.
   }
+}
+
+function readRemoteDatabaseUrl() {
+  try {
+    return window.localStorage.getItem(REMOTE_DATABASE_URL_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+function writeRemoteDatabaseUrl(url: string) {
+  try {
+    if (url) window.localStorage.setItem(REMOTE_DATABASE_URL_KEY, url);
+    else window.localStorage.removeItem(REMOTE_DATABASE_URL_KEY);
+  } catch {
+    // Remote source URL is local convenience state; the app can run without it.
+  }
+}
+
+function normalizeRemoteDatabaseUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) throw new Error("Zadaj URL kapelovej databázy.");
+
+  let url: URL;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    throw new Error("URL kapelovej databázy nie je platná.");
+  }
+
+  if (url.protocol !== "https:" && url.protocol !== "http:") {
+    throw new Error("URL kapelovej databázy musí začínať http:// alebo https://.");
+  }
+
+  return url.toString();
+}
+
+function validateRemoteDatabasePayload(value: unknown) {
+  if (!isUnknownRecord(value)) throw new Error("Remote súbor nie je platný JSON objekt.");
+  if (value.appName !== REMOTE_DATABASE_APP_NAME) throw new Error("Remote súbor nevyzerá ako TriNiTTTy databáza.");
+  if (value.schemaVersion !== 1) throw new Error("Remote databáza má nepodporovanú schému.");
+  if (typeof value.databaseVersion !== "number") throw new Error("Remote databáza nemá databaseVersion.");
+  if (typeof value.exportedAt !== "string") throw new Error("Remote databáza nemá exportedAt.");
+  if (typeof value.songCount !== "number") throw new Error("Remote databáza nemá songCount.");
+  if (typeof value.setlistCount !== "number") throw new Error("Remote databáza nemá setlistCount.");
+  return normalizePersistedState(value);
+}
+
+function isUnknownRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
 function formatShortTime(value: string) {

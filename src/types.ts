@@ -93,6 +93,12 @@ export type PersistedState = {
   driveFile: DriveFileMemory | null;
 };
 
+export type RemoteDatabaseCheck = {
+  checkedAt: string;
+  status: "newer" | "same" | "older";
+  state: PersistedState;
+};
+
 export type ChildrenProps = {
   children: ReactNode;
 };
