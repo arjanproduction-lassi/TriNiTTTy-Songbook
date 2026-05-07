@@ -182,6 +182,8 @@ export default function App() {
   useEffect(() => {
     if (!printJob) return undefined;
 
+    enterBrowserPrintMode();
+
     const previousTitle = document.title || "TriNiTTTy Songbook";
     document.title = makePrintDocumentTitle(printJob);
 
@@ -190,6 +192,7 @@ export default function App() {
     };
     const afterPrint = () => {
       restoreTitle();
+      leaveBrowserPrintMode();
       setPrintJob(null);
     };
     window.addEventListener("afterprint", afterPrint);
@@ -197,7 +200,10 @@ export default function App() {
     let frameTwo = 0;
     const frameOne = window.requestAnimationFrame(() => {
       frameTwo = window.requestAnimationFrame(() => {
-        timer = window.setTimeout(() => window.print(), 150);
+        timer = window.setTimeout(() => {
+          enterBrowserPrintMode();
+          window.print();
+        }, 150);
       });
     });
 
@@ -206,6 +212,7 @@ export default function App() {
       window.cancelAnimationFrame(frameTwo);
       window.clearTimeout(timer);
       window.removeEventListener("afterprint", afterPrint);
+      leaveBrowserPrintMode();
       restoreTitle();
     };
   }, [printJob]);
@@ -943,7 +950,7 @@ export default function App() {
               <div className="mt-0.5 font-semibold text-zinc-900">{normalizeSongTitle(printJob.title)}</div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => window.print()} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
+              <button type="button" onClick={() => { enterBrowserPrintMode(); window.print(); }} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
                 Tlačiť / PDF
               </button>
               <button type="button" onClick={() => setPrintJob(null)} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
@@ -1139,6 +1146,16 @@ export default function App() {
 function firstEditableIndex(lines: Line[]) {
   const firstNonSpace = lines.findIndex((line) => line.type !== "space");
   return firstNonSpace >= 0 ? firstNonSpace : 0;
+}
+
+function enterBrowserPrintMode() {
+  document.documentElement.classList.add("app-printing");
+  document.body.classList.add("app-printing");
+}
+
+function leaveBrowserPrintMode() {
+  document.documentElement.classList.remove("app-printing");
+  document.body.classList.remove("app-printing");
 }
 
 function makePrintDocumentTitle(song: Song) {
