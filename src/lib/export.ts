@@ -22,19 +22,7 @@ function lineToText(line: Line) {
 }
 
 export function songToClipboardText(song: Song) {
-  const metadata = [
-    `BPM ${song.bpm}`,
-    normalizeKeyInput(song.key),
-    song.timeSignature?.trim() ? `Takt ${song.timeSignature.trim()}` : "",
-    `Capo ${song.capo || "-"}`,
-    song.duration,
-  ].filter(Boolean);
-  const header = [
-    [normalizeSongTitle(song.title), song.artist].filter(Boolean).join(" - "),
-    metadata.join(" | "),
-  ];
-
-  return [...header, "", ...songBodyLines(song)].join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return songToMonospaceText(song);
 }
 
 export function songToMonospaceText(song: Song) {
