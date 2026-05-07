@@ -22,6 +22,7 @@ export function SongView({
   startEditingSong,
   openInSetlist,
   copySong,
+  exportSongText,
   deleteSong,
   printSong,
 }: {
@@ -41,6 +42,7 @@ export function SongView({
   startEditingSong: (song: Song) => void;
   openInSetlist: (songId: number) => void;
   copySong: (song: Song) => void;
+  exportSongText: (song: Song) => void;
   deleteSong: (songId: number) => void;
   printSong: (song: Song) => void;
 }) {
@@ -73,6 +75,7 @@ export function SongView({
               <button onClick={() => startEditingSong(selectedSong)} className="rounded-2xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white">Upraviť skladbu</button>
               <SoftButton onClick={() => openInSetlist(selectedSong.id)}>Otvoriť v setliste</SoftButton>
               <PrimaryButton onClick={() => copySong(renderedSong)}>Kopírovať do Wordu</PrimaryButton>
+              <SoftButton onClick={() => exportSongText(renderedSong)}>Export TXT</SoftButton>
               <SoftButton onClick={() => printSong(renderedSong)}>Tlačiť / PDF</SoftButton>
               <button onClick={() => deleteSong(selectedSong.id)} className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white">Zmazať skladbu</button>
             </div>

@@ -7,7 +7,7 @@ import { A4Page } from "./components/A4Sheet";
 import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
-import { copyText, songToWordText } from "./lib/export";
+import { copyText, downloadSongText, songToWordText } from "./lib/export";
 import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
@@ -784,6 +784,15 @@ export default function App() {
     }
   }
 
+  function exportSongText(song: Song) {
+    try {
+      downloadSongText(song);
+      setCopyStatus("TXT export pripravený.");
+    } catch {
+      setCopyStatus("TXT export sa nepodaril.");
+    }
+  }
+
   async function importBackup(file: File) {
     try {
       const state = await readBackupFile(file);
@@ -1046,6 +1055,7 @@ export default function App() {
             startEditingSong={startEditingSong}
             openInSetlist={openInSetlist}
             copySong={copySong}
+            exportSongText={exportSongText}
             deleteSong={deleteSong}
             printSong={printA4Song}
           />
