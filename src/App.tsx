@@ -8,7 +8,7 @@ import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, songToWordText } from "./lib/export";
-import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
+import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
@@ -75,6 +75,7 @@ export default function App() {
   const [serviceWorkerUpdateReady, setServiceWorkerUpdateReady] = useState(false);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [printJob, setPrintJob] = useState<Song | null>(null);
+  const [databaseVersion, setDatabaseVersion] = useState(1);
   const { canInstall, installed, install } = useInstallPrompt();
 
   const persistedState = useMemo(() => makePersistedBackup({
@@ -89,7 +90,8 @@ export default function App() {
     notation,
     draft,
     driveFile,
-  }), [songs, setlist, setlists, activeSetlistId, selectedSongId, setlistPreviewSongId, performanceIndex, transpose, notation, draft, driveFile]);
+    databaseVersion,
+  }), [songs, setlist, setlists, activeSetlistId, selectedSongId, setlistPreviewSongId, performanceIndex, transpose, notation, draft, driveFile, databaseVersion]);
 
   useEffect(() => {
     let cancelled = false;
@@ -362,6 +364,7 @@ export default function App() {
     setNotation(state.notation === "de" ? "de" : "intl");
     setDraft(state.draft || DEFAULT_DRAFT);
     setDriveFile(state.driveFile || null);
+    setDatabaseVersion(state.databaseVersion || 1);
     setImportLines(parseImportText((state.draft || DEFAULT_DRAFT).rawText));
     setImportMode("raw");
     setEditorMode("create");
@@ -380,10 +383,13 @@ export default function App() {
 
   function exportCanonicalDatabase() {
     try {
-      const savedAt = new Date().toISOString();
-      downloadBackup({ ...persistedState, savedAt });
-      markCanonicalSaved(savedAt);
-      setStorageStatus(`Databáza exportovaná: ${formatShortTime(savedAt)}.`);
+      const exportedAt = new Date().toISOString();
+      const nextDatabaseVersion = Math.max(1, databaseVersion + 1);
+      const exportState = makePersistedBackup({ ...persistedState, databaseVersion: nextDatabaseVersion }, exportedAt);
+      downloadBackup(exportState);
+      setDatabaseVersion(nextDatabaseVersion);
+      markCanonicalSaved(exportedAt);
+      setStorageStatus(`Databáza exportovaná: ${formatDatabaseVersion(nextDatabaseVersion)} - ${formatShortTime(exportedAt)}.`);
     } catch {
       setStorageStatus("Export databázy zlyhal. Neuložené zmeny ostávajú aktívne.");
     }
@@ -781,9 +787,32 @@ export default function App() {
   async function importBackup(file: File) {
     try {
       const state = await readBackupFile(file);
+      const importedOlder = state.databaseVersion < databaseVersion;
+      const importSummary = [
+        `Aktuálna databáza: ${formatDatabaseVersion(databaseVersion)}`,
+        `Importovaný súbor: ${formatDatabaseVersion(state.databaseVersion)}`,
+        `Exportované: ${formatBackupDateTime(state.exportedAt || state.savedAt)}`,
+        `Skladby: ${state.songCount}`,
+        `Setlisty: ${state.setlistCount}`,
+        importedOlder ? "Pozor: importovaný súbor je starší než aktuálna databáza." : "",
+        "",
+        "Pred nahradením sa automaticky stiahne záloha aktuálnej databázy.",
+        "Naozaj nahradiť aktuálnu lokálnu databázu importom?",
+      ].filter(Boolean).join("\n");
+
+      if (!window.confirm(importSummary)) return;
+
+      try {
+        const backupAt = new Date().toISOString();
+        downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt));
+      } catch {
+        setStorageStatus("Import zastavený: nepodarilo sa vytvoriť zálohu aktuálnej databázy.");
+        return;
+      }
+
       applyPersistedState(state);
-      markCanonicalSaved(state.savedAt);
-      setStorageStatus(`Backup importovaný: ${state.songs.length} piesne.`);
+      markCanonicalSaved(state.exportedAt || state.savedAt);
+      setStorageStatus(`Backup importovaný: ${formatDatabaseVersion(state.databaseVersion)} · ${state.songs.length} piesne.`);
     } catch {
       setStorageStatus("Backup sa nepodarilo importovať. Súbor nevyzerá správne.");
     }
@@ -850,6 +879,7 @@ export default function App() {
     resetEditorHistory();
     setDriveFile(null);
     setDriveStatus("Drive admin sync je vypnutý.");
+    setDatabaseVersion(1);
     markCanonicalDirty();
     setStorageStatus("Dáta resetované na demo stav.");
   }
@@ -1199,6 +1229,18 @@ function formatShortTime(value: string) {
   return date.toLocaleTimeString("sk-SK", { hour: "2-digit", minute: "2-digit" });
 }
 
+function formatBackupDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "neznáme";
+  return date.toLocaleString("sk-SK", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function loadLegacyState(): PersistedState | null {
   for (const key of LEGACY_STORAGE_KEYS) {
     const state = readLegacyState(key);
@@ -1258,6 +1300,7 @@ function readLegacyState(key: string): PersistedState | null {
       notation: parsed.notation === "de" ? "de" : "intl",
       draft: { ...DEFAULT_DRAFT, ...(parsed.draft || {}) },
       driveFile: null,
+      databaseVersion: typeof parsed.databaseVersion === "number" ? parsed.databaseVersion : 1,
     });
   } catch {
     return null;

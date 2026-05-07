@@ -73,6 +73,12 @@ export type SectionGroup = {
 
 export type PersistedState = {
   version: 1;
+  appName: string;
+  schemaVersion: 1;
+  databaseVersion: number;
+  exportedAt: string;
+  songCount: number;
+  setlistCount: number;
   savedAt: string;
   songs: Song[];
   setlist: number[];

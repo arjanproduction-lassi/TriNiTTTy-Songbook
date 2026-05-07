@@ -6,6 +6,10 @@ const DB_VERSION = 2;
 const STORE = "state";
 const SONG_BACKUP_STORE = "song-before-save-backups";
 const STATE_KEY = "app";
+const BACKUP_APP_NAME = "TriNiTTTy Songbook";
+const BACKUP_SCHEMA_VERSION = 1;
+
+type PersistedStateInput = Omit<PersistedState, "version" | "appName" | "schemaVersion" | "exportedAt" | "songCount" | "setlistCount" | "savedAt">;
 
 const FALLBACK_DRAFT: ImportDraft = {
   title: "",
@@ -44,6 +48,11 @@ function stringValue(value: unknown, fallback = "") {
 
 function numberValue(value: unknown, fallback = 0) {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function positiveIntegerValue(value: unknown, fallback: number) {
+  const next = Math.floor(numberValue(value, fallback));
+  return next > 0 ? next : fallback;
 }
 
 function positiveId(value: unknown, fallback: number) {
@@ -180,6 +189,8 @@ function normalizeDriveFile(value: unknown): DriveFileMemory | null {
 
 export function normalizePersistedState(value: unknown): PersistedState {
   if (!isRecord(value) || value.version !== 1) throw new Error("Nepodporovana verzia backupu.");
+  const schemaVersion = positiveIntegerValue(value.schemaVersion, BACKUP_SCHEMA_VERSION);
+  if (schemaVersion !== BACKUP_SCHEMA_VERSION) throw new Error("Nepodporovana schema backupu.");
 
   const songs = normalizeSongs(value.songs);
   const validIds = new Set(songs.map((song) => song.id));
@@ -195,6 +206,12 @@ export function normalizePersistedState(value: unknown): PersistedState {
 
   return {
     version: 1,
+    appName: stringValue(value.appName, BACKUP_APP_NAME) || BACKUP_APP_NAME,
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    databaseVersion: positiveIntegerValue(value.databaseVersion, 1),
+    exportedAt: stringValue(value.exportedAt, stringValue(value.savedAt, new Date().toISOString())),
+    songCount: songs.length,
+    setlistCount: setlists.length,
     savedAt: stringValue(value.savedAt, new Date().toISOString()),
     songs,
     setlist,
@@ -262,11 +279,17 @@ export function clearState() {
   return runStore<undefined>("readwrite", (store) => store.delete(STATE_KEY)).then(() => undefined);
 }
 
-export function makePersistedBackup(state: Omit<PersistedState, "version" | "savedAt">): PersistedState {
+export function makePersistedBackup(state: PersistedStateInput, exportedAt = new Date().toISOString()): PersistedState {
   return {
-    version: 1,
-    savedAt: new Date().toISOString(),
     ...state,
+    version: 1,
+    appName: BACKUP_APP_NAME,
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    databaseVersion: positiveIntegerValue(state.databaseVersion, 1),
+    exportedAt,
+    songCount: state.songs.length,
+    setlistCount: state.setlists.length,
+    savedAt: exportedAt,
   };
 }
 
@@ -275,11 +298,21 @@ export function downloadBackup(state: PersistedState) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `trinittty-backup-v${state.version}-${backupTimestamp(new Date())}.json`;
+  link.download = backupFileName(state);
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+export function formatDatabaseVersion(version: number) {
+  return `v${String(positiveIntegerValue(version, 1)).padStart(3, "0")}`;
+}
+
+export function backupFileName(state: Pick<PersistedState, "databaseVersion" | "exportedAt">) {
+  const exportedAt = new Date(state.exportedAt);
+  const date = Number.isNaN(exportedAt.getTime()) ? new Date() : exportedAt;
+  return `TriNiTTTy_BandDB_${backupDate(date)}_${formatDatabaseVersion(state.databaseVersion)}.json`;
 }
 
 export function readBackupFile(file: File): Promise<PersistedState> {
@@ -336,6 +369,15 @@ function backupTimestamp(date: Date) {
     pad(date.getMonth() + 1),
     pad(date.getDate()),
   ].join("-") + `-${pad(date.getHours())}${pad(date.getMinutes())}`;
+}
+
+function backupDate(date: Date) {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-");
 }
 
 function backupFileTimestamp(date: Date) {
