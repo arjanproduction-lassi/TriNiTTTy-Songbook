@@ -934,7 +934,7 @@ export default function App() {
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
-    <div className={`min-h-screen ${printJob ? "bg-white" : "bg-zinc-50"} text-zinc-900`}>
+    <div className={`min-h-screen ${printJob ? "app-printing bg-white" : "bg-zinc-50"} text-zinc-900`}>
       {printJob ? (
         <div className="print-surface">
           <div className="print-mode-controls">

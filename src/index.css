@@ -50,15 +50,15 @@ body {
     background: white !important;
   }
 
-  .screen-surface {
+  .app-printing .screen-surface {
     display: none !important;
   }
 
-  .print-mode-controls {
+  .app-printing .print-mode-controls {
     display: none !important;
   }
 
-  .print-surface {
+  .app-printing .print-surface {
     position: static !important;
     display: block !important;
     width: 210mm !important;
@@ -74,7 +74,7 @@ body {
     page-break-after: avoid !important;
   }
 
-  .print-a4-stage {
+  .app-printing .print-a4-stage {
     display: block !important;
     width: 210mm !important;
     margin: 0 !important;
@@ -84,7 +84,7 @@ body {
     transform: none !important;
   }
 
-  .print-surface .a4-print-surface {
+  .app-printing .print-surface .a4-print-surface {
     width: 210mm !important;
     height: 297mm !important;
     min-height: 297mm !important;
