@@ -312,7 +312,7 @@ export function formatDatabaseVersion(version: number) {
 export function backupFileName(state: Pick<PersistedState, "databaseVersion" | "exportedAt">) {
   const exportedAt = new Date(state.exportedAt);
   const date = Number.isNaN(exportedAt.getTime()) ? new Date() : exportedAt;
-  return `TriNiTTTy_BandDB_${backupDate(date)}_${formatDatabaseVersion(state.databaseVersion)}.json`;
+  return `DB${formatDatabaseVersion(state.databaseVersion)}_TriNiTTTy_${backupDate(date)}.json`;
 }
 
 export function readBackupFile(file: File): Promise<PersistedState> {

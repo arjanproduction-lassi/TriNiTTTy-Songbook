@@ -22,7 +22,7 @@ Databazovy subor ma priponu:
 
 Priklad:
 
-`TriNiTTTy_BandDB_2026-05-08_v012.json`
+`DBv012_TriNiTTTy_2026-05-08.json`
 
 Databazovy subor sluzi na import do aplikacie.
 
@@ -69,7 +69,7 @@ Kazdy export databazy vytvara novy verzovany subor.
 
 Priklad:
 
-`TriNiTTTy_BandDB_2026-05-08_v012.json`
+`DBv012_TriNiTTTy_2026-05-08.json`
 
 Verzia databazy je dolezita, aby bolo jasne, kto ma aku verziu nacitanu.
 
@@ -124,7 +124,7 @@ Export databazy vytvori novy subor s verziou.
 
 Priklad:
 
-`TriNiTTTy_BandDB_2026-05-08_v013.json`
+`DBv013_TriNiTTTy_2026-05-08.json`
 
 Kazdy export je archivna verzia. Starsie exporty sa nemazu, pokial nie je iste, ze uz nie su potrebne.
 
@@ -145,7 +145,7 @@ Prehliadac/PWA z bezpecnostnych dovodov nemoze sam citat subory z disku pocitaca
 
 Spravna cesta musi byt internetova URL, napriklad:
 
-`https://.../TriNiTTTy_BandDB_latest.json`
+`https://.../DBv012_TriNiTTTy_2026-05-08.json`
 
 Bezny Google Drive share link nemusi fungovat ako priamy JSON zdroj. Pre plnu Google Drive integraciu bude neskor potrebne pouzit Google Drive API.
 

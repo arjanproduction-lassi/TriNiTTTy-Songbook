@@ -242,7 +242,7 @@ export function SongsView({
             <input
               value={remoteDatabaseUrlDraft}
               onChange={(event) => onRemoteDatabaseUrlDraftChange(event.target.value)}
-              placeholder="https://.../TriNiTTTy_BandDB_v003.json"
+              placeholder="https://.../DBv003_TriNiTTTy_2026-05-08.json"
               className="mt-1 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none"
             />
             <div className="mt-2 text-xs text-zinc-500">

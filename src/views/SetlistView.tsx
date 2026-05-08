@@ -83,6 +83,7 @@ export function SetlistView({
   const renameActiveSetlist = () => {
     if (trimmedSetlistName) renameSetlist(trimmedSetlistName);
   };
+  const activeSetlistCount = setlists.length;
   const sourceKey = setlistPreviewSong ? normalizeKeyInput(setlistPreviewSong.key) : "";
   const renderedKey = renderedSetlistPreview ? normalizeKeyInput(renderedSetlistPreview.key) : "";
   const keyStatus = sourceKey && renderedKey ? `${sourceKey} -> ${renderedKey}` : "";
@@ -95,9 +96,15 @@ export function SetlistView({
             <h2 className="text-lg font-semibold md:text-xl">Setlist</h2>
             <p className="mt-1 text-sm text-zinc-500">Klikni na skladbu vľavo a vpravo sa ukáže celý A4 paper.</p>
           </div>
-          <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200">
-            <div className="text-xs text-zinc-500">Celkový čas</div>
-            <div className="font-bold">{formatTotalDuration(setlistSongs)}</div>
+          <div className="flex flex-wrap gap-2">
+            <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200">
+              <div className="text-xs text-zinc-500">Setlisty</div>
+              <div className="font-bold">{activeSetlistCount}</div>
+            </div>
+            <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200">
+              <div className="text-xs text-zinc-500">Celkový čas</div>
+              <div className="font-bold">{formatTotalDuration(setlistSongs)}</div>
+            </div>
           </div>
         </div>
 
