@@ -822,7 +822,7 @@ export default function App() {
       }
 
       applyPersistedState(state);
-      markCanonicalSaved(state.exportedAt || state.savedAt);
+      markCanonicalDirty();
       setStorageStatus(`Backup importovaný: ${formatDatabaseVersion(state.databaseVersion)} · ${state.songs.length} piesne.`);
     } catch {
       setStorageStatus("Backup sa nepodarilo importovať. Súbor nevyzerá správne.");
@@ -906,7 +906,7 @@ export default function App() {
     }
 
     applyPersistedState(state);
-    markCanonicalSaved(state.exportedAt || state.savedAt);
+    markCanonicalDirty();
     setRemoteDatabaseCheck({ checkedAt: new Date().toISOString(), status: "same", state });
     setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)}.`);
   }
@@ -1003,12 +1003,8 @@ export default function App() {
     setView("setlist");
   };
   const performanceView = view === "performance";
-  const canonicalDirty = canonicalSaveStatus.dirty;
-  const canonicalStatusText = canonicalDirty
-    ? "Neexportované zmeny v databáze"
-    : canonicalSaveStatus.lastCanonicalSaveAt
-      ? `Databáza exportovaná: ${formatShortTime(canonicalSaveStatus.lastCanonicalSaveAt)}`
-      : "Databáza zatiaľ nebola exportovaná";
+  const canonicalDirty = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
+  const canonicalStatusText = canonicalDirty ? "Exportovať databázu" : "Databáza exportovaná";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
@@ -1060,7 +1056,7 @@ export default function App() {
               <NavButton current={view} target="import" onClick={setView}>Import</NavButton>
               <NavButton current={view} target="song" onClick={setView}>Náhľad</NavButton>
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
-              <button onClick={exportCanonicalDatabase} className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>Exportovať databázu</button>
+              <button onClick={exportCanonicalDatabase} className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>{canonicalDirty ? "Exportovať databázu" : "Exportovať znova"}</button>
               {serviceWorkerUpdateReady && (
                 <button onClick={activateWaitingServiceWorker} className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Aktualizovať appku</button>
               )}
@@ -1079,6 +1075,7 @@ export default function App() {
             selectedSong={selectedSong}
             storageStatus={storageStatus}
             canInstall={canInstall}
+            canonicalDirty={canonicalDirty}
             onQuery={setQuery}
             onCreateNewSong={startNewSongDraft}
             onOpen={openSong}
