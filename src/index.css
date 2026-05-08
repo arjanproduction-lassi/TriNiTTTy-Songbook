@@ -54,6 +54,7 @@ html,
   html.app-printing,
   html.app-printing body,
   html.app-printing #root,
+  #root.app-printing,
   body.app-printing,
   body.app-printing #root {
     margin: 0 !important;
@@ -66,18 +67,26 @@ html,
   }
 
   html.app-printing .screen-surface,
+  #root.app-printing .screen-surface,
+  .app-printing .screen-surface,
   body.app-printing .screen-surface {
     display: none !important;
   }
 
   html.app-printing .print-mode-controls,
+  #root.app-printing .print-mode-controls,
+  .app-printing .print-mode-controls,
   body.app-printing .print-mode-controls,
   html.app-printing .print-surface > :not(.print-a4-stage),
+  #root.app-printing .print-surface > :not(.print-a4-stage),
+  .app-printing .print-surface > :not(.print-a4-stage),
   body.app-printing .print-surface > :not(.print-a4-stage) {
     display: none !important;
   }
 
   html.app-printing .print-surface,
+  #root.app-printing .print-surface,
+  .app-printing .print-surface,
   body.app-printing .print-surface {
     position: static !important;
     display: block !important;
@@ -95,6 +104,8 @@ html,
   }
 
   html.app-printing .print-a4-stage,
+  #root.app-printing .print-a4-stage,
+  .app-printing .print-a4-stage,
   body.app-printing .print-a4-stage {
     display: block !important;
     width: 210mm !important;
@@ -106,6 +117,8 @@ html,
   }
 
   html.app-printing .print-surface .a4-print-surface,
+  #root.app-printing .print-surface .a4-print-surface,
+  .app-printing .print-surface .a4-print-surface,
   body.app-printing .print-surface .a4-print-surface {
     width: 210mm !important;
     height: 297mm !important;

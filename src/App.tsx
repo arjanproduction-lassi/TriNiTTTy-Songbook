@@ -1243,6 +1243,7 @@ function firstEditableIndex(lines: Line[]) {
 function enterBrowserPrintMode() {
   document.documentElement.classList.add("app-printing");
   document.body.classList.add("app-printing");
+  document.getElementById("root")?.classList.add("app-printing");
 }
 
 function printVisibleA4Mode() {
@@ -1257,6 +1258,7 @@ function printVisibleA4Mode() {
 function leaveBrowserPrintMode() {
   document.documentElement.classList.remove("app-printing");
   document.body.classList.remove("app-printing");
+  document.getElementById("root")?.classList.remove("app-printing");
 }
 
 function makePrintDocumentTitle(song: Song) {

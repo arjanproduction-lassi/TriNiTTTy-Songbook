@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { DriveFileMemory, NamedSetlist, RemoteDatabaseCheck, Song } from "../types";
-import { A4Sheet } from "../components/A4Sheet";
+import { A4Sheet, FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
 import { buildSections, normalizeSongTitle } from "../lib/import";
@@ -297,7 +297,14 @@ export function SongsView({
         <div className="mt-2 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
         <div className="mt-4">
           {selectedSong ? (
-            <A4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} />
+            <>
+              <div className="min-w-0 xl:hidden">
+                <FitA4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} readerZoom={100} className="h-[72svh] rounded-3xl ring-1 ring-zinc-200" />
+              </div>
+              <div className="hidden min-w-0 xl:block">
+                <A4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} />
+              </div>
+            </>
           ) : (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">Nie je vybraná žiadna skladba.</div>
           )}
