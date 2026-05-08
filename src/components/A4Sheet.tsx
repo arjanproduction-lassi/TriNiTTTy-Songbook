@@ -85,7 +85,7 @@ export function A4Sheet({ song, sections, selectedIndex, onSelectBlock, responsi
   responsive?: boolean;
 }) {
   return (
-    <div className="overflow-auto max-h-[84vh] rounded-3xl bg-zinc-100 p-3 ring-1 ring-zinc-200">
+    <div className="max-w-full overflow-auto max-h-[84vh] rounded-3xl bg-zinc-100 p-3 ring-1 ring-zinc-200">
       <A4Page song={song} sections={sections} selectedIndex={selectedIndex} onSelectBlock={onSelectBlock} responsive={responsive} />
     </div>
   );

@@ -1054,7 +1054,7 @@ export default function App() {
               <h1 className="mt-0.5 text-xl font-bold tracking-tight">Songbook PWA MVP</h1>
               {!online && <p className="mt-1 text-xs font-semibold text-amber-700">Offline režim: pracuješ z lokálnej databázy a cache.</p>}
               <p className="mt-0.5 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
-              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · build {BUILD_DATE}</p>
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · DB {formatDatabaseVersion(databaseVersion)} · build {BUILD_DATE}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className={`rounded-xl px-3 py-1.5 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-50 text-amber-900 ring-amber-300" : "bg-emerald-50 text-emerald-900 ring-emerald-200"}`}>
                   {canonicalStatusText}
@@ -1396,6 +1396,9 @@ function writeRemoteDatabaseUrl(url: string) {
 function normalizeRemoteDatabaseUrl(value: string) {
   const trimmed = value.trim();
   if (!trimmed) throw new Error("Zadaj URL kapelovej databázy.");
+  if (!/^https?:\/\//i.test(trimmed)) {
+    throw new Error("Toto nie je URL. Použi verejný https link alebo manuálny import súboru.");
+  }
 
   let url: URL;
   try {

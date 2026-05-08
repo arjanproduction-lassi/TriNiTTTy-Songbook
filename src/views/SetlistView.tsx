@@ -88,11 +88,11 @@ export function SetlistView({
   const keyStatus = sourceKey && renderedKey ? `${sourceKey} -> ${renderedKey}` : "";
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[0.76fr_1.24fr]">
+    <div className="grid min-w-0 gap-3 md:gap-4 xl:grid-cols-[0.76fr_1.24fr]">
       <Card>
         <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Setlist</h2>
+            <h2 className="text-lg font-semibold md:text-xl">Setlist</h2>
             <p className="mt-1 text-sm text-zinc-500">Klikni na skladbu vľavo a vpravo sa ukáže celý A4 paper.</p>
           </div>
           <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200">
@@ -121,14 +121,14 @@ export function SetlistView({
           </div>
         </div>
 
-        <div className="mt-3 grid max-h-[calc(100vh-22rem)] gap-2 overflow-auto pr-1 md:grid-cols-2 xl:grid-cols-1">
+        <div className="mt-3 grid max-h-[55svh] min-w-0 gap-2 overflow-auto pr-1 md:max-h-[calc(100vh-22rem)] md:grid-cols-2 xl:grid-cols-1">
           {!setlistSongs.length && (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">
               Setlist je zatiaľ prázdny. Pridaj skladby z knižnice.
             </div>
           )}
           {setlistSongs.map((song, index) => (
-            <div key={`${song.id}-${index}`} className={`w-full rounded-xl border p-3 ${setlistPreviewSong?.id === song.id ? "border-zinc-900 bg-zinc-900 text-white" : song.deletedAt ? "border-amber-200 bg-amber-50 text-amber-950" : "border-zinc-200 bg-zinc-50 text-zinc-900"}`}>
+            <div key={`${song.id}-${index}`} className={`min-w-0 w-full rounded-xl border p-3 ${setlistPreviewSong?.id === song.id ? "border-zinc-900 bg-zinc-900 text-white" : song.deletedAt ? "border-amber-200 bg-amber-50 text-amber-950" : "border-zinc-200 bg-zinc-50 text-zinc-900"}`}>
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <button type="button" disabled={Boolean(song.deletedAt)} onClick={() => setSetlistPreviewSongId(song.id)} className="min-w-0 flex-1 text-left disabled:cursor-not-allowed">
                   <div className="font-semibold">{index + 1}. {song.deletedAt ? "Odstránená skladba" : normalizeSongTitle(song.title)}</div>
@@ -156,17 +156,17 @@ export function SetlistView({
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
           <PrimaryButton disabled={!setlistSongs.length} onClick={startPerformance}>Spustiť koncertný režim</PrimaryButton>
           {renderedSetlistPreview && <SoftButton onClick={() => printSong(renderedSetlistPreview)}>Tlačiť / PDF</SoftButton>}
           <SoftButton onClick={() => setView("songs")}>Pridať ďalšie piesne</SoftButton>
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-xl font-semibold">A4 náhľad vybratej skladby</h2>
+      <Card className="min-w-0">
+        <h2 className="text-lg font-semibold md:text-xl">A4 náhľad vybratej skladby</h2>
         <div className="mt-1 text-sm text-zinc-600">Reálny veľký papier vybratej položky zo setlistu.</div>
-        <div className="mt-3">
+        <div className="mt-3 min-w-0">
           {renderedSetlistPreview ? (
             <A4Sheet song={renderedSetlistPreview} sections={setlistPreviewSections} />
           ) : (

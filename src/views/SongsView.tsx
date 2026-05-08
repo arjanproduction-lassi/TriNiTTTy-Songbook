@@ -110,17 +110,17 @@ export function SongsView({
   }, [openSetlistSongId]);
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-      <div className="space-y-4">
-        <Card>
-          <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <h2 className="text-xl font-semibold">Knižnica piesní</h2>
+    <div className="grid min-w-0 gap-3 md:gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+      <div className="flex min-w-0 flex-col gap-3 md:gap-4">
+        <Card className="order-2 md:order-1">
+          <div className="mb-3 flex flex-col gap-2 md:mb-4 md:flex-row md:items-center md:justify-between md:gap-3">
+            <h2 className="text-lg font-semibold md:text-xl">Knižnica piesní</h2>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <button onClick={onCreateNewSong} className="rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">Pridať skladbu</button>
+              <button onClick={onCreateNewSong} className="w-full rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white sm:w-auto">Pridať skladbu</button>
               <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Hľadať..." className="w-full rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm outline-none sm:w-64" />
             </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 md:space-y-3">
             {!filteredSongs.length && (
               <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">
                 Knižnica je prázdna. Novú skladbu pridáš cez Import alebo obnovíš zo zálohy.
@@ -131,30 +131,30 @@ export function SongsView({
               const pickerOpen = openSetlistSongId === song.id;
 
               return (
-              <div key={song.id} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <div className="flex flex-col gap-2">
-                  <div className="text-lg font-semibold">{normalizeSongTitle(song.title)}</div>
+              <div key={song.id} className="min-w-0 rounded-xl border border-zinc-200 bg-zinc-50 p-3 md:rounded-2xl md:p-4">
+                <div className="flex min-w-0 flex-col gap-1 md:gap-2">
+                  <div className="min-w-0 break-words text-base font-semibold md:text-lg">{normalizeSongTitle(song.title)}</div>
                   <div className="text-sm text-zinc-500">{song.artist}</div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 md:gap-2">
                     <Chip>{normalizeKeyInput(song.key)}</Chip>
                     <Chip>{song.bpm} BPM</Chip>
                     <Chip>{song.duration}</Chip>
                   </div>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button onClick={() => onOpen(song)} className="rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">Otvoriť</button>
-                  <button onClick={() => onEdit(song)} className="rounded-2xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Upraviť</button>
+                <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 md:mt-4 md:gap-2">
+                  <button onClick={() => onOpen(song)} className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white">Otvoriť</button>
+                  <button onClick={() => onEdit(song)} className="rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white">Upraviť</button>
                   {hasMultipleSetlists ? (
-                    <div className="relative">
+                    <div className="relative min-w-0">
                       <button
                         onClick={() => setOpenSetlistSongId(pickerOpen ? null : song.id)}
                         aria-expanded={pickerOpen}
-                        className="rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200"
+                        className="rounded-xl bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200"
                       >
                         Setlisty…
                       </button>
                       {pickerOpen && (
-                        <div ref={pickerRef} className="absolute left-0 z-20 mt-2 w-72 rounded-2xl bg-white p-3 text-sm shadow-lg ring-1 ring-zinc-200">
+                        <div ref={pickerRef} className="absolute left-0 z-20 mt-2 w-[min(18rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] rounded-2xl bg-white p-3 text-sm shadow-lg ring-1 ring-zinc-200">
                           <div className="mb-2 flex items-center justify-between gap-3">
                             <div className="font-semibold text-zinc-800">Setlisty</div>
                             <button onClick={() => setOpenSetlistSongId(null)} className="text-xs font-semibold text-zinc-500 hover:text-zinc-900">Zavrieť</button>
@@ -181,12 +181,12 @@ export function SongsView({
                       )}
                     </div>
                   ) : (
-                    <button onClick={() => onToggleSetlist(song.id)} className={`rounded-2xl px-4 py-2 text-sm font-semibold ring-1 ${isInSetlist(song.id) ? "bg-rose-50 text-rose-800 ring-rose-200" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}>{isInSetlist(song.id) ? "Odobrať zo setlistu" : "Pridať do setlistu"}</button>
+                    <button onClick={() => onToggleSetlist(song.id)} className={`rounded-xl px-3 py-2 text-sm font-semibold ring-1 ${isInSetlist(song.id) ? "bg-rose-50 text-rose-800 ring-rose-200" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}>{isInSetlist(song.id) ? "Odobrať zo setlistu" : "Pridať do setlistu"}</button>
                   )}
-                  <button onClick={() => onDelete(song.id)} className="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white">Odstrániť</button>
+                  <button onClick={() => onDelete(song.id)} className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white">Odstrániť</button>
                 </div>
                 {hasMultipleSetlists && songSetlists.length > 0 && (
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 md:mt-3 md:gap-2">
                     <span>In:</span>
                     {songSetlists.map((name) => <Chip key={name}>{name}</Chip>)}
                   </div>
@@ -197,7 +197,7 @@ export function SongsView({
           </div>
         </Card>
 
-        <Card>
+        <Card className="order-3 md:order-2">
           <details>
             <summary className="cursor-pointer text-lg font-semibold">Kôš ({deletedSongs.length})</summary>
             <div className="mt-3 space-y-2">
@@ -219,10 +219,10 @@ export function SongsView({
           </details>
         </Card>
 
-        <Card>
-          <h2 className="text-xl font-semibold">PWA / lokálna databáza</h2>
+        <Card className="order-1 md:order-3">
+          <h2 className="text-lg font-semibold md:text-xl">PWA / lokálna databáza</h2>
           <div className="mt-3"><InfoBox tone="emerald">{storageStatus}</InfoBox></div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
             {canInstall && <PrimaryButton onClick={onInstall}>Nainštalovať appku</PrimaryButton>}
             <SoftButton onClick={onExportBackup}>Exportovať databázu</SoftButton>
             <label className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
@@ -236,7 +236,7 @@ export function SongsView({
           </div>
           <p className="mt-3 text-sm text-zinc-500">Piesne, setlist a nastavenia sa ukladajú do IndexedDB v tomto zariadení.</p>
 
-          <div className="mt-4 rounded-2xl bg-zinc-50 p-4 text-sm ring-1 ring-zinc-200">
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
             <div className="font-semibold text-zinc-800">Kapelový zdroj databázy</div>
             <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">URL kapelovej databázy</label>
             <input
@@ -248,7 +248,7 @@ export function SongsView({
             <div className="mt-2 text-xs text-zinc-500">
               {remoteDatabaseUrl ? `Uložený zdroj: ${remoteDatabaseUrl}` : "Zdroj databázy zatiaľ nie je uložený."}
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
               <SoftButton onClick={onSaveRemoteDatabaseUrl}>Uložiť URL</SoftButton>
               <SoftButton disabled={!remoteDatabaseUrl && !remoteDatabaseUrlDraft.trim()} onClick={onCheckRemoteDatabaseUpdate}>Skontrolovať aktualizáciu</SoftButton>
               <SoftButton disabled={!remoteDatabaseUrl && !remoteDatabaseUrlDraft.trim()} onClick={onClearRemoteDatabaseUrl}>Vymazať URL</SoftButton>
@@ -275,14 +275,14 @@ export function SongsView({
             )}
           </div>
 
-          <div className="mt-4 rounded-2xl bg-zinc-50 p-4 text-sm ring-1 ring-zinc-200">
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
             <div className="font-semibold text-zinc-800">Google Drive admin</div>
             <div className="mt-1 text-zinc-600">
               {driveFile ? `Drive file: ${driveFile.fileName}` : "Drive file nie je vybraný."}
             </div>
             {!!driveFile?.displayPath && <div className="mt-1 text-xs text-zinc-500">{driveFile.displayPath}</div>}
             <div className="mt-2 text-xs text-zinc-500">{driveConfigured ? driveStatus : driveConfigMessage}</div>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
               <SoftButton disabled={!driveConfigured} onClick={onChooseDriveFile}>{driveFile ? "Change Drive file" : "Choose Drive file"}</SoftButton>
               <SoftButton disabled={!driveConfigured} onClick={onLoadFromDrive}>Load from Drive</SoftButton>
               <SoftButton disabled={!driveConfigured} onClick={onSaveToDrive}>Save to Drive</SoftButton>
@@ -292,7 +292,7 @@ export function SongsView({
         </Card>
       </div>
 
-      <Card>
+      <Card className="min-w-0">
         <h2 className="text-xl font-semibold">Rýchly A4 náhľad</h2>
         <div className="mt-2 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
         <div className="mt-4">

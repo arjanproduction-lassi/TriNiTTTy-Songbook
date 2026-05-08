@@ -19,7 +19,7 @@ export function Chip({ children }: ChildrenProps) {
 }
 
 export function Card({ children, className = "" }: ChildrenProps & { className?: string }) {
-  return <div className={`rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 ${className}`}>{children}</div>;
+  return <div className={`min-w-0 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-200 md:p-4 ${className}`}>{children}</div>;
 }
 
 export function InfoBox({ children, tone = "zinc" }: ChildrenProps & { tone?: "zinc" | "amber" | "sky" | "emerald" }) {
