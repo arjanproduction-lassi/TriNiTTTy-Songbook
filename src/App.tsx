@@ -1004,7 +1004,7 @@ export default function App() {
   };
   const performanceView = view === "performance";
   const canonicalDirty = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
-  const canonicalStatusText = canonicalDirty ? "Exportovať databázu" : "Databáza exportovaná";
+  const canonicalStatusText = canonicalDirty ? "Zmeny nie sú exportované" : "Databáza aktuálna";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
@@ -1056,7 +1056,9 @@ export default function App() {
               <NavButton current={view} target="import" onClick={setView}>Import</NavButton>
               <NavButton current={view} target="song" onClick={setView}>Náhľad</NavButton>
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
-              <button onClick={exportCanonicalDatabase} className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-500 text-white ring-amber-500 hover:bg-amber-600" : "bg-white text-emerald-800 ring-emerald-200 hover:bg-emerald-50"}`}>{canonicalDirty ? "Exportovať databázu" : "Exportovať znova"}</button>
+              {canonicalDirty && (
+                <button onClick={exportCanonicalDatabase} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white ring-1 ring-amber-500 hover:bg-amber-600">Exportovať databázu</button>
+              )}
               {serviceWorkerUpdateReady && (
                 <button onClick={activateWaitingServiceWorker} className="rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white">Aktualizovať appku</button>
               )}

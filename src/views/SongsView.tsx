@@ -226,7 +226,7 @@ export function SongsView({
           <div className="mt-3"><InfoBox tone="emerald">{storageStatus}</InfoBox></div>
           <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
             {canInstall && <PrimaryButton onClick={onInstall}>Nainštalovať appku</PrimaryButton>}
-            <SoftButton onClick={onExportBackup}>{canonicalDirty ? "Exportovať databázu" : "Exportovať znova"}</SoftButton>
+            <SoftButton onClick={onExportBackup}>{canonicalDirty ? "Exportovať databázu" : "Stiahnuť kópiu DB"}</SoftButton>
             <label className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
               Importovať backup
               <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => {
