@@ -110,9 +110,9 @@ export function SongsView({
   }, [openSetlistSongId]);
 
   return (
-    <div className="grid min-w-0 gap-3 md:gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-      <div className="flex min-w-0 flex-col gap-3 md:gap-4">
-        <Card className="order-2 md:order-1">
+    <div className="grid min-w-0 items-start gap-3 md:gap-6 lg:grid-cols-[minmax(320px,0.82fr)_minmax(520px,1.18fr)]">
+      <div className="order-2 flex min-w-0 flex-col gap-3 md:gap-4 lg:order-1">
+        <Card className="order-1 lg:flex lg:h-[calc(100svh-12rem)] lg:min-h-0 lg:flex-col">
           <div className="mb-3 flex flex-col gap-2 md:mb-4 md:flex-row md:items-center md:justify-between md:gap-3">
             <h2 className="text-lg font-semibold md:text-xl">Knižnica piesní</h2>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -120,7 +120,7 @@ export function SongsView({
               <input value={query} onChange={(e) => onQuery(e.target.value)} placeholder="Hľadať..." className="w-full rounded-2xl border border-zinc-300 bg-zinc-50 px-4 py-2 text-sm outline-none sm:w-64" />
             </div>
           </div>
-          <div className="space-y-2 md:space-y-3">
+          <div className="min-h-0 max-h-[52svh] space-y-2 overflow-auto pr-1 md:max-h-[58svh] md:space-y-3 lg:max-h-none lg:flex-1">
             {!filteredSongs.length && (
               <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">
                 Knižnica je prázdna. Novú skladbu pridáš cez Import alebo obnovíš zo zálohy.
@@ -197,7 +197,7 @@ export function SongsView({
           </div>
         </Card>
 
-        <Card className="order-3 md:order-2">
+        <Card className="order-3">
           <details>
             <summary className="cursor-pointer text-lg font-semibold">Kôš ({deletedSongs.length})</summary>
             <div className="mt-3 space-y-2">
@@ -219,7 +219,7 @@ export function SongsView({
           </details>
         </Card>
 
-        <Card className="order-1 md:order-3">
+        <Card className="order-2">
           <h2 className="text-lg font-semibold md:text-xl">PWA / lokálna databáza</h2>
           <div className="mt-3"><InfoBox tone="emerald">{storageStatus}</InfoBox></div>
           <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
@@ -292,7 +292,7 @@ export function SongsView({
         </Card>
       </div>
 
-      <Card className="min-w-0">
+      <Card className="order-1 min-w-0 lg:sticky lg:top-4 lg:order-2 lg:max-h-[calc(100svh-2rem)] lg:overflow-hidden">
         <h2 className="text-xl font-semibold">Rýchly A4 náhľad</h2>
         <div className="mt-2 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
         <div className="mt-4">
