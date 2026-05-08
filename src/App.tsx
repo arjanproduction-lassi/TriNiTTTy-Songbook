@@ -1019,6 +1019,9 @@ export default function App() {
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Tlač / PDF</div>
               <div className="mt-0.5 font-semibold text-zinc-900">{normalizeSongTitle(printJob.title)}</div>
+              <div className="mt-1 max-w-[42rem] text-xs leading-snug text-zinc-500">
+                Ak chceš PDF uložiť do tabletu, v Android dialógu vyber Súbory / Stiahnuté namiesto Google Drive.
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={printVisibleA4Mode} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
