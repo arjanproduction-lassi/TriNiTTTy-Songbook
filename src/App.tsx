@@ -193,20 +193,9 @@ export default function App() {
     const previousTitle = document.title || "TriNiTTTy Songbook";
     document.title = makePrintDocumentTitle(printJob);
 
-    const restoreTitle = () => {
-      document.title = previousTitle;
-    };
-    const afterPrint = () => {
-      restoreTitle();
-      leaveBrowserPrintMode();
-      setPrintJob(null);
-    };
-    window.addEventListener("afterprint", afterPrint);
-
     return () => {
-      window.removeEventListener("afterprint", afterPrint);
       leaveBrowserPrintMode();
-      restoreTitle();
+      document.title = previousTitle;
     };
   }, [printJob]);
 
