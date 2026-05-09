@@ -12,6 +12,18 @@ Pravidlo projektu:
 
 **T8 je jediny source of truth. A4 preview je vizualna pravda.**
 
+Produktova politika:
+
+- Appka je pre solo muzikantov a zacinajuce/pracujuce kapely, nie pre produkcie s vlastnym IT timom.
+- Ciel je prakticka priprava skladieb, setlistov a koncertna poistka, nie dalsi drahy cloudovy system.
+- Muzikant sa ma vdaka appke skladbu naucit, nie byt na nu navzdy priputany.
+- Na podiu ma appka sluzit ako rychla poistka pri vypadku pamate, orientacii v texte, akordoch a setliste.
+- Realita a citatelnost maju prednost pred efektami.
+- Ziadny cirkus: ziadne zbytocne efekty, ziadna vizualna exhibicia, ziadne funkcie len preto, ze sa daju urobit.
+- Pre kapely ma byt preferovany lacny, prakticky a pochopitelny workflow: offline-first, Drive-first, bez povinneho servera a bez predplatneho.
+- Google Drive smer je kontrolovany databazovy zdroj, nie realtime sync.
+- Stage/dark rezim, ked pride, ma menej svietit do oci a nerusit. Nie je to "cool tema", ale pracovny rezim pre podmienky na podiu.
+
 ## Ako zapisovat zaznam
 
 Kazdy zaznam by mal mat:
