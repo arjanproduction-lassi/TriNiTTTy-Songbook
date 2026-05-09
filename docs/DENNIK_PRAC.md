@@ -27,6 +27,91 @@ Kazdy zaznam by mal mat:
 
 ## 2026-05-09
 
+### ZNAMY BUG - importovana databaza na mobile/tablete ostava v dirty stave
+
+Stav:
+
+- Zatial nezmenene v kode.
+- Manualny workaround pre kapelu.
+
+Problem:
+
+- Na PC sa databazovy stav sprava zrozumitelne.
+- Na mobile/tablete po importe aktualnej oficialnej databazy z Google Drive moze hlavicka stale ukazovat stav typu `Zmeny nie su exportovane`.
+- Samotna verzia databazy v hlavicke pritom moze byt spravna, napriklad `DB v033`.
+
+Docasne pravidlo pre kapelu:
+
+- Oficialna pravda je cislo databazy v hlavicke.
+- Ak je oficialna verzia `DB v033` a clen kapely ma v hlavicke `DB v033`, je aktualny.
+- Hlasenie o neexportovanych zmenach po importe na mobile/tablete je zatial zname UX/data-state zavadzanie.
+
+Zaradenie:
+
+- High priority UX/data-state bug.
+- Nie je to blokator hrania, ak DB verzia v hlavicke sedi a skladby su nacitane spravne.
+- Stane sa RC blockerom, ak by import nezmenil DB verziu, nacital zle data alebo by hrozila strata dat.
+
+Navrhovana oprava:
+
+- Po uspesnom manualnom importe validnej databazy oznacit databazu ako clean/current.
+- Po uspesnom remote importe validnej databazy oznacit databazu ako clean/current.
+- Nezvysovat `databaseVersion` pri importe.
+- Dirty stav zapinat az po lokalnej uprave po importe.
+
+Manualny test po buducej oprave:
+
+- Importovat oficialnu DB na PC, mobile a tablete.
+- Overit, ze hlavicka ukazuje importovanu DB verziu.
+- Overit, ze app hned po importe nesvieti ako neexportovana.
+- Urobit lokalnu zmenu a overit, ze dirty varovanie sa zapne.
+- Exportovat a overit, ze dirty varovanie zhasne.
+
+### PLAN - Google Drive databazovy zdroj ako kontrolovana pravda
+
+Stav:
+
+- Neimplementovat hned.
+- Premysliet ako dalsi systemovy krok po realnych testoch.
+
+Produktova myslienka:
+
+- Admin/bandleader spravuje oficialnu databazu.
+- Oficialny databazovy JSON je ulozeny na Google Drive.
+- Pouzivatel v appke urci jeden oficialny zdroj databazy.
+- App vie z tohto zdroja nacitat metadata databazy a porovnat ich s lokalnou DB verziou.
+- App vie pouzivatelovi povedat, ci je lokalna databaza aktualna.
+
+Dolezite pravidla:
+
+- Toto nema byt realtime sync.
+- Toto nema byt spolocne online editovanie.
+- Toto nema byt automaticky merge konfliktov.
+- Lokalna app databaza ostava pracovna kopia.
+- Drive databazovy subor je kontrolovany zdroj aktualizacii.
+- Transpozicia, zoom, vybrata skladba a practice stav ostavaju iba lokalne.
+
+Technicky dolezite:
+
+- Nepouzivat lokalnu cestu typu `C:\` alebo `F:\`.
+- Nepouzivat nazov priecinka ako stabilnu identitu.
+- Stabilna identita musi byt Google Drive file ID alebo jasne vybrany remote URL/file endpoint.
+- Bezne Google Drive share linky nemusia byt vhodne ako priamy JSON zdroj bez Drive API.
+
+Mozny MVP smer:
+
+- Faza 1: manualny export/import ostava hlavny workflow.
+- Faza 2: remote DB URL vie iba kontrolovat a importovat databazovu verziu.
+- Faza 3: Google Drive file picker / vybrany subor cez Drive API.
+- Faza 4: admin Save to Drive / members Load from Drive, stale bez realtime syncu.
+
+Otvorene otazky:
+
+- Chceme najprv jednoduchy verejny HTTPS JSON endpoint?
+- Alebo rovno Google Drive API s vybranym suborom?
+- Kto smie zapisovat oficialnu databazu?
+- Ako jasne odlisit admin workflow od member workflow bez velkeho login systemu?
+
 ### FIX - power chordy v importe, repeat a pair blokoch
 
 Commit:
