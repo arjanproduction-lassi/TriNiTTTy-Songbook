@@ -2,7 +2,7 @@ import type { Line, Notation, Song } from "../types";
 import type { ChordAnchor } from "../types";
 import { normalizePairLine, renderChordAnchors } from "./chordAnchors";
 
-const CHORD_REGEX = /^(?:[A-H](?:#|b)?)(?:m(?!aj)|maj7|maj9|maj|min|sus2|sus4|dim|aug|add9|add11|add13|6|7|9|11|13|m6|m7|m9|m11|m13)?(?:\/[A-H](?:#|b)?)?$/;
+const CHORD_REGEX = /^(?:[A-H](?:#|b)?)(?:m(?!aj)|maj7|maj9|maj|min|sus2|sus4|dim|aug|add9|add11|add13|5|6|7|9|11|13|m6|m7|m9|m11|m13)?(?:\/[A-H](?:#|b)?)?$/;
 const ROOT_REGEX = /^([A-H])([#b]?)([^/\s]*)(?:\/([A-H])([#b]?))?$/;
 const PASS_TOKENS = new Set(["-", "/", "|", "||", "/:", ":/", "x", "2x", "4x", "8x"]);
 
@@ -51,17 +51,19 @@ function transposeRoot(root: string, steps: number, notation: Notation, preferFl
 
 export function transposeChordToken(token: string, steps: number, notation: Notation) {
   if (PASS_TOKENS.has(token)) return token;
-  const m = token.match(ROOT_REGEX);
+  const { prefix: repeatPrefix, core, suffix: repeatSuffix } = unwrapRepeatToken(token);
+  if (!core) return token;
+  const m = core.match(ROOT_REGEX);
   if (!m) return token;
 
-  const [, rootL, rootA = "", suffix = "", bassL, bassA = ""] = m;
+  const [, rootL, rootA = "", chordSuffix = "", bassL, bassA = ""] = m;
   const root = `${rootL}${rootA}`;
   const bass = bassL ? `${bassL}${bassA}` : "";
-  const preferFlat = rootA === "b" || bassA === "b" || /(^|\/)(Bb|Eb|Ab|Db|Gb)/.test(token);
+  const preferFlat = rootA === "b" || bassA === "b" || /(^|\/)(Bb|Eb|Ab|Db|Gb)/.test(core);
   const nextRoot = transposeRoot(root, steps, notation, preferFlat);
   const nextBass = bass ? transposeRoot(bass, steps, notation, preferFlat) : "";
 
-  return `${nextRoot}${suffix}${nextBass ? `/${nextBass}` : ""}`;
+  return `${repeatPrefix}${nextRoot}${chordSuffix}${nextBass ? `/${nextBass}` : ""}${repeatSuffix}`;
 }
 
 export function transposeChordLine(text: string, steps: number, notation: Notation) {
@@ -79,7 +81,9 @@ export function renderTransposedAnchors(anchors: readonly ChordAnchor[], steps: 
 }
 
 export function isChordToken(token: string) {
-  return PASS_TOKENS.has(token) || CHORD_REGEX.test(token);
+  if (PASS_TOKENS.has(token)) return true;
+  const { core } = unwrapRepeatToken(token);
+  return Boolean(core) && CHORD_REGEX.test(core);
 }
 
 export function isChordLikeLine(text: string) {
@@ -87,6 +91,24 @@ export function isChordLikeLine(text: string) {
   if (!trimmed || (trimmed.startsWith("[") && trimmed.endsWith("]"))) return false;
   if (/^(cue:|poznámka:|note:)/i.test(trimmed)) return false;
   return trimmed.split(/\s+/).filter(Boolean).every(isChordToken);
+}
+
+function unwrapRepeatToken(token: string) {
+  let core = token;
+  let prefix = "";
+  let suffix = "";
+
+  while (core.startsWith("/:")) {
+    prefix += "/:";
+    core = core.slice(2);
+  }
+
+  while (core.endsWith(":/")) {
+    suffix = `:/${suffix}`;
+    core = core.slice(0, -2);
+  }
+
+  return { prefix, core, suffix };
 }
 
 export function transposeSong(song: Song, steps: number, notation: Notation): Song {
