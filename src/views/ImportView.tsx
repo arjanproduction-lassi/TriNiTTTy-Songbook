@@ -102,7 +102,6 @@ function DraftFields({
       <Field label="BPM" value={draft.bpm} onChange={update("bpm")} />
       <Field label="Takt" value={draft.timeSignature} onChange={update("timeSignature")} />
       <Field label="Tónina" value={draft.key} onChange={update("key")} />
-      <Field label="Capo" value={draft.capo} onChange={update("capo")} />
       <Field label="Dĺžka" value={draft.duration} onChange={update("duration")} />
     </div>
   );

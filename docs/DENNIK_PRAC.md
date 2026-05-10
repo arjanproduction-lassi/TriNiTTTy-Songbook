@@ -39,6 +39,47 @@ Kazdy zaznam by mal mat:
 
 ## 2026-05-10
 
+### CLEANUP - Capo skryte z aktivneho workflow
+
+Commit:
+
+- `Hide capo from active workflow` (hash je v Git historii tohto commitu)
+
+Problem:
+
+- `Capo` momentalne mätie workflow viac, nez pomaha.
+- Capo spravanie teraz nechceme aktivne podporovat.
+- Zaroven nechceme rozbit stare skladby, backupy, import/export ani datovu kompatibilitu.
+
+Oprava:
+
+- Capo skryte z import/editor metadata formulara.
+- Capo odstranene z A4 hlavicky.
+- Capo odstranene zo song info panelu.
+- Capo odstranene z TXT metadata exportu/kopirovania.
+
+Zachovane:
+
+- `capo` pole ostava v `Song` a `ImportDraft` typoch.
+- Stare skladby s `capo` sa stale nacitaju.
+- Import/export/backups ostavaju tolerantne k existujucim capo hodnotam.
+- Transpozitor ostal nedotknuty.
+- Print/PDF logika ostala nedotknuta.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- `test:chords` presiel.
+
+Manualne este vhodne otestovat:
+
+- Import/editor uz nezobrazuje Capo.
+- Song detail info panel uz nezobrazuje Capo.
+- A4 preview/print/PDF uz nezobrazuje Capo.
+- TXT export uz nezobrazuje Capo metadata.
+- Stara skladba s ulozenym capo sa nacita bez chyby.
+- Transpozicia funguje rovnako ako predtym.
+
 ### FIX - mobile Setlist rychly A4 nahlad
 
 Commit:

@@ -9,7 +9,6 @@ function songMetadataParts(song: Song) {
     song.key ? `Tónina: ${normalizeKeyInput(song.key)}` : "",
     Number.isFinite(song.bpm) ? `BPM: ${song.bpm}` : "",
     song.timeSignature?.trim() ? `Takt: ${song.timeSignature.trim()}` : "",
-    song.capo ? `Capo: ${song.capo}` : "",
     song.duration ? `Dĺžka: ${song.duration}` : "",
   ].filter(Boolean);
 }

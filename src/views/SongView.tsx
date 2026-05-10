@@ -89,7 +89,6 @@ export function SongView({
             <Chip>{normalizeKeyInput(renderedSong.key)}</Chip>
             <Chip>{renderedSong.bpm} BPM</Chip>
             {renderedSong.timeSignature && <Chip>Takt {renderedSong.timeSignature}</Chip>}
-            <Chip>Capo {renderedSong.capo}</Chip>
             <Chip>{renderedSong.duration}</Chip>
           </div>
         </Card>

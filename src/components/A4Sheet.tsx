@@ -37,7 +37,6 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
           <span>BPM {song.bpm}</span>
           <span>{normalizeKeyInput(song.key)}</span>
           {timeSignature && <span>Takt: {timeSignature}</span>}
-          <span>Capo {song.capo || "-"}</span>
           <span>{song.duration}</span>
         </div>
       </div>
