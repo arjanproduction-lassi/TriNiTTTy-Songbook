@@ -1,6 +1,6 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { NamedSetlist, Notation, SectionGroup, Song, View } from "../types";
-import { A4Sheet } from "../components/A4Sheet";
+import { A4Sheet, FitA4Sheet } from "../components/A4Sheet";
 import { Card, PrimaryButton, SoftButton, TransposeControls } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
 import { normalizeSongTitle } from "../lib/import";
@@ -175,7 +175,14 @@ export function SetlistView({
         <div className="mt-1 text-sm text-zinc-600">Reálny veľký papier vybratej položky zo setlistu.</div>
         <div className="mt-3 min-w-0">
           {renderedSetlistPreview ? (
-            <A4Sheet song={renderedSetlistPreview} sections={setlistPreviewSections} />
+            <>
+              <div className="min-w-0 md:hidden">
+                <FitA4Sheet song={renderedSetlistPreview} sections={setlistPreviewSections} readerZoom={100} className="h-[72svh] rounded-3xl ring-1 ring-zinc-200" />
+              </div>
+              <div className="hidden min-w-0 md:block">
+                <A4Sheet song={renderedSetlistPreview} sections={setlistPreviewSections} />
+              </div>
+            </>
           ) : (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">Nie je vybraná žiadna skladba.</div>
           )}

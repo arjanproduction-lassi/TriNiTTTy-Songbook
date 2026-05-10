@@ -37,6 +37,45 @@ Kazdy zaznam by mal mat:
 
 ---
 
+## 2026-05-10
+
+### FIX - mobile Setlist rychly A4 nahlad
+
+Commit:
+
+- `Fix mobile setlist A4 preview fit` (hash je v Git historii tohto commitu)
+
+Problem:
+
+- Rychly A4 nahlad v Setlist view bol rozbity iba na mobile.
+- Tablet Setlist nahlad bol OK.
+- Song detail A4 preview a Songs rychly A4 nahlad boli OK.
+
+Pricina:
+
+- Setlist view pouzival priamo `A4Sheet` aj na mobile.
+- Funkcne mobilne cesty v Song detail a Songs quick preview pouzivaju `FitA4Sheet`, ktory pocita scale podla realnej sirky a vysky kontajnera.
+- A4 renderer nebol problem; rozdiel bol v parent/wrapper retazci a mobilnom fit spravani.
+
+Oprava:
+
+- Iba mobilna vetva Setlist preview pouziva `FitA4Sheet`.
+- `md` a vyssie ostavaju na povodnom `A4Sheet`, aby tablet/desktop spravanie zostalo zachovane.
+- A4 renderer, print/PDF, parser, transpozitor a data model ostali nedotknute.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- `test:chords` presiel.
+
+Manualne este vhodne otestovat:
+
+- Mobile Setlist view: A4 nahlad sa zmesti do sirky bez rozbitia.
+- Tablet Setlist view: spravanie ostava OK.
+- Song detail A4 preview ostava OK.
+- Songs rychly A4 nahlad ostava OK.
+- Print/PDF ostava bez zmeny.
+
 ## 2026-05-09
 
 ### ZNAMY BUG - importovana databaza na mobile/tablete ostava v dirty stave
