@@ -24,6 +24,18 @@ Produktova politika:
 - Google Drive smer je kontrolovany databazovy zdroj, nie realtime sync.
 - Stage/dark rezim, ked pride, ma menej svietit do oci a nerusit. Nie je to "cool tema", ale pracovny rezim pre podmienky na podiu.
 
+Release / update / rollback politika:
+
+- Male UI alebo textove upravy nemusia vzdy vynucovat PWA hlasku `Aktualizovat`.
+- Pri malych upravach staci, ak sa zmena nacita po refreshi alebo znovuotvoreni appky.
+- Vacsi release alebo citliva zmena ma bumpnut `public/sw.js` cache verziu, aby PWA vedela ponuknut aktualizaciu.
+- Pred vacsim release musi prejst `npm run release:check`.
+- Vacsi release sa zapisuje do dennika prac.
+- Rollback appky sa robi cez Git/Vercel: revert commit alebo redeploy starsieho commitu.
+- Rollback databazy sa robi cez JSON exporty, backup pred importom, lokalne before-save zalohy a kos.
+- Zatial nerobime komplikovany rollback system priamo v UI.
+- Tento model ma najlepsi ROI pre projekt: lacny, pochopitelny, bez vlastneho servera a bez zbytocnej technickej zataze.
+
 ## Ako zapisovat zaznam
 
 Kazdy zaznam by mal mat:
