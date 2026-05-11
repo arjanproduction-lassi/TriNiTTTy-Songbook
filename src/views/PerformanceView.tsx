@@ -87,7 +87,7 @@ export function PerformanceView({
       </div>
 
       <div className="min-h-0 flex-1">
-        <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} className="h-full" />
+        <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} className="h-full" showOverflowWarning={false} />
       </div>
 
       <div

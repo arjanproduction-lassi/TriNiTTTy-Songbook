@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import type { CSSProperties, HTMLAttributes, Ref } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties, HTMLAttributes, MutableRefObject, Ref } from "react";
 import type { SectionGroup, Song } from "../types";
 import { normalizeKeyInput } from "../lib/chords";
 import { pairChordLine } from "../lib/chordAnchors";
@@ -7,6 +7,8 @@ import { normalizeSongTitle } from "../lib/import";
 
 const A4_WIDTH_PX = 210 * 96 / 25.4;
 const A4_HEIGHT_PX = 297 * 96 / 25.4;
+const A4_OVERFLOW_TOLERANCE_PX = 2;
+export const A4_OVERFLOW_WARNING = "Skladba presahuje A4. Spodné riadky sa môžu pri tlači/PDF odrezať.";
 
 type A4PageProps = {
   song: Song;
@@ -15,9 +17,30 @@ type A4PageProps = {
   onSelectBlock?: (index: number) => void;
   responsive?: boolean;
   pageRef?: Ref<HTMLDivElement>;
+  onOverflowChange?: (overflowing: boolean) => void;
 };
 
-export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsive = true, pageRef }: A4PageProps) {
+function assignRef(ref: Ref<HTMLDivElement> | undefined, value: HTMLDivElement | null) {
+  if (!ref) return;
+  if (typeof ref === "function") ref(value);
+  else (ref as MutableRefObject<HTMLDivElement | null>).current = value;
+}
+
+function measureA4Overflow(page: HTMLDivElement) {
+  const renderedHeight = Math.ceil(Math.max(page.scrollHeight, page.offsetHeight));
+  return renderedHeight > Math.ceil(A4_HEIGHT_PX) + A4_OVERFLOW_TOLERANCE_PX;
+}
+
+export function A4OverflowWarning({ className = "" }: { className?: string }) {
+  return (
+    <div className={`rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-300 ${className}`}>
+      {A4_OVERFLOW_WARNING}
+    </div>
+  );
+}
+
+export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsive = true, pageRef, onOverflowChange }: A4PageProps) {
+  const localPageRef = useRef<HTMLDivElement | null>(null);
   const timeSignature = song.timeSignature?.trim();
   const pageStyle: CSSProperties = {
     width: "210mm",
@@ -29,8 +52,31 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
 
   if (responsive) pageStyle.maxWidth = "100%";
 
+  const setPageRefs = useCallback((node: HTMLDivElement | null) => {
+    localPageRef.current = node;
+    assignRef(pageRef, node);
+  }, [pageRef]);
+
+  useEffect(() => {
+    if (!onOverflowChange) return undefined;
+    const page = localPageRef.current;
+    if (!page) return undefined;
+
+    const update = () => onOverflowChange(measureA4Overflow(page));
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(page);
+    window.addEventListener("resize", update);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [song, sections, onOverflowChange]);
+
   return (
-    <div ref={pageRef} className="a4-print-surface mx-auto bg-white text-zinc-900 shadow-lg ring-1 ring-zinc-300" style={pageStyle}>
+    <div ref={setPageRefs} className="a4-print-surface mx-auto bg-white text-zinc-900 shadow-lg ring-1 ring-zinc-300" style={pageStyle}>
       <div className="border-b border-zinc-300 pb-3" style={{ fontSize: "9pt", lineHeight: 1.08 }}>
         <div className="font-bold" style={{ fontSize: "13pt" }}>{normalizeSongTitle(song.title)} - {song.artist}</div>
         <div className="mt-1 flex flex-wrap gap-4 font-semibold text-zinc-700" style={{ fontSize: "9pt" }}>
@@ -83,9 +129,12 @@ export function A4Sheet({ song, sections, selectedIndex, onSelectBlock, responsi
   onSelectBlock?: (index: number) => void;
   responsive?: boolean;
 }) {
+  const [overflowing, setOverflowing] = useState(false);
+
   return (
     <div className="max-w-full overflow-auto max-h-[84vh] rounded-3xl bg-zinc-100 p-3 ring-1 ring-zinc-200">
-      <A4Page song={song} sections={sections} selectedIndex={selectedIndex} onSelectBlock={onSelectBlock} responsive={responsive} />
+      {overflowing && <A4OverflowWarning className="mb-3" />}
+      <A4Page song={song} sections={sections} selectedIndex={selectedIndex} onSelectBlock={onSelectBlock} responsive={responsive} onOverflowChange={setOverflowing} />
     </div>
   );
 }
@@ -95,16 +144,19 @@ export function FitA4Sheet({
   sections,
   readerZoom,
   className = "h-[100svh]",
+  showOverflowWarning = true,
 }: {
   song: Song;
   sections: SectionGroup[];
   readerZoom: number;
   className?: string;
+  showOverflowWarning?: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [pageSize, setPageSize] = useState({ width: A4_WIDTH_PX, height: A4_HEIGHT_PX });
+  const [overflowing, setOverflowing] = useState(false);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -147,7 +199,8 @@ export function FitA4Sheet({
   const scaledHeight = pageSize.height * scale;
 
   return (
-    <div ref={containerRef} className={`${className} w-full overflow-auto bg-zinc-100 p-2`}>
+    <div ref={containerRef} className={`${className} relative w-full overflow-auto bg-zinc-100 p-2`}>
+      {showOverflowWarning && overflowing && <A4OverflowWarning className="absolute left-3 right-3 top-3 z-10 shadow-sm" />}
       <div
         className="mx-auto"
         style={{
@@ -162,7 +215,7 @@ export function FitA4Sheet({
             transformOrigin: "top left",
           }}
         >
-          <A4Page pageRef={pageRef} song={song} sections={sections} responsive={false} />
+          <A4Page pageRef={pageRef} song={song} sections={sections} responsive={false} onOverflowChange={setOverflowing} />
         </div>
       </div>
     </div>

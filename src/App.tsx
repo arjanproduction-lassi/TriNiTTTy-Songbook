@@ -3,7 +3,7 @@ import type { DriveFileMemory, EditorMode, ImportDraft, ImportMode, Line, NamedS
 import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT, EMPTY_SONG_DRAFT } from "./data/defaultImport";
 import { INITIAL_SONGS } from "./data/songs";
 import { NavButton } from "./components/ui";
-import { A4Page } from "./components/A4Sheet";
+import { A4OverflowWarning, A4Page } from "./components/A4Sheet";
 import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
@@ -81,6 +81,7 @@ export default function App() {
   const [serviceWorkerUpdateReady, setServiceWorkerUpdateReady] = useState(false);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [printJob, setPrintJob] = useState<Song | null>(null);
+  const [printJobOverflowing, setPrintJobOverflowing] = useState(false);
   const [databaseVersion, setDatabaseVersion] = useState(1);
   const { canInstall, installed, install } = useInstallPrompt();
 
@@ -188,6 +189,7 @@ export default function App() {
   useEffect(() => {
     if (!printJob) return undefined;
 
+    setPrintJobOverflowing(false);
     enterBrowserPrintMode();
 
     const previousTitle = document.title || "TriNiTTTy Songbook";
@@ -1018,6 +1020,7 @@ export default function App() {
               <div className="mt-1 max-w-[42rem] text-xs leading-snug text-zinc-500">
                 Ak chceš PDF uložiť do tabletu, v Android dialógu vyber Súbory / Stiahnuté namiesto Google Drive.
               </div>
+              {printJobOverflowing && <A4OverflowWarning className="mt-2 max-w-[42rem]" />}
             </div>
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={printVisibleA4Mode} className="rounded-xl bg-zinc-900 px-4 py-2 text-sm font-semibold text-white">
@@ -1029,7 +1032,7 @@ export default function App() {
             </div>
           </div>
           <div className="print-a4-stage">
-            <A4Page song={printJob} sections={buildSections(printJob.lines)} responsive={false} />
+            <A4Page song={printJob} sections={buildSections(printJob.lines)} responsive={false} onOverflowChange={setPrintJobOverflowing} />
           </div>
         </div>
       ) : (

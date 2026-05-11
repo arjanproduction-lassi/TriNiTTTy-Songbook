@@ -49,6 +49,61 @@ Kazdy zaznam by mal mat:
 
 ---
 
+## 2026-05-11
+
+### BUGFIX / UX - A4 overflow warning pre dlhe piesne
+
+Commit:
+
+- `Warn when songs overflow A4 page` (hash je v Git historii tohto commitu)
+
+Problem:
+
+- Pri vacsich piesnach moze print/PDF odrezat spodne riadky A4.
+- Editor alebo preview mohli vyzerat zdanlivo v poriadku, lebo screen A4 stranka mala `min-height` a vedela narast.
+- Print/PDF vsak tlaci realnu A4 vysku 297mm s `overflow: hidden`.
+
+Princip:
+
+- A4 ostava vizualna pravda.
+- Appka nesmie ticho rezat obsah bez upozornenia.
+- Tento pass iba varuje, nic automaticky nezmensuje ani nepreformatuje.
+
+Oprava:
+
+- `A4Page` meria realnu vyrenderovanu vysku DOM stranky oproti A4 vyske 297mm.
+- Ak stranka prerastie A4, wrapper zobrazi varovanie:
+  `Skladba presahuje A4. Spodne riadky sa mozu pri tlaci/PDF odrezat.`
+- Varovanie sa zobrazuje pri A4 preview wrapperoch.
+- Print/PDF rezim zobrazi screen-only varovanie pred tlacou.
+- Varovanie sa netlaci do PDF.
+- Concert/performance rezim nema overlay warning, aby sme nemenili stage spravanie.
+
+Nedotknute:
+
+- Parser.
+- Transpozitor.
+- TXT export/copy.
+- DB import/export.
+- Remote DB.
+- Setlist logika.
+- Print/PDF pipeline struktura.
+- A4 layout pravidla, fonty a stlpce.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- `test:chords` presiel.
+
+Manualne este vhodne otestovat:
+
+- Kratka skladba bez presahu: bez varovania.
+- Dlhasia skladba s presahom: varovanie pri A4 preview.
+- Print/PDF rezim dlhej skladby: varovanie pred tlacou, nie v PDF.
+- Editor A4 preview dlhej skladby: varovanie.
+- Song detail, quick preview, setlist preview: konzistentne varovanie.
+- A4 layout sa nezmenil.
+
 ## 2026-05-10
 
 ### CLEANUP - Capo skryte z aktivneho workflow
