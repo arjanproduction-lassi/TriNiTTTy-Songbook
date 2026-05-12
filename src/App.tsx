@@ -846,7 +846,7 @@ export default function App() {
 
       applyPersistedState(state);
       markImportedDatabaseClean(state);
-      setStorageStatus(`Backup importovaný: ${formatDatabaseVersion(state.databaseVersion)} · databáza aktuálna.`);
+      setStorageStatus(`Backup importovaný: ${formatDatabaseVersion(state.databaseVersion)} · bez lokálnych zmien.`);
     } catch {
       setStorageStatus("Backup sa nepodarilo importovať. Súbor nevyzerá správne.");
     }
@@ -887,9 +887,9 @@ export default function App() {
         : state.databaseVersion < databaseVersion ? "older" : "same";
 
       setRemoteDatabaseCheck({ checkedAt: new Date().toISOString(), status, state });
-      if (status === "newer") setRemoteDatabaseStatus("Nová databáza dostupná.");
+      if (status === "newer") setRemoteDatabaseStatus(`Dostupná novšia DB ${formatDatabaseVersion(state.databaseVersion)}.`);
       else if (status === "older") setRemoteDatabaseStatus("Pozor: dostupná databáza je staršia než lokálna.");
-      else setRemoteDatabaseStatus("Databáza je aktuálna.");
+      else setRemoteDatabaseStatus("Databáza aktuálna podľa zdroja.");
     } catch (error) {
       setRemoteDatabaseCheck(null);
       setRemoteDatabaseStatus(error instanceof Error ? error.message : "Kontrola zdroja databázy zlyhala.");
@@ -931,7 +931,7 @@ export default function App() {
     applyPersistedState(state);
     markImportedDatabaseClean(state);
     setRemoteDatabaseCheck({ checkedAt: new Date().toISOString(), status: "same", state });
-    setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)} · databáza aktuálna.`);
+    setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)} · bez lokálnych zmien.`);
   }
 
   async function chooseDriveFile() {
@@ -1027,7 +1027,19 @@ export default function App() {
   };
   const performanceView = view === "performance";
   const canonicalDirty = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
-  const canonicalStatusText = canonicalDirty ? "Zmeny nie sú exportované" : "Databáza aktuálna";
+  const canonicalStatusText = canonicalDirty
+    ? "Zmeny nie sú exportované"
+    : remoteDatabaseCheck?.status === "same"
+      ? "Databáza aktuálna podľa zdroja"
+      : remoteDatabaseCheck?.status === "newer"
+        ? `Dostupná novšia DB ${formatDatabaseVersion(remoteDatabaseCheck.state.databaseVersion)}`
+        : "Bez lokálnych zmien";
+  const canonicalStatusClass = canonicalDirty || remoteDatabaseCheck?.status === "newer"
+    ? "bg-amber-50 text-amber-900 ring-amber-300"
+    : remoteDatabaseCheck?.status === "same"
+      ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
+      : "bg-zinc-50 text-zinc-700 ring-zinc-200";
+  const canonicalStatusNote = !canonicalDirty && !remoteDatabaseCheck ? "Oficiálna verzia neoverená" : "";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
@@ -1068,9 +1080,10 @@ export default function App() {
               <p className="mt-0.5 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · DB {formatDatabaseVersion(databaseVersion)} · build {BUILD_DATE}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className={`rounded-xl px-3 py-1.5 text-sm font-bold ring-1 ${canonicalDirty ? "bg-amber-50 text-amber-900 ring-amber-300" : "bg-emerald-50 text-emerald-900 ring-emerald-200"}`}>
+                <span className={`rounded-xl px-3 py-1.5 text-sm font-bold ring-1 ${canonicalStatusClass}`}>
                   {canonicalStatusText}
                 </span>
+                {canonicalStatusNote && <span className="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-zinc-200">{canonicalStatusNote}</span>}
                 <span className="rounded-xl bg-zinc-50 px-3 py-1.5 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">{localAutosaveText}</span>
               </div>
               {installed && <p className="mt-1 text-xs font-semibold text-emerald-700">Appka je nainštalovaná.</p>}

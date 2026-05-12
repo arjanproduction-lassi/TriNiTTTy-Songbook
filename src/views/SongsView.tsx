@@ -336,9 +336,9 @@ function formatRemoteDate(value: string) {
 }
 
 function remoteStatusLabel(status: RemoteDatabaseCheck["status"]) {
-  if (status === "newer") return "Nová databáza dostupná";
+  if (status === "newer") return "Dostupná novšia DB";
   if (status === "older") return "Staršia verzia";
-  return "Databáza je aktuálna";
+  return "Databáza aktuálna podľa zdroja";
 }
 
 function remoteStatusClass(status: RemoteDatabaseCheck["status"]) {

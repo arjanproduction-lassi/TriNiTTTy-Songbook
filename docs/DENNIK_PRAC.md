@@ -400,6 +400,36 @@ Manualne este vhodne otestovat:
 - Upravit skladbu alebo setlist po importe a overit, ze dirty warning sa znovu zapne.
 - Export po takej uprave ma vytvorit dalsiu oficialnu verziu.
 
+### DB status - lokalne cista DB nie je automaticky najnovsia kapelova DB
+
+Commit:
+
+- `Clarify local DB clean state wording`
+
+Problem:
+
+- Appka vedela zobrazit `Databaza aktualna`, aj ked iba vedela, ze zariadenie nema lokalne neexportovane zmeny.
+- V kapelovom workflow to mohlo mylit: tablet s `DBv004` mohol posobit aktualne, hoci official DB u kapelnika bola napriklad `DBv046`.
+
+Oprava:
+
+- Dirty stav ostava `Zmeny nie su exportovane`.
+- Cisty lokalny stav bez overeneho zdroja je `Bez lokalnych zmien`.
+- Pri cistom stave bez remote checku sa zobrazi jemna poznamka `Oficialna verzia neoverena`.
+- Aplikacia povie `Databaza aktualna podla zdroja` iba po remote/kapelovom checku so zhodnou verziou.
+- Ak zdroj obsahuje novsiu DB, header a remote sekcia ukazu `Dostupna novsia DB v...`.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Zariadenie s lokalne cistou starsou DB nema tvrdit, ze je globalne aktualne.
+- Remote check proti novsej databaze ma ukazat dostupnu novsiu DB.
+- Po importe ostava stav `Bez lokalnych zmien`, kym nepride lokalna uprava.
+
 ---
 
 ## Predchadzajuce zdroje historie
