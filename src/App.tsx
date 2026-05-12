@@ -385,6 +385,10 @@ export default function App() {
     setCanonicalSaveStatus({ dirty: false, lastCanonicalSaveAt: savedAt });
   }
 
+  function markImportedDatabaseClean(state: PersistedState) {
+    markCanonicalSaved(state.exportedAt || state.savedAt || new Date().toISOString());
+  }
+
   function exportCanonicalDatabase() {
     try {
       const hasCanonicalChanges = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
@@ -841,8 +845,8 @@ export default function App() {
       }
 
       applyPersistedState(state);
-      markCanonicalDirty();
-      setStorageStatus(`Backup importovaný: ${formatDatabaseVersion(state.databaseVersion)} · ${state.songs.length} piesne.`);
+      markImportedDatabaseClean(state);
+      setStorageStatus(`Backup importovaný: ${formatDatabaseVersion(state.databaseVersion)} · databáza aktuálna.`);
     } catch {
       setStorageStatus("Backup sa nepodarilo importovať. Súbor nevyzerá správne.");
     }
@@ -925,9 +929,9 @@ export default function App() {
     }
 
     applyPersistedState(state);
-    markCanonicalDirty();
+    markImportedDatabaseClean(state);
     setRemoteDatabaseCheck({ checkedAt: new Date().toISOString(), status: "same", state });
-    setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)}.`);
+    setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)} · databáza aktuálna.`);
   }
 
   async function chooseDriveFile() {
@@ -946,7 +950,7 @@ export default function App() {
       const state = await loadBackupFromDrive(file.fileId);
       applyPersistedState(state);
       setDriveFile(file);
-      markCanonicalSaved(state.savedAt);
+      markImportedDatabaseClean(state);
       setDriveStatus(`Načítané z Drive: ${file.fileName}`);
     } catch (error) {
       setDriveStatus(error instanceof Error ? error.message : "Load from Drive zlyhal.");

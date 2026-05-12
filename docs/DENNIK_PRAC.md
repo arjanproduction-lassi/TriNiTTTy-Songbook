@@ -370,6 +370,36 @@ Manualne este vhodne otestovat:
 - Cisty stav: `Stiahnut kopiu DB` vytvori subor s tou istou verziou, napriklad `DBv041`, a header ostava `DBv041`.
 - Import stareho aj noveho DB suboru ostava nezmeneny.
 
+### DB import - importovana databaza je aktualna, nie dirty
+
+Commit:
+
+- `Mark imported database clean`
+
+Problem:
+
+- Po importe oficialnej databazy mohla appka, hlavne na mobile/tablete, zobrazit `Zmeny nie su exportovane`.
+- Import oficialnej DB ale nie je lokalna editacia; je to prevzatie aktualnej pravdy.
+
+Oprava:
+
+- Manualny import po uspesnom nahradeni databazy nastavuje clean/current stav.
+- Remote import po uspesnom nahradeni databazy nastavuje clean/current stav.
+- Load z Drive scaffold cesty pouziva rovnaku clean logiku.
+- Import zachova `databaseVersion` zo suboru a neinkrementuje ju.
+- Nasledna lokalna uprava skladby alebo setlistu stale znovu oznaci databazu ako dirty.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Importovat aktualny `DBv041` na mobile/tablete a overit, ze header neukazuje `Zmeny nie su exportovane`.
+- Upravit skladbu alebo setlist po importe a overit, ze dirty warning sa znovu zapne.
+- Export po takej uprave ma vytvorit dalsiu oficialnu verziu.
+
 ---
 
 ## Predchadzajuce zdroje historie
