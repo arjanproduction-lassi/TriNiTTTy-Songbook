@@ -252,6 +252,9 @@ export function SongsView({
             <div className="mt-2 text-xs text-zinc-500">
               {remoteDatabaseUrl ? `Uložený zdroj: ${remoteDatabaseUrl}` : "Zdroj databázy zatiaľ nie je uložený."}
             </div>
+            {!remoteDatabaseCheck && (
+              <div className="mt-2 text-xs text-zinc-500">Oficiálnu verziu over ručne podľa čísla DB alebo cez kapelový zdroj.</div>
+            )}
             <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
               <SoftButton onClick={onSaveRemoteDatabaseUrl}>Uložiť URL</SoftButton>
               <SoftButton disabled={!remoteDatabaseUrl && !remoteDatabaseUrlDraft.trim()} onClick={onCheckRemoteDatabaseUpdate}>Skontrolovať aktualizáciu</SoftButton>

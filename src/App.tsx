@@ -1039,7 +1039,6 @@ export default function App() {
     : remoteDatabaseCheck?.status === "same"
       ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
       : "bg-zinc-50 text-zinc-700 ring-zinc-200";
-  const canonicalStatusNote = !canonicalDirty && !remoteDatabaseCheck ? "Oficiálna verzia neoverená" : "";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
   return (
@@ -1083,7 +1082,6 @@ export default function App() {
                 <span className={`rounded-xl px-3 py-1.5 text-sm font-bold ring-1 ${canonicalStatusClass}`}>
                   {canonicalStatusText}
                 </span>
-                {canonicalStatusNote && <span className="rounded-xl bg-white px-3 py-1.5 text-xs font-semibold text-zinc-500 ring-1 ring-zinc-200">{canonicalStatusNote}</span>}
                 <span className="rounded-xl bg-zinc-50 px-3 py-1.5 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">{localAutosaveText}</span>
               </div>
               {installed && <p className="mt-1 text-xs font-semibold text-emerald-700">Appka je nainštalovaná.</p>}

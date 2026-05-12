@@ -430,6 +430,37 @@ Manualne este vhodne otestovat:
 - Remote check proti novsej databaze ma ukazat dostupnu novsiu DB.
 - Po importe ostava stav `Bez lokalnych zmien`, kym nepride lokalna uprava.
 
+### DB header - zdrojove overenie mimo hlavnej hlasky
+
+Commit:
+
+- `Simplify DB header source verification wording`
+
+Problem:
+
+- Hlavicka zobrazovala `Oficialna verzia neoverena` ako samostatny badge.
+- Technicky to bolo pravdive, ale v manualnom kapelovom workflow to zbytocne posobilo ako varovanie aj vtedy, ked si ludia DB verziu overili rucne.
+
+Oprava:
+
+- Hlavicka ostava zamerana na lokalny stav:
+  - `Zmeny nie su exportovane`
+  - `Bez lokalnych zmien`
+  - pripadne remote vysledok po skutocnom checku.
+- Badge `Oficialna verzia neoverena` bol odstraneny z hlavicky.
+- Pomocny text o rucnom overeni DB je iba v sekcii `Kapelovy zdroj databazy`.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Cista lokalna DB v hlavicke ukaze iba `Bez lokalnych zmien`.
+- V sekcii kapeloveho zdroja ostava jemna pomocna veta k rucnemu overeniu.
+- Dirty lokalna uprava stale ukaze warning.
+
 ---
 
 ## Predchadzajuce zdroje historie
