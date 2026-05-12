@@ -387,6 +387,12 @@ export default function App() {
 
   function exportCanonicalDatabase() {
     try {
+      const hasCanonicalChanges = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
+      if (!hasCanonicalChanges) {
+        downloadCurrentDatabaseCopy();
+        return;
+      }
+
       const exportedAt = new Date().toISOString();
       const nextDatabaseVersion = Math.max(1, databaseVersion + 1);
       const exportState = makePersistedBackup({ ...persistedState, databaseVersion: nextDatabaseVersion }, exportedAt);
@@ -396,6 +402,17 @@ export default function App() {
       setStorageStatus(`Databáza exportovaná: ${formatDatabaseVersion(nextDatabaseVersion)} - ${formatShortTime(exportedAt)}.`);
     } catch {
       setStorageStatus("Export databázy zlyhal. Neuložené zmeny ostávajú aktívne.");
+    }
+  }
+
+  function downloadCurrentDatabaseCopy() {
+    try {
+      const exportedAt = new Date().toISOString();
+      const copyState = makePersistedBackup({ ...persistedState, databaseVersion }, exportedAt);
+      downloadBackup(copyState);
+      setStorageStatus(`Kópia databázy stiahnutá: ${formatDatabaseVersion(databaseVersion)} - ${formatShortTime(exportedAt)}.`);
+    } catch {
+      setStorageStatus("Stiahnutie kópie databázy zlyhalo.");
     }
   }
 
@@ -1091,6 +1108,7 @@ export default function App() {
             onRestoreDeleted={restoreDeletedSong}
             onInstall={() => { void install(); }}
             onExportBackup={exportCanonicalDatabase}
+            onDownloadDatabaseCopy={downloadCurrentDatabaseCopy}
             onImportBackup={(file) => { void importBackup(file); }}
             isInSetlist={isInSetlist}
             isSongInSetlist={isSongInSetlist}

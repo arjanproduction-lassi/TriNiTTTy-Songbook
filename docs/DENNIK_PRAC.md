@@ -339,6 +339,37 @@ Manualne este vhodne otestovat:
 - Overit, ze sa ponukne aktualizacia alebo sa po refreshi zobrazi build `2026-05-09`.
 - Overit, ze lokalna databaza ostala zachovana.
 
+### DB export - oddelenie oficialnej verzie od cistej kopie
+
+Commit:
+
+- `Separate DB copy download from versioned export`
+
+Problem:
+
+- V cistom stave tlacidlo `Stiahnut kopiu DB` pouzivalo rovnaku exportnu funkciu ako oficialny export po zmenach.
+- Tato funkcia vzdy zvysovala `databaseVersion` o 1.
+- Pouzivatel tak mohol nechtiac vytvarat nove oficialne verzie, napriklad `DBv034`, `DBv035`, aj bez realnej zmeny databazy.
+
+Oprava:
+
+- Oficialny export v dirty stave ostava nezmeneny: zvysi `databaseVersion` o 1 a oznaci databazu ako exportovanu.
+- Stiahnutie kopie v cistom stave pouziva samostatnu cestu bez inkrementu verzie.
+- Aj keby cisty stav omylom zavolal oficialnu exportnu funkciu, logika uz nevytvori novu verziu a stiahne iba kopiu aktualnej DB.
+- Kopia pouziva aktualny `databaseVersion`; `exportedAt` je cas stiahnutia kopie.
+- Header verzia DB sa pri stiahnuti kopie nemeni.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Dirty stav: `DBv040` -> export vytvori `DBv041`.
+- Cisty stav: `Stiahnut kopiu DB` vytvori subor s tou istou verziou, napriklad `DBv041`, a header ostava `DBv041`.
+- Import stareho aj noveho DB suboru ostava nezmeneny.
+
 ---
 
 ## Predchadzajuce zdroje historie
