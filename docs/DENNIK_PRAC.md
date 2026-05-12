@@ -461,6 +461,37 @@ Manualne este vhodne otestovat:
 - V sekcii kapeloveho zdroja ostava jemna pomocna veta k rucnemu overeniu.
 - Dirty lokalna uprava stale ukaze warning.
 
+### Performance - prakticky nocny rezim na podiu
+
+Commit:
+
+- `Add stage dark mode for performance`
+
+Problem:
+
+- Na podiu moze biela obrazovka tabletu zbytocne svietit do oci.
+- Cielom nie je tema celej appky, ale citatelne a pokojne javiskove zobrazenie.
+
+Oprava:
+
+- Do koncertneho/performance rezimu bol pridany lokalny toggle `Nocny rezim`.
+- Nastavenie sa uklada iba lokalne v zariadeni.
+- Tmavy rezim sa vztahuje iba na performance shell a screen zobrazenie A4 v performance view.
+- A4 renderer, parser, transpozicia, DB, TXT export a print/PDF ostali bez zmeny.
+- Print/PDF ostava biela A4 pravda.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Performance view na tablete v landscape.
+- Prepinanie `Nocny rezim` a citatelnost akordov/textu.
+- Transpozicia a dalsia/spat navigacia v performance mode.
+- Overit, ze print/PDF ostava biele A4.
+
 ---
 
 ## Predchadzajuce zdroje historie

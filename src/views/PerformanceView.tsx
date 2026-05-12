@@ -9,6 +9,15 @@ import { normalizeSongTitle } from "../lib/import";
 const MIN_READER_ZOOM = 100;
 const MAX_READER_ZOOM = 125;
 const ZOOM_STEP = 5;
+const STAGE_DARK_MODE_KEY = "trinittty-stage-dark-mode";
+
+function readStageDarkMode() {
+  try {
+    return window.localStorage.getItem(STAGE_DARK_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function PerformanceView({
   setlistSongs,
@@ -33,12 +42,21 @@ export function PerformanceView({
 }) {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [readerZoom, setReaderZoom] = useState(MIN_READER_ZOOM);
+  const [stageDark, setStageDark] = useState(readStageDarkMode);
 
   useEffect(() => {
     if (!controlsOpen) return undefined;
     const timer = window.setTimeout(() => setControlsOpen(false), 7000);
     return () => window.clearTimeout(timer);
   }, [controlsOpen, performanceIndex, readerZoom, transpose]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STAGE_DARK_MODE_KEY, stageDark ? "1" : "0");
+    } catch {
+      // Stage dark mode is device-local comfort state.
+    }
+  }, [stageDark]);
 
   if (!renderedPerformance) {
     return (
@@ -68,11 +86,40 @@ export function PerformanceView({
   const renderedKey = normalizeKeyInput(renderedPerformance.key);
   const keyLabel = originalKey === renderedKey ? renderedKey : `${originalKey} -> ${renderedKey}`;
   const timeSignature = renderedPerformance.timeSignature?.trim();
+  const shellClass = stageDark
+    ? "performance-stage-dark flex h-[100svh] flex-col overflow-hidden bg-zinc-950 text-zinc-100"
+    : "flex h-[100svh] flex-col overflow-hidden bg-zinc-100";
+  const hudClass = stageDark
+    ? "shrink-0 border-b border-zinc-800 bg-zinc-950/95 px-3 py-1.5 text-xs font-semibold text-zinc-200 shadow-sm backdrop-blur sm:text-sm"
+    : "shrink-0 border-b border-zinc-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur sm:text-sm";
+  const footerClass = stageDark
+    ? "shrink-0 border-t border-zinc-800 bg-zinc-950/95 px-3 py-2 shadow-sm"
+    : "shrink-0 border-t border-zinc-200 bg-white/95 px-3 py-2 shadow-sm";
+  const secondaryButtonClass = stageDark
+    ? "rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-bold text-zinc-100 ring-1 ring-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+    : "rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40";
+  const primaryButtonClass = stageDark
+    ? "rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-950 disabled:cursor-not-allowed disabled:opacity-40"
+    : "rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40";
+  const panelClass = stageDark
+    ? "fixed bottom-16 right-3 z-40 max-h-[min(72svh,34rem)] w-[min(92vw,26rem)] overflow-auto rounded-3xl bg-zinc-950 p-4 text-zinc-100 shadow-2xl ring-1 ring-zinc-700"
+    : "fixed bottom-16 right-3 z-40 max-h-[min(72svh,34rem)] w-[min(92vw,26rem)] overflow-auto rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-zinc-200";
+  const closeButtonClass = stageDark
+    ? "rounded-full bg-zinc-900 px-3 py-1 text-sm font-bold text-zinc-200 ring-1 ring-zinc-700"
+    : "rounded-full bg-zinc-100 px-3 py-1 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200";
+  const nightToggleClass = stageDark
+    ? "rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-950 ring-1 ring-zinc-100"
+    : "rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200";
+  const mutedTextClass = stageDark ? "text-zinc-400" : "text-zinc-500";
+  const subtleTextClass = stageDark ? "text-zinc-300" : "text-zinc-600";
+  const transposePanelClass = stageDark
+    ? "mt-3 rounded-2xl bg-zinc-900 p-3 ring-1 ring-zinc-700"
+    : "mt-3 rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200";
 
   return (
-    <div className="flex h-[100svh] flex-col overflow-hidden bg-zinc-100">
+    <div className={shellClass}>
       <div
-        className="shrink-0 border-b border-zinc-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-zinc-700 shadow-sm backdrop-blur sm:text-sm"
+        className={hudClass}
         style={{ paddingTop: "max(0.375rem, env(safe-area-inset-top))" }}
       >
         <div className="flex min-w-0 items-center gap-3">
@@ -87,19 +134,19 @@ export function PerformanceView({
       </div>
 
       <div className="min-h-0 flex-1">
-        <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} className="h-full" showOverflowWarning={false} />
+        <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} className="a4-performance-fit h-full" showOverflowWarning={false} />
       </div>
 
       <div
-        className="shrink-0 border-t border-zinc-200 bg-white/95 px-3 py-2 shadow-sm"
+        className={footerClass}
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="mx-auto flex max-w-5xl items-center gap-2">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-2">
           <button
             type="button"
             disabled={previousDisabled}
             onClick={goPrevious}
-            className="rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+            className={secondaryButtonClass}
           >
             ← Späť
           </button>
@@ -107,14 +154,22 @@ export function PerformanceView({
             type="button"
             disabled={nextDisabled}
             onClick={goNext}
-            className="rounded-2xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className={primaryButtonClass}
           >
             Ďalšia →
           </button>
           <button
             type="button"
+            onClick={() => setStageDark((value) => !value)}
+            className={`ml-auto ${nightToggleClass}`}
+            aria-pressed={stageDark}
+          >
+            Nočný režim
+          </button>
+          <button
+            type="button"
             onClick={() => setControlsOpen((open) => !open)}
-            className="ml-auto rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200"
+            className={secondaryButtonClass}
             aria-expanded={controlsOpen}
           >
             Ovládanie
@@ -123,42 +178,48 @@ export function PerformanceView({
       </div>
 
       {controlsOpen && (
-        <div className="fixed bottom-16 right-3 z-40 max-h-[min(72svh,34rem)] w-[min(92vw,26rem)] overflow-auto rounded-3xl bg-white p-4 shadow-2xl ring-1 ring-zinc-200">
+        <div className={panelClass}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div className="truncate text-base font-bold">{normalizeSongTitle(renderedPerformance.title)}</div>
-              <div className="mt-1 text-sm font-semibold text-zinc-500">{currentPosition} / {setlistSongs.length} · {keyLabel} · {renderedPerformance.duration}</div>
+              <div className={`mt-1 text-sm font-semibold ${mutedTextClass}`}>{currentPosition} / {setlistSongs.length} · {keyLabel} · {renderedPerformance.duration}</div>
             </div>
-            <button type="button" onClick={() => setControlsOpen(false)} className="rounded-full bg-zinc-100 px-3 py-1 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200">×</button>
+            <button type="button" onClick={() => setControlsOpen(false)} className={closeButtonClass}>×</button>
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-2">
             <button
               disabled={previousDisabled}
               onClick={goPrevious}
-              className="rounded-2xl bg-zinc-100 px-4 py-4 text-base font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40"
+              className={`${secondaryButtonClass} py-4 text-base`}
             >
               ← Späť
             </button>
             <button
               disabled={nextDisabled}
               onClick={goNext}
-              className="rounded-2xl bg-zinc-900 px-4 py-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className={`${primaryButtonClass} py-4 text-base`}
             >
               Ďalšia →
             </button>
           </div>
 
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <button disabled={readerZoom <= MIN_READER_ZOOM} onClick={() => changeZoom(-1)} className="rounded-2xl bg-zinc-100 px-3 py-3 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40">Reader -</button>
-            <button onClick={() => setReaderZoom(MIN_READER_ZOOM)} className="rounded-2xl bg-zinc-50 px-3 py-3 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200">{readerZoom}%</button>
-            <button disabled={readerZoom >= MAX_READER_ZOOM} onClick={() => changeZoom(1)} className="rounded-2xl bg-zinc-100 px-3 py-3 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200 disabled:cursor-not-allowed disabled:opacity-40">Reader +</button>
+            <button disabled={readerZoom <= MIN_READER_ZOOM} onClick={() => changeZoom(-1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader -</button>
+            <button onClick={() => setReaderZoom(MIN_READER_ZOOM)} className={stageDark ? "rounded-2xl bg-zinc-900 px-3 py-3 text-sm font-bold text-zinc-200 ring-1 ring-zinc-700" : "rounded-2xl bg-zinc-50 px-3 py-3 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200"}>{readerZoom}%</button>
+            <button disabled={readerZoom >= MAX_READER_ZOOM} onClick={() => changeZoom(1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader +</button>
           </div>
 
-          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
-            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Transpozícia</div>
-            <div className="mt-1 text-sm font-bold text-zinc-800">Transpozícia: {transposeLabel}</div>
-            <div className="mt-0.5 text-sm font-semibold text-zinc-600">Tónina: {keyLabel}</div>
+          <div className="mt-3">
+            <button type="button" onClick={() => setStageDark((value) => !value)} className={`w-full ${nightToggleClass}`} aria-pressed={stageDark}>
+              Nočný režim
+            </button>
+          </div>
+
+          <div className={transposePanelClass}>
+            <div className={`text-xs font-semibold uppercase tracking-[0.12em] ${mutedTextClass}`}>Transpozícia</div>
+            <div className="mt-1 text-sm font-bold">Transpozícia: {transposeLabel}</div>
+            <div className={`mt-0.5 text-sm font-semibold ${subtleTextClass}`}>Tónina: {keyLabel}</div>
             <div className="mt-2"><TransposeControls compact transpose={transpose} onTranspose={setTranspose} /></div>
           </div>
 

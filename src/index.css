@@ -45,6 +45,33 @@ html,
   overflow: visible;
 }
 
+@media screen {
+  .performance-stage-dark .a4-performance-fit {
+    background: #09090b !important;
+  }
+
+  .performance-stage-dark .a4-print-surface {
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 0 0 1px #3f3f46 !important;
+  }
+
+  .performance-stage-dark .a4-print-surface *,
+  .performance-stage-dark .a4-print-surface .border-zinc-300 {
+    border-color: #3f3f46 !important;
+  }
+
+  .performance-stage-dark .a4-print-surface .text-zinc-900,
+  .performance-stage-dark .a4-print-surface .text-zinc-800,
+  .performance-stage-dark .a4-print-surface .text-zinc-700 {
+    color: #e5e7eb !important;
+  }
+
+  .performance-stage-dark .a4-print-surface .bg-white {
+    background: #111827 !important;
+  }
+}
+
 @page {
   size: A4 portrait;
   margin: 0;
