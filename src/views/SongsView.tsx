@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { DriveFileMemory, NamedSetlist, RemoteDatabaseCheck, Song } from "../types";
-import { A4Sheet, FitA4Sheet } from "../components/A4Sheet";
+import { FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
 import { buildSections, normalizeSongTitle } from "../lib/import";
@@ -20,6 +20,7 @@ export function SongsView({
   onEdit,
   onToggleSetlist,
   onToggleSongInSetlist,
+  onOpenSongInSetlist,
   onDelete,
   onRestoreDeleted,
   onInstall,
@@ -64,6 +65,7 @@ export function SongsView({
   onEdit: (song: Song) => void;
   onToggleSetlist: (songId: number) => void;
   onToggleSongInSetlist: (songId: number, setlistId: number) => void;
+  onOpenSongInSetlist: (songId: number, setlistId: number) => void;
   onDelete: (songId: number) => void;
   onRestoreDeleted: (songId: number) => void;
   onInstall: () => void;
@@ -132,6 +134,7 @@ export function SongsView({
             )}
             {filteredSongs.map((song) => {
               const songSetlists = setlistNamesForSong(song.id);
+              const songSetlistEntries = setlists.filter((setlist) => setlist.songIds.includes(song.id));
               const pickerOpen = openSetlistSongId === song.id;
 
               return (
@@ -192,7 +195,17 @@ export function SongsView({
                 {hasMultipleSetlists && songSetlists.length > 0 && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 md:mt-3 md:gap-2">
                     <span>In:</span>
-                    {songSetlists.map((name) => <Chip key={name}>{name}</Chip>)}
+                    {songSetlistEntries.map((setlist) => (
+                      <button
+                        key={setlist.id}
+                        type="button"
+                        onClick={() => onOpenSongInSetlist(song.id, setlist.id)}
+                        className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-semibold text-zinc-700 ring-1 ring-zinc-200 transition hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                        title={`Otvoriť v setliste ${setlist.name}`}
+                      >
+                        {setlist.name}
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>
@@ -304,14 +317,7 @@ export function SongsView({
         <div className="mt-2 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
         <div className="mt-4">
           {selectedSong ? (
-            <>
-              <div className="min-w-0 xl:hidden">
-                <FitA4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} readerZoom={100} className="h-[72svh] rounded-3xl ring-1 ring-zinc-200" />
-              </div>
-              <div className="hidden min-w-0 xl:block">
-                <A4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} />
-              </div>
-            </>
+            <FitA4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} readerZoom={100} className="h-[72svh] rounded-3xl ring-1 ring-zinc-200 lg:h-[calc(100svh-9rem)]" />
           ) : (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">Nie je vybraná žiadna skladba.</div>
           )}

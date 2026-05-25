@@ -1005,6 +1005,16 @@ export default function App() {
   const setlistNamesForSong = (songId: number) => setlists.filter((item) => item.songIds.includes(songId)).map((item) => item.name);
   const openSong = (song: Song) => { setSelectedSongId(song.id); setTranspose(0); setView("song"); };
   const openInSetlist = (songId: number) => { setSetlistPreviewSongId(songId); setView("setlist"); };
+  const openSongInSetlist = (songId: number, setlistId: number) => {
+    const nextSetlist = setlists.find((item) => item.id === setlistId);
+    if (!nextSetlist) return;
+    setActiveSetlistId(nextSetlist.id);
+    setSetlist(nextSetlist.songIds);
+    setSetlistPreviewSongId(songId);
+    setPerformanceIndex(0);
+    setTranspose(0);
+    setView("setlist");
+  };
   const printA4Song = (song: Song) => setPrintJob(song);
   const startPerformance = () => {
     const selectedIndex = setlistPreviewSong ? activeSetlistSongs.findIndex((song) => song.id === setlistPreviewSong.id) : -1;
@@ -1119,6 +1129,7 @@ export default function App() {
             onEdit={startEditingSong}
             onToggleSetlist={toggleSetlist}
             onToggleSongInSetlist={toggleSongInNamedSetlist}
+            onOpenSongInSetlist={openSongInSetlist}
             onDelete={deleteSong}
             onRestoreDeleted={restoreDeletedSong}
             onInstall={() => { void install(); }}

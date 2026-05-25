@@ -492,6 +492,37 @@ Manualne este vhodne otestovat:
 - Transpozicia a dalsia/spat navigacia v performance mode.
 - Overit, ze print/PDF ostava biele A4.
 
+### Knižnica - klikacie setlist chipy a pohodlnejsi rychly A4 nahlad
+
+Commit:
+
+- `Polish song library navigation and preview UX`
+
+Problem:
+
+- Setlist chipy v kniznici piesni boli iba informacne.
+- Pouzivatel videl, v ktorom setliste skladba je, ale musel sa tam preklikavat inou cestou.
+- Rychly A4 nahlad na desktope pouzival velky scrollovaci papier, co nebolo vzdy pohodlne na rychlu kontrolu celej strany.
+
+Oprava:
+
+- Setlist chipy v kniznici su klikacie navigacne prvky.
+- Klik na chip otvori dany setlist a vyberie kliknutu skladbu ako setlist preview.
+- Tlacidlo `Setlisty...` ostava na spravu clenstva skladby v setlistoch.
+- Rychly A4 nahlad v kniznici pouziva fit wrapper aj na desktope/tablete, aby sa preferovalo zobrazenie celej A4 strany.
+- A4 renderer, print/PDF, parser, transpozicia a databazova logika ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Klik na chip `In: ...` v kniznici otvori spravny setlist.
+- Existujuce `Setlisty...` menu stale pridava/odobera skladbu zo setlistov.
+- Rychly A4 nahlad fituje celu stranu na PC/tablete/mobile.
+
 ---
 
 ## Predchadzajuce zdroje historie
