@@ -523,6 +523,37 @@ Manualne este vhodne otestovat:
 - Existujuce `Setlisty...` menu stale pridava/odobera skladbu zo setlistov.
 - Rychly A4 nahlad fituje celu stranu na PC/tablete/mobile.
 
+### Knižnica - ovladanie rychleho A4 nahladu ostava na ociach
+
+Commit:
+
+- `Keep A4 preview controls fixed during zoom`
+
+Problem:
+
+- Pri zvacsovani rychleho A4 nahladu mohlo byt ovladanie nepohodlne alebo mimo pozornosti.
+- Zoom ma menit iba papier, nie ovladacie prvky preview panelu.
+
+Oprava:
+
+- Rychly A4 nahlad ma sticky toolbar mimo skalovaneho A4 papiera.
+- Toolbar obsahuje `Fit`, `100%`, `-`, `+` a aktualny stav zoomu.
+- `Fit` preferuje celu stranu v paneli.
+- `100%` zobrazi realny 100% papier v scrollovatelnom viewport-e.
+- Zoom sa aplikuje iba na A4 sheet vo viewport-e.
+- A4 renderer, print/PDF, parser, transpozicia a DB logika ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- PC/tablet: pri 100% a zvacseni ostava toolbar dostupny.
+- Mobile: toolbar neprekrýva obsah a preview sa da rolovat.
+- Print/PDF neobsahuje preview toolbar.
+
 ---
 
 ## Predchadzajuce zdroje historie

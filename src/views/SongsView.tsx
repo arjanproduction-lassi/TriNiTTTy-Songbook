@@ -97,9 +97,12 @@ export function SongsView({
   onForgetDriveFile: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
+  const [quickPreviewMode, setQuickPreviewMode] = useState<"fit" | "actual">("fit");
+  const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
   const pickerRef = useRef<HTMLDivElement>(null);
   const hasMultipleSetlists = setlists.length > 1;
   const remoteCheckLabel = remoteDatabaseCheck ? remoteStatusLabel(remoteDatabaseCheck.status) : "";
+  const quickPreviewZoomLabel = quickPreviewMode === "fit" && quickPreviewZoom === 100 ? "Fit" : `${quickPreviewZoom}%`;
 
   useEffect(() => {
     if (!hasMultipleSetlists) setOpenSetlistSongId(null);
@@ -313,11 +316,62 @@ export function SongsView({
       </div>
 
       <Card className="order-1 min-w-0 lg:sticky lg:top-4 lg:order-2 lg:max-h-[calc(100svh-2rem)] lg:overflow-hidden">
-        <h2 className="text-xl font-semibold">Rýchly A4 náhľad</h2>
-        <div className="mt-2 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
-        <div className="mt-4">
+        <div className="sticky top-0 z-10 -mx-3 -mt-3 border-b border-zinc-200 bg-white/95 px-3 py-3 backdrop-blur print:hidden md:-mx-4 md:-mt-4 md:px-4">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-xl font-semibold">Rýchly A4 náhľad</h2>
+              <div className="mt-1 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickPreviewMode("fit");
+                  setQuickPreviewZoom(100);
+                }}
+                className={`rounded-xl px-3 py-2 font-semibold ring-1 ${quickPreviewMode === "fit" && quickPreviewZoom === 100 ? "bg-zinc-900 text-white ring-zinc-900" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}
+              >
+                Fit
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickPreviewMode("actual");
+                  setQuickPreviewZoom(100);
+                }}
+                className={`rounded-xl px-3 py-2 font-semibold ring-1 ${quickPreviewMode === "actual" && quickPreviewZoom === 100 ? "bg-zinc-900 text-white ring-zinc-900" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}
+              >
+                100%
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuickPreviewZoom((value) => Math.max(60, value - 10))}
+                className="rounded-xl bg-zinc-100 px-3 py-2 font-semibold text-zinc-800 ring-1 ring-zinc-200"
+              >
+                -
+              </button>
+              <span className="min-w-[3rem] rounded-xl bg-white px-3 py-2 text-center text-xs font-bold text-zinc-600 ring-1 ring-zinc-200">{quickPreviewZoomLabel}</span>
+              <button
+                type="button"
+                onClick={() => setQuickPreviewZoom((value) => Math.min(160, value + 10))}
+                className="rounded-xl bg-zinc-100 px-3 py-2 font-semibold text-zinc-800 ring-1 ring-zinc-200"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="pt-3">
           {selectedSong ? (
-            <FitA4Sheet song={selectedSong} sections={buildSections(selectedSong.lines)} readerZoom={100} className="h-[72svh] rounded-3xl ring-1 ring-zinc-200 lg:h-[calc(100svh-9rem)]" />
+            <FitA4Sheet
+              song={selectedSong}
+              sections={buildSections(selectedSong.lines)}
+              readerZoom={quickPreviewZoom}
+              fitMode={quickPreviewMode}
+              minZoom={60}
+              maxZoom={160}
+              className="h-[72svh] rounded-3xl ring-1 ring-zinc-200 lg:h-[calc(100svh-13rem)]"
+            />
           ) : (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">Nie je vybraná žiadna skladba.</div>
           )}

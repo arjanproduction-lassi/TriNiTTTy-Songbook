@@ -145,12 +145,18 @@ export function FitA4Sheet({
   readerZoom,
   className = "h-[100svh]",
   showOverflowWarning = true,
+  fitMode = "fit",
+  minZoom = 100,
+  maxZoom = 125,
 }: {
   song: Song;
   sections: SectionGroup[];
   readerZoom: number;
   className?: string;
   showOverflowWarning?: boolean;
+  fitMode?: "fit" | "actual";
+  minZoom?: number;
+  maxZoom?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
@@ -194,7 +200,8 @@ export function FitA4Sheet({
     Math.max(0.1, (containerSize.width - inset) / pageSize.width),
     Math.max(0.1, (containerSize.height - inset) / pageSize.height),
   );
-  const scale = fitScale * (Math.min(125, Math.max(100, readerZoom)) / 100);
+  const zoom = Math.min(maxZoom, Math.max(minZoom, readerZoom)) / 100;
+  const scale = (fitMode === "fit" ? fitScale : 1) * zoom;
   const scaledWidth = pageSize.width * scale;
   const scaledHeight = pageSize.height * scale;
 
