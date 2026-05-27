@@ -128,29 +128,29 @@ html,
   }
 
   .app-night .screen-surface .a4-print-surface {
-    background: white !important;
-    color: #18181b !important;
-    box-shadow: 0 0 0 1px #d4d4d8 !important;
+    background: #111827 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 0 0 1px #3f3f46 !important;
   }
 
   .app-night .screen-surface .a4-print-surface :is(.bg-white, .bg-zinc-50, .bg-zinc-100, .bg-zinc-200, .bg-zinc-300) {
-    background-color: white !important;
+    background-color: #111827 !important;
   }
 
   .app-night .screen-surface .a4-print-surface :is(.text-zinc-900, .text-zinc-800, .text-zinc-700) {
-    color: #18181b !important;
+    color: #e5e7eb !important;
   }
 
   .app-night .screen-surface .a4-print-surface :is(.text-zinc-600, .text-zinc-500, .text-zinc-400) {
-    color: #52525b !important;
+    color: #cbd5e1 !important;
   }
 
   .app-night .screen-surface .a4-print-surface :is(.ring-zinc-200, .ring-zinc-300) {
-    --tw-ring-color: #d4d4d8 !important;
+    --tw-ring-color: #3f3f46 !important;
   }
 
   .app-night .screen-surface .a4-print-surface :is(.border-zinc-200, .border-zinc-300) {
-    border-color: #d4d4d8 !important;
+    border-color: #3f3f46 !important;
   }
 
   .performance-stage-dark .a4-performance-fit {
@@ -178,26 +178,8 @@ html,
     background: #111827 !important;
   }
 
-  .app-night .performance-stage-dark .a4-print-surface {
-    background: white !important;
-    color: #18181b !important;
-    box-shadow: 0 0 0 1px #d4d4d8 !important;
-  }
-
-  .app-night .performance-stage-dark .a4-print-surface * {
-    border-color: #d4d4d8 !important;
-  }
-
-  .app-night .performance-stage-dark .a4-print-surface :is(.text-zinc-900, .text-zinc-800, .text-zinc-700) {
-    color: #18181b !important;
-  }
-
-  .app-night .performance-stage-dark .a4-print-surface :is(.text-zinc-600, .text-zinc-500, .text-zinc-400) {
-    color: #52525b !important;
-  }
-
   .app-night .performance-stage-dark .a4-print-surface .bg-white {
-    background: white !important;
+    background: #111827 !important;
   }
 }
 
@@ -207,6 +189,27 @@ html,
 }
 
 @media print {
+  .a4-print-surface {
+    background: white !important;
+    color: #18181b !important;
+  }
+
+  .a4-print-surface :is(.bg-white, .bg-zinc-50, .bg-zinc-100, .bg-zinc-200, .bg-zinc-300) {
+    background-color: white !important;
+  }
+
+  .a4-print-surface :is(.text-zinc-900, .text-zinc-800, .text-zinc-700) {
+    color: #18181b !important;
+  }
+
+  .a4-print-surface :is(.text-zinc-600, .text-zinc-500, .text-zinc-400) {
+    color: #52525b !important;
+  }
+
+  .a4-print-surface :is(.border-zinc-200, .border-zinc-300) {
+    border-color: #d4d4d8 !important;
+  }
+
   html.app-printing,
   html.app-printing body,
   html.app-printing #root,

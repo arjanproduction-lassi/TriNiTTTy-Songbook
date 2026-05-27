@@ -620,6 +620,38 @@ Manualne este vhodne otestovat:
 - A4 nahlad ostava biely.
 - Print/PDF ostava biele A4 bez tmaveho shellu.
 
+### Nocny rezim - tmavy screen skin pre A4 nahlady
+
+Commit:
+
+- `Darken screen A4 previews in night mode`
+
+Problem:
+
+- Globalny nocny rezim tmavil app shell, ale A4 nahlady v appke ostali biele.
+- Na vecernu pracu a stage pouzitie to stale svietilo do oci.
+- Realna papierova pravda a PDF vsak musia ostat biele.
+
+Oprava:
+
+- V `app-night` rezime su A4 nahlady v `.screen-surface` tmave iba vizualne na obrazovke.
+- Pouziva sa ten isty `A4Page` renderer, bez zmeny rozmerov, fontov, stlpcov alebo layout flow.
+- Tmavy skin meni len farbu papiera, textu a liniek na screen preview.
+- Dedicated print surface a `@media print` su chranene ako biele A4 s tmavym textom.
+- TXT/export/copy, parser, transpozicia, DB a print/PDF pipeline ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Songs quick preview v nocnom rezime.
+- Song detail, import/editor a setlist A4 nahlad v nocnom rezime.
+- Performance A4 preview v nocnom rezime.
+- Print/PDF ostava biele A4.
+
 ---
 
 ## Predchadzajuce zdroje historie
