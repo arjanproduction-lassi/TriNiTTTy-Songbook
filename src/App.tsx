@@ -24,6 +24,7 @@ const DEFAULT_SETLISTS: NamedSetlist[] = [{ id: 1, name: "Setlist 1", songIds: [
 const CANONICAL_STATUS_KEY = "trinittty-canonical-save-status";
 const REMOTE_DATABASE_URL_KEY = "trinittty-remote-database-url";
 const REMOTE_DATABASE_APP_NAME = "TriNiTTTy Songbook";
+const SCREEN_NIGHT_MODE_KEY = "trinittty-screen-night-mode";
 
 type CanonicalSaveStatus = {
   dirty: boolean;
@@ -83,6 +84,7 @@ export default function App() {
   const [printJob, setPrintJob] = useState<Song | null>(null);
   const [printJobOverflowing, setPrintJobOverflowing] = useState(false);
   const [databaseVersion, setDatabaseVersion] = useState(1);
+  const [screenNightMode, setScreenNightMode] = useState(() => readScreenNightMode());
   const { canInstall, installed, install } = useInstallPrompt();
 
   const persistedState = useMemo(() => makePersistedBackup({
@@ -139,6 +141,10 @@ export default function App() {
   useEffect(() => {
     writeCanonicalSaveStatus(canonicalSaveStatus);
   }, [canonicalSaveStatus]);
+
+  useEffect(() => {
+    writeScreenNightMode(screenNightMode);
+  }, [screenNightMode]);
 
   useEffect(() => {
     if (!canonicalSaveStatus.dirty) return undefined;
@@ -1051,8 +1057,12 @@ export default function App() {
       : "bg-zinc-50 text-zinc-700 ring-zinc-200";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
 
+  const rootClass = printJob
+    ? "app-printing min-h-screen bg-white text-zinc-900"
+    : `min-h-screen ${screenNightMode ? "app-night bg-zinc-950 text-zinc-100" : "bg-zinc-50 text-zinc-900"}`;
+
   return (
-    <div className={`min-h-screen ${printJob ? "app-printing bg-white" : "bg-zinc-50"} text-zinc-900`}>
+    <div className={rootClass}>
       {printJob ? (
         <div className="print-surface">
           <div className="print-mode-controls">
@@ -1101,6 +1111,14 @@ export default function App() {
               <NavButton current={view} target="import" onClick={setView}>Import</NavButton>
               <NavButton current={view} target="song" onClick={setView}>Náhľad</NavButton>
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
+              <button
+                type="button"
+                onClick={() => setScreenNightMode((enabled) => !enabled)}
+                aria-pressed={screenNightMode}
+                className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${screenNightMode ? "bg-zinc-900 text-white ring-zinc-700" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"}`}
+              >
+                Nočný režim
+              </button>
               {canonicalDirty && (
                 <button onClick={exportCanonicalDatabase} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white ring-1 ring-amber-500 hover:bg-amber-600">Exportovať databázu</button>
               )}
@@ -1413,6 +1431,22 @@ function writeCanonicalSaveStatus(status: CanonicalSaveStatus) {
     window.localStorage.setItem(CANONICAL_STATUS_KEY, JSON.stringify(status));
   } catch {
     // Local status is helpful, but the app can still run if localStorage is blocked.
+  }
+}
+
+function readScreenNightMode() {
+  try {
+    return window.localStorage.getItem(SCREEN_NIGHT_MODE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeScreenNightMode(enabled: boolean) {
+  try {
+    window.localStorage.setItem(SCREEN_NIGHT_MODE_KEY, enabled ? "1" : "0");
+  } catch {
+    // Screen theme is device-local comfort state; the app can run without it.
   }
 }
 

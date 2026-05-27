@@ -46,6 +46,113 @@ html,
 }
 
 @media screen {
+  .app-night {
+    color-scheme: dark;
+    background: #09090b;
+  }
+
+  .app-night .screen-surface {
+    background: #09090b;
+    color: #e4e4e7;
+  }
+
+  .app-night .screen-surface .bg-gradient-to-br {
+    background: linear-gradient(135deg, #18181b 0%, #111827 100%) !important;
+  }
+
+  .app-night .screen-surface :is(.bg-white, .bg-zinc-50, .bg-zinc-100) {
+    background-color: #18181b !important;
+  }
+
+  .app-night .screen-surface :is(.bg-zinc-200, .bg-zinc-300) {
+    background-color: #27272a !important;
+  }
+
+  .app-night .screen-surface button.bg-zinc-900,
+  .app-night .screen-surface .bg-zinc-900 {
+    background-color: #e4e4e7 !important;
+    color: #09090b !important;
+  }
+
+  .app-night .screen-surface button.bg-white,
+  .app-night .screen-surface button.bg-zinc-100,
+  .app-night .screen-surface button.bg-zinc-200 {
+    background-color: #27272a !important;
+    color: #e4e4e7 !important;
+  }
+
+  .app-night .screen-surface :is(.text-zinc-900, .text-zinc-800, .text-zinc-700) {
+    color: #e4e4e7 !important;
+  }
+
+  .app-night .screen-surface :is(.text-zinc-600, .text-zinc-500) {
+    color: #a1a1aa !important;
+  }
+
+  .app-night .screen-surface .text-zinc-400 {
+    color: #71717a !important;
+  }
+
+  .app-night .screen-surface :is(.ring-zinc-200, .ring-zinc-300) {
+    --tw-ring-color: #3f3f46 !important;
+  }
+
+  .app-night .screen-surface :is(.border-zinc-200, .border-zinc-300) {
+    border-color: #3f3f46 !important;
+  }
+
+  .app-night .screen-surface :is(input, textarea, select) {
+    background-color: #18181b !important;
+    border-color: #52525b !important;
+    color: #f4f4f5 !important;
+  }
+
+  .app-night .screen-surface :is(input, textarea)::placeholder {
+    color: #71717a !important;
+  }
+
+  .app-night .screen-surface :is(.shadow-sm, .shadow-lg, .shadow-2xl) {
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.38) !important;
+  }
+
+  .app-night .screen-surface :is(.bg-amber-50, .bg-sky-50, .bg-emerald-50, .bg-rose-50) {
+    background-color: #1f2937 !important;
+  }
+
+  .app-night .screen-surface :is(.text-amber-900, .text-amber-800, .text-sky-900, .text-emerald-900, .text-rose-800, .text-rose-700) {
+    color: #facc15 !important;
+  }
+
+  .app-night .screen-surface :is(.ring-amber-200, .ring-amber-300, .ring-sky-200, .ring-emerald-200, .ring-rose-200) {
+    --tw-ring-color: #52525b !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface {
+    background: white !important;
+    color: #18181b !important;
+    box-shadow: 0 0 0 1px #d4d4d8 !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface :is(.bg-white, .bg-zinc-50, .bg-zinc-100, .bg-zinc-200, .bg-zinc-300) {
+    background-color: white !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface :is(.text-zinc-900, .text-zinc-800, .text-zinc-700) {
+    color: #18181b !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface :is(.text-zinc-600, .text-zinc-500, .text-zinc-400) {
+    color: #52525b !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface :is(.ring-zinc-200, .ring-zinc-300) {
+    --tw-ring-color: #d4d4d8 !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface :is(.border-zinc-200, .border-zinc-300) {
+    border-color: #d4d4d8 !important;
+  }
+
   .performance-stage-dark .a4-performance-fit {
     background: #09090b !important;
   }
@@ -69,6 +176,28 @@ html,
 
   .performance-stage-dark .a4-print-surface .bg-white {
     background: #111827 !important;
+  }
+
+  .app-night .performance-stage-dark .a4-print-surface {
+    background: white !important;
+    color: #18181b !important;
+    box-shadow: 0 0 0 1px #d4d4d8 !important;
+  }
+
+  .app-night .performance-stage-dark .a4-print-surface * {
+    border-color: #d4d4d8 !important;
+  }
+
+  .app-night .performance-stage-dark .a4-print-surface :is(.text-zinc-900, .text-zinc-800, .text-zinc-700) {
+    color: #18181b !important;
+  }
+
+  .app-night .performance-stage-dark .a4-print-surface :is(.text-zinc-600, .text-zinc-500, .text-zinc-400) {
+    color: #52525b !important;
+  }
+
+  .app-night .performance-stage-dark .a4-print-surface .bg-white {
+    background: white !important;
   }
 }
 

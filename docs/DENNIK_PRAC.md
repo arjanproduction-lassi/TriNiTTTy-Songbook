@@ -586,6 +586,40 @@ Manualne este vhodne otestovat:
 - Notebook: kniznica ukaze o trochu viac skladieb bez straty citatelnosti.
 - Tablet: Songs/Setlist/Performance vizualne bez regresie.
 
+### Globalny screen-only nocny rezim
+
+Commit:
+
+- `Add global screen night mode`
+
+Problem:
+
+- Appka mala tmavy rezim iba pre performance/stage citanie.
+- Pri vecernej praci bolo stale nutne pozerat do svetleho shellu kniznice, editoru a setlistu.
+- A4 papier a PDF vsak musia ostat biela pravda.
+
+Oprava:
+
+- Do hlavnej hornej listy pribudol toggle `Nocny rezim`.
+- Nastavenie sa uklada lokalne v `localStorage` pod klucom `trinittty-screen-night-mode`.
+- Root app shell dostava triedu `app-night`, ktora tmavi iba screen UI.
+- Karty, panely, inputy, tlacidla, chipy a shell maju centralne CSS override pravidla v `src/index.css`.
+- `.a4-print-surface` je v nocnom rezime explicitne chraneny ako biely papier.
+- Print/PDF root nepouziva `app-night`, aby tlac ostala nezmenena.
+- Parser, transpozicia, DB, TXT export, A4 renderer a print pipeline ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Desktop kniznica, detail, import/editor a setlist v nocnom rezime.
+- Performance view s globalnym nocnym rezimom aj bez neho.
+- A4 nahlad ostava biely.
+- Print/PDF ostava biele A4 bez tmaveho shellu.
+
 ---
 
 ## Predchadzajuce zdroje historie
