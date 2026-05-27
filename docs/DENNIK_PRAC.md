@@ -652,6 +652,39 @@ Manualne este vhodne otestovat:
 - Performance A4 preview v nocnom rezime.
 - Print/PDF ostava biele A4.
 
+### Nocny rezim - kozmeticke zjednotenie tmaveho UI
+
+Commit:
+
+- `Polish dark UI surfaces`
+
+Problem:
+
+- Niektore screen toolbary a preview hlavicky v nocnom rezime stale posobili ako svetle pasy.
+- Cast pomocnych textov bola prilis slaba alebo vizualne nesuladila so zvyskom tmaveho shellu.
+- Tlacidla a stavove farby mali miestami zmiesany light/dark pocit.
+
+Oprava:
+
+- `bg-white/95` a podobne priesvitne svetle pasy v `app-night` rezime dostali tmavy screen-only override.
+- Pomocne texty maju citatelnejsi, ale stale jemny kontrast.
+- Primarne, sekundarne a tonovane tlacidla v nocnom rezime maju pokojnejsie tmave farby.
+- Amber/sky/emerald/rose stavy uz nepadaju vsetky do jednej zltej farby.
+- A4 screen preview zostava tmave v nocnom rezime.
+- Print/PDF a `@media print` ostavaju biele A4.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Rychly A4 nahlad toolbar bez svetleho pasu.
+- Songs, detail, import/editor a setlist v nocnom rezime.
+- Performance view v nocnom rezime.
+- Print/PDF ostava biele A4.
+
 ---
 
 ## Predchadzajuce zdroje historie

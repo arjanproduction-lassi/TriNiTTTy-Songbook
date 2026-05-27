@@ -56,6 +56,12 @@ html,
     color: #e4e4e7;
   }
 
+  .app-night .screen-surface [class*="bg-white/"],
+  .app-night .screen-surface [class*="bg-zinc-50/"],
+  .app-night .screen-surface [class*="bg-zinc-100/"] {
+    background-color: rgb(24 24 27 / 0.94) !important;
+  }
+
   .app-night .screen-surface .bg-gradient-to-br {
     background: linear-gradient(135deg, #18181b 0%, #111827 100%) !important;
   }
@@ -70,14 +76,14 @@ html,
 
   .app-night .screen-surface button.bg-zinc-900,
   .app-night .screen-surface .bg-zinc-900 {
-    background-color: #e4e4e7 !important;
+    background-color: #d4d4d8 !important;
     color: #09090b !important;
   }
 
   .app-night .screen-surface button.bg-white,
   .app-night .screen-surface button.bg-zinc-100,
   .app-night .screen-surface button.bg-zinc-200 {
-    background-color: #27272a !important;
+    background-color: #202027 !important;
     color: #e4e4e7 !important;
   }
 
@@ -86,11 +92,11 @@ html,
   }
 
   .app-night .screen-surface :is(.text-zinc-600, .text-zinc-500) {
-    color: #a1a1aa !important;
+    color: #b6bbc6 !important;
   }
 
   .app-night .screen-surface .text-zinc-400 {
-    color: #71717a !important;
+    color: #969ba8 !important;
   }
 
   .app-night .screen-surface :is(.ring-zinc-200, .ring-zinc-300) {
@@ -108,7 +114,7 @@ html,
   }
 
   .app-night .screen-surface :is(input, textarea)::placeholder {
-    color: #71717a !important;
+    color: #858b98 !important;
   }
 
   .app-night .screen-surface :is(.shadow-sm, .shadow-lg, .shadow-2xl) {
@@ -119,8 +125,40 @@ html,
     background-color: #1f2937 !important;
   }
 
-  .app-night .screen-surface :is(.text-amber-900, .text-amber-800, .text-sky-900, .text-emerald-900, .text-rose-800, .text-rose-700) {
-    color: #facc15 !important;
+  .app-night .screen-surface :is(.text-amber-900, .text-amber-800) {
+    color: #fcd34d !important;
+  }
+
+  .app-night .screen-surface :is(.text-sky-900, .text-sky-800, .text-sky-700) {
+    color: #93c5fd !important;
+  }
+
+  .app-night .screen-surface :is(.text-emerald-900, .text-emerald-800, .text-emerald-700) {
+    color: #86efac !important;
+  }
+
+  .app-night .screen-surface :is(.text-rose-900, .text-rose-800, .text-rose-700) {
+    color: #fda4af !important;
+  }
+
+  .app-night .screen-surface :is(.bg-amber-500, .bg-amber-600) {
+    background-color: #d97706 !important;
+    color: #fff7ed !important;
+  }
+
+  .app-night .screen-surface :is(.bg-sky-600, .bg-sky-700) {
+    background-color: #0369a1 !important;
+    color: #eff6ff !important;
+  }
+
+  .app-night .screen-surface :is(.bg-rose-600, .bg-rose-700) {
+    background-color: #be123c !important;
+    color: #fff1f2 !important;
+  }
+
+  .app-night .screen-surface :is(.bg-emerald-600, .bg-emerald-700) {
+    background-color: #047857 !important;
+    color: #ecfdf5 !important;
   }
 
   .app-night .screen-surface :is(.ring-amber-200, .ring-amber-300, .ring-sky-200, .ring-emerald-200, .ring-rose-200) {
