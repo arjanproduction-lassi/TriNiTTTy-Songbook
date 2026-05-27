@@ -97,12 +97,11 @@ export function SongsView({
   onForgetDriveFile: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
-  const [quickPreviewMode, setQuickPreviewMode] = useState<"fit" | "actual">("fit");
   const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
   const pickerRef = useRef<HTMLDivElement>(null);
   const hasMultipleSetlists = setlists.length > 1;
   const remoteCheckLabel = remoteDatabaseCheck ? remoteStatusLabel(remoteDatabaseCheck.status) : "";
-  const quickPreviewZoomLabel = quickPreviewMode === "fit" && quickPreviewZoom === 100 ? "Fit" : `${quickPreviewZoom}%`;
+  const quickPreviewZoomLabel = `${quickPreviewZoom}%`;
 
   useEffect(() => {
     if (!hasMultipleSetlists) setOpenSetlistSongId(null);
@@ -119,7 +118,7 @@ export function SongsView({
   }, [openSetlistSongId]);
 
   return (
-    <div className="grid min-w-0 items-start gap-3 md:gap-6 lg:grid-cols-[minmax(320px,0.82fr)_minmax(520px,1.18fr)]">
+    <div className="grid min-w-0 items-start gap-3 md:gap-6 xl:gap-4 lg:grid-cols-[minmax(320px,0.82fr)_minmax(520px,1.18fr)] xl:grid-cols-[minmax(300px,0.7fr)_minmax(640px,1.3fr)]">
       <div className="order-2 flex min-w-0 flex-col gap-3 md:gap-4 lg:order-1">
         <Card className="order-1 lg:flex lg:h-[calc(100svh-12rem)] lg:min-h-0 lg:flex-col">
           <div className="mb-3 flex flex-col gap-2 md:mb-4 md:flex-row md:items-center md:justify-between md:gap-3">
@@ -141,25 +140,25 @@ export function SongsView({
               const pickerOpen = openSetlistSongId === song.id;
 
               return (
-              <div key={song.id} className="min-w-0 rounded-xl border border-zinc-200 bg-zinc-50 p-3 md:rounded-2xl md:p-4">
-                <div className="flex min-w-0 flex-col gap-1 md:gap-2">
-                  <div className="min-w-0 break-words text-base font-semibold md:text-lg">{normalizeSongTitle(song.title)}</div>
+              <div key={song.id} className="min-w-0 rounded-xl border border-zinc-200 bg-zinc-50 p-3 md:rounded-2xl md:p-4 xl:p-3">
+                <div className="flex min-w-0 flex-col gap-1 md:gap-2 xl:gap-1">
+                  <div className="min-w-0 break-words text-base font-semibold md:text-lg xl:text-base">{normalizeSongTitle(song.title)}</div>
                   <div className="text-sm text-zinc-500">{song.artist}</div>
-                  <div className="flex flex-wrap gap-1.5 md:gap-2">
+                  <div className="flex flex-wrap gap-1.5 md:gap-2 xl:gap-1.5">
                     <Chip>{normalizeKeyInput(song.key)}</Chip>
                     <Chip>{song.bpm} BPM</Chip>
                     <Chip>{song.duration}</Chip>
                   </div>
                 </div>
-                <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 md:mt-4 md:gap-2">
-                  <button onClick={() => onOpen(song)} className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white">Otvoriť</button>
-                  <button onClick={() => onEdit(song)} className="rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white">Upraviť</button>
+                <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 md:mt-4 md:gap-2 xl:mt-2 xl:gap-1.5">
+                  <button onClick={() => onOpen(song)} className="rounded-xl bg-zinc-900 px-3 py-2 text-sm font-semibold text-white xl:py-1.5">Otvoriť</button>
+                  <button onClick={() => onEdit(song)} className="rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white xl:py-1.5">Upraviť</button>
                   {hasMultipleSetlists ? (
                     <div className="relative min-w-0">
                       <button
                         onClick={() => setOpenSetlistSongId(pickerOpen ? null : song.id)}
                         aria-expanded={pickerOpen}
-                        className="rounded-xl bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200"
+                        className="rounded-xl bg-zinc-100 px-3 py-2 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200 xl:py-1.5"
                       >
                         Setlisty…
                       </button>
@@ -191,12 +190,12 @@ export function SongsView({
                       )}
                     </div>
                   ) : (
-                    <button onClick={() => onToggleSetlist(song.id)} className={`rounded-xl px-3 py-2 text-sm font-semibold ring-1 ${isInSetlist(song.id) ? "bg-rose-50 text-rose-800 ring-rose-200" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}>{isInSetlist(song.id) ? "Odobrať zo setlistu" : "Pridať do setlistu"}</button>
+                    <button onClick={() => onToggleSetlist(song.id)} className={`rounded-xl px-3 py-2 text-sm font-semibold ring-1 xl:py-1.5 ${isInSetlist(song.id) ? "bg-rose-50 text-rose-800 ring-rose-200" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}>{isInSetlist(song.id) ? "Odobrať zo setlistu" : "Pridať do setlistu"}</button>
                   )}
-                  <button onClick={() => onDelete(song.id)} className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white">Odstrániť</button>
+                  <button onClick={() => onDelete(song.id)} className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white xl:py-1.5">Odstrániť</button>
                 </div>
                 {hasMultipleSetlists && songSetlists.length > 0 && (
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 md:mt-3 md:gap-2">
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-zinc-500 md:mt-3 md:gap-2 xl:mt-2 xl:gap-1.5">
                     <span>In:</span>
                     {songSetlistEntries.map((setlist) => (
                       <button
@@ -315,33 +314,22 @@ export function SongsView({
         </Card>
       </div>
 
-      <Card className="order-1 min-w-0 lg:sticky lg:top-4 lg:order-2 lg:max-h-[calc(100svh-2rem)] lg:overflow-hidden">
-        <div className="sticky top-0 z-10 -mx-3 -mt-3 border-b border-zinc-200 bg-white/95 px-3 py-3 backdrop-blur print:hidden md:-mx-4 md:-mt-4 md:px-4">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
+      <Card className="order-1 min-w-0 lg:sticky lg:top-4 lg:order-2 lg:max-h-[calc(100svh-2rem)] lg:overflow-hidden xl:max-h-[calc(100svh-1rem)]">
+        <div className="sticky top-0 z-10 -mx-3 -mt-3 border-b border-zinc-200 bg-white/95 px-3 py-3 backdrop-blur print:hidden md:-mx-4 md:-mt-4 md:px-4 xl:py-2">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between xl:gap-4">
             <div className="min-w-0">
-              <h2 className="text-xl font-semibold">Rýchly A4 náhľad</h2>
-              <div className="mt-1 text-sm text-zinc-600">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
+              <h2 className="text-xl font-semibold xl:text-lg">Rýchly A4 náhľad</h2>
+              <div className="mt-1 text-sm text-zinc-600 xl:hidden">Vyber pieseň vľavo a hneď ju vidíš v reálnom papierovom rozložení.</div>
             </div>
             <div className="flex shrink-0 flex-wrap items-center gap-1.5 text-sm">
               <button
                 type="button"
                 onClick={() => {
-                  setQuickPreviewMode("fit");
                   setQuickPreviewZoom(100);
                 }}
-                className={`rounded-xl px-3 py-2 font-semibold ring-1 ${quickPreviewMode === "fit" && quickPreviewZoom === 100 ? "bg-zinc-900 text-white ring-zinc-900" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}
+                className={`rounded-xl px-3 py-2 font-semibold ring-1 ${quickPreviewZoom === 100 ? "bg-zinc-900 text-white ring-zinc-900" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}
               >
                 Fit
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setQuickPreviewMode("actual");
-                  setQuickPreviewZoom(100);
-                }}
-                className={`rounded-xl px-3 py-2 font-semibold ring-1 ${quickPreviewMode === "actual" && quickPreviewZoom === 100 ? "bg-zinc-900 text-white ring-zinc-900" : "bg-zinc-100 text-zinc-800 ring-zinc-200"}`}
-              >
-                100%
               </button>
               <button
                 type="button"
@@ -361,16 +349,16 @@ export function SongsView({
             </div>
           </div>
         </div>
-        <div className="pt-3">
+        <div className="pt-3 xl:pt-2">
           {selectedSong ? (
             <FitA4Sheet
               song={selectedSong}
               sections={buildSections(selectedSong.lines)}
               readerZoom={quickPreviewZoom}
-              fitMode={quickPreviewMode}
+              fitMode="fit"
               minZoom={60}
               maxZoom={160}
-              className="h-[72svh] rounded-3xl ring-1 ring-zinc-200 lg:h-[calc(100svh-13rem)]"
+              className="h-[72svh] rounded-3xl ring-1 ring-zinc-200 lg:h-[calc(100svh-13rem)] xl:h-[calc(100svh-8rem)]"
             />
           ) : (
             <div className="rounded-2xl bg-zinc-50 p-5 text-sm text-zinc-600 ring-1 ring-zinc-200">Nie je vybraná žiadna skladba.</div>

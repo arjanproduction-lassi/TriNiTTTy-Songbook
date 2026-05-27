@@ -554,6 +554,38 @@ Manualne este vhodne otestovat:
 - Mobile: toolbar neprekrýva obsah a preview sa da rolovat.
 - Print/PDF neobsahuje preview toolbar.
 
+### Kniznica - desktop comfort pass pre rychly A4 nahlad a hustotu zoznamu
+
+Commit:
+
+- `Polish quick A4 preview controls and song density`
+
+Problem:
+
+- Rychly A4 nahlad na desktop/notebooku mal este zbytocny mrtvy priestor v pravom paneli.
+- Zoom toolbar bol nejasny, pretoze kombinoval `Fit`, `100%` akciu a samostatny stav zoomu.
+- Karty skladieb v kniznici boli na desktope este o kus vyssie, nez bolo prakticke pre pracovny zoznam.
+
+Oprava:
+
+- Desktop `xl` layout dava pravemu A4 preview panelu vacsi podiel sirky.
+- Quick A4 preview ma kompaktnejsi desktop toolbar a vacsi desktop viewport pre papier.
+- Zoom toolbar je zjednoteny na jeden model: `Fit`, `-`, aktualny zoom stav, `+`.
+- `Fit` resetuje rychly nahlad na celu A4 stranu v paneli.
+- Karty skladieb maju na desktopovom breakpointe mierne mensie paddingy/gapy a kompaktnejsie tlacidla.
+- Tabletove `lg` spravanie, A4 renderer, print/PDF, parser, transpozicia, DB a performance mode ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Desktop wide: pravy A4 panel vyuziva priestor lepsie a cela A4 je viditelna cez `Fit`.
+- Notebook: kniznica ukaze o trochu viac skladieb bez straty citatelnosti.
+- Tablet: Songs/Setlist/Performance vizualne bez regresie.
+
 ---
 
 ## Predchadzajuce zdroje historie
