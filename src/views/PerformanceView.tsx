@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { SectionGroup, Song } from "../types";
 import { FitA4Sheet } from "../components/A4Sheet";
@@ -10,6 +10,19 @@ const MIN_READER_ZOOM = 100;
 const DEFAULT_READER_ZOOM = 115;
 const MAX_READER_ZOOM = 125;
 const ZOOM_STEP = 5;
+
+type WakeLockSentinelLike = {
+  released: boolean;
+  release: () => Promise<void>;
+  addEventListener: (type: "release", listener: () => void) => void;
+  removeEventListener: (type: "release", listener: () => void) => void;
+};
+
+type WakeLockNavigator = Navigator & {
+  wakeLock?: {
+    request: (type: "screen") => Promise<WakeLockSentinelLike>;
+  };
+};
 
 export function PerformanceView({
   setlistSongs,
@@ -38,12 +51,120 @@ export function PerformanceView({
 }) {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [readerZoom, setReaderZoom] = useState(DEFAULT_READER_ZOOM);
+  const [wakeLockWanted, setWakeLockWanted] = useState(false);
+  const [wakeLockActive, setWakeLockActive] = useState(false);
+  const [wakeLockMessage, setWakeLockMessage] = useState("");
+  const wakeLockRef = useRef<WakeLockSentinelLike | null>(null);
+  const wakeLockReleaseHandlerRef = useRef<(() => void) | null>(null);
+
+  const releaseWakeLock = useCallback(async () => {
+    const sentinel = wakeLockRef.current;
+    const releaseHandler = wakeLockReleaseHandlerRef.current;
+    wakeLockRef.current = null;
+    wakeLockReleaseHandlerRef.current = null;
+
+    if (sentinel && releaseHandler) {
+      sentinel.removeEventListener("release", releaseHandler);
+    }
+
+    try {
+      if (sentinel && !sentinel.released) await sentinel.release();
+    } catch {
+      // Wake Lock release may fail if the browser already released it.
+    }
+
+    setWakeLockActive(false);
+  }, []);
+
+  const requestWakeLock = useCallback(async () => {
+    if (typeof navigator === "undefined") return;
+
+    const wakeLock = (navigator as WakeLockNavigator).wakeLock;
+    if (!wakeLock) {
+      setWakeLockActive(false);
+      setWakeLockMessage("Tento prehliadač nepodporuje nezhasínanie displeja.");
+      return;
+    }
+
+    if (document.visibilityState !== "visible") return;
+
+    if (wakeLockRef.current && !wakeLockRef.current.released) {
+      setWakeLockActive(true);
+      setWakeLockMessage("Displej zostane zapnutý.");
+      return;
+    }
+
+    try {
+      const sentinel = await wakeLock.request("screen");
+      const handleRelease = () => {
+        if (wakeLockRef.current === sentinel) {
+          wakeLockRef.current = null;
+          wakeLockReleaseHandlerRef.current = null;
+        }
+        setWakeLockActive(false);
+        setWakeLockMessage("Nezhasínanie displeja bolo uvoľnené systémom.");
+      };
+
+      sentinel.addEventListener("release", handleRelease);
+      wakeLockRef.current = sentinel;
+      wakeLockReleaseHandlerRef.current = handleRelease;
+      setWakeLockActive(true);
+      setWakeLockMessage("Displej zostane zapnutý.");
+    } catch {
+      wakeLockRef.current = null;
+      wakeLockReleaseHandlerRef.current = null;
+      setWakeLockActive(false);
+      setWakeLockMessage("Nezhasínanie displeja sa nepodarilo zapnúť.");
+    }
+  }, []);
+
+  const toggleWakeLock = () => {
+    if (!wakeLockWanted && typeof navigator !== "undefined" && !(navigator as WakeLockNavigator).wakeLock) {
+      setWakeLockActive(false);
+      setWakeLockMessage("Tento prehliadač nepodporuje nezhasínanie displeja.");
+      return;
+    }
+    setWakeLockWanted((enabled) => !enabled);
+  };
 
   useEffect(() => {
     if (!controlsOpen) return undefined;
     const timer = window.setTimeout(() => setControlsOpen(false), 7000);
     return () => window.clearTimeout(timer);
   }, [controlsOpen, performanceIndex, readerZoom, transpose]);
+
+  useEffect(() => {
+    if (wakeLockWanted) {
+      void requestWakeLock();
+      return undefined;
+    }
+
+    setWakeLockMessage("");
+    void releaseWakeLock();
+    return undefined;
+  }, [releaseWakeLock, requestWakeLock, wakeLockWanted]);
+
+  useEffect(() => {
+    if (!wakeLockWanted) return undefined;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void requestWakeLock();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [requestWakeLock, wakeLockWanted]);
+
+  useEffect(() => {
+    return () => {
+      const sentinel = wakeLockRef.current;
+      const releaseHandler = wakeLockReleaseHandlerRef.current;
+      wakeLockRef.current = null;
+      wakeLockReleaseHandlerRef.current = null;
+      if (sentinel && releaseHandler) sentinel.removeEventListener("release", releaseHandler);
+      if (sentinel && !sentinel.released) void sentinel.release();
+    };
+  }, []);
 
   if (!renderedPerformance) {
     return (
@@ -71,6 +192,8 @@ export function PerformanceView({
   const transposeLabel = transpose > 0 ? `+${transpose}` : String(transpose);
   const stageDark = screenNightMode;
   const stageDarkToggleLabel = stageDark ? "Denný režim" : "Nočný režim";
+  const wakeLockLabel = wakeLockActive ? "Displej stále zapnutý" : wakeLockWanted ? "Čakám na displej" : "Nezhasínať displej";
+  const wakeLockStatusText = wakeLockActive ? "Displej zostane zapnutý." : wakeLockMessage;
   const originalKey = normalizeKeyInput(originalSong?.key || renderedPerformance.key);
   const renderedKey = normalizeKeyInput(renderedPerformance.key);
   const keyLabel = originalKey === renderedKey ? renderedKey : `${originalKey} -> ${renderedKey}`;
@@ -99,6 +222,11 @@ export function PerformanceView({
   const nightToggleClass = stageDark
     ? "rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-950 ring-1 ring-zinc-100"
     : "rounded-2xl bg-zinc-100 px-4 py-2 text-sm font-bold text-zinc-800 ring-1 ring-zinc-200";
+  const wakeLockButtonClass = wakeLockWanted && wakeLockActive
+    ? stageDark
+      ? "rounded-2xl bg-emerald-300 px-4 py-2 text-sm font-bold text-zinc-950 ring-1 ring-emerald-200"
+      : "rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white ring-1 ring-emerald-600"
+    : secondaryButtonClass;
   const mutedTextClass = stageDark ? "text-zinc-400" : "text-zinc-500";
   const subtleTextClass = stageDark ? "text-zinc-300" : "text-zinc-600";
   const transposePanelClass = stageDark
@@ -157,6 +285,14 @@ export function PerformanceView({
           </button>
           <button
             type="button"
+            onClick={toggleWakeLock}
+            className={wakeLockButtonClass}
+            aria-pressed={wakeLockWanted}
+          >
+            {wakeLockLabel}
+          </button>
+          <button
+            type="button"
             onClick={() => setControlsOpen((open) => !open)}
             className={secondaryButtonClass}
             aria-expanded={controlsOpen}
@@ -203,6 +339,13 @@ export function PerformanceView({
             <button type="button" onClick={onToggleScreenNightMode} className={`w-full ${nightToggleClass}`} aria-pressed={stageDark}>
               {stageDarkToggleLabel}
             </button>
+          </div>
+
+          <div className="mt-3">
+            <button type="button" onClick={toggleWakeLock} className={`w-full ${wakeLockButtonClass}`} aria-pressed={wakeLockWanted}>
+              {wakeLockLabel}
+            </button>
+            {wakeLockStatusText && <div className={`mt-2 text-xs font-semibold ${mutedTextClass}`}>{wakeLockStatusText}</div>}
           </div>
 
           <div className={transposePanelClass}>

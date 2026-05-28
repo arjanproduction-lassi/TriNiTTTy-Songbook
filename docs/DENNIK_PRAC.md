@@ -817,6 +817,39 @@ Manualne este vhodne otestovat:
 - Skontrolovat, ze tag `core-rc1` existuje a je pushnuty na GitHub.
 - Overit Vercel deploy po pushi.
 
+### Update 1 po Core RC1 - volitelny wake lock v performance
+
+Commit:
+
+- `Add optional wake lock in performance mode`
+
+Problem:
+
+- Pri skuske alebo koncerte moze tablet/mobil stmavit alebo zamknut displej.
+- Toto je riziko najma v koncertnom rezime, kde ma zariadenie fungovat ako citacka setlistu.
+
+Oprava:
+
+- Do performance/koncertneho rezimu pribudol volitelny prepínac `Nezhasinat displej`.
+- Default je vypnute.
+- Ak prehliadac podporuje Screen Wake Lock API, appka poziada o `navigator.wakeLock.request("screen")`.
+- Pri odchode z performance rezimu sa wake lock uvolni.
+- Ak system wake lock uvolni, appka aktualizuje stav a pri navrate do viditelnej appky sa pokusi obnovit lock, ak ho pouzivatel stale chce.
+- Nepodporovany prehliadac zobrazi jemnu spravu bez padu appky.
+- A4 renderer, print/PDF, parser, DB, TXT, setlist data a transpozicia ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Android/tablet Chrome v performance rezime.
+- Zapnut `Nezhasinat displej` a nechat zariadenie dlhsie bez dotyku.
+- Odist z performance rezimu a overit, ze sa zariadenie moze spravat normalne.
+- Skusit prehliadac bez Wake Lock podpory, ak je dostupny.
+
 ---
 
 ## Predchadzajuce zdroje historie

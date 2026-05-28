@@ -285,6 +285,8 @@ Dolezite:
 - Transpozicia sa robi vedome iba na aktualnej skladbe.
 - Transpozicia jednej skladby sa neprenasa na dalsiu skladbu.
 - Default reader zoom je `115 %`.
+- Volitelne tlacidlo `Nezhasinat displej` sa pokusi udrzat obrazovku zapnutu pocas hrania, ak to prehliadac podporuje.
+- Ak prehliadac Wake Lock nepodporuje, appka len zobrazi jemnu informaciu a dalej funguje normalne.
 
 ## 16. Nocny / denny rezim
 
