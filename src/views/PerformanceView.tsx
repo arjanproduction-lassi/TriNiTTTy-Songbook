@@ -10,15 +10,6 @@ const MIN_READER_ZOOM = 100;
 const DEFAULT_READER_ZOOM = 115;
 const MAX_READER_ZOOM = 125;
 const ZOOM_STEP = 5;
-const STAGE_DARK_MODE_KEY = "trinittty-stage-dark-mode";
-
-function readStageDarkMode() {
-  try {
-    return window.localStorage.getItem(STAGE_DARK_MODE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
 
 export function PerformanceView({
   setlistSongs,
@@ -30,6 +21,8 @@ export function PerformanceView({
   transpose,
   onBackToSetlist,
   originalSong,
+  screenNightMode,
+  onToggleScreenNightMode,
 }: {
   setlistSongs: Song[];
   performanceIndex: number;
@@ -40,24 +33,17 @@ export function PerformanceView({
   setTranspose: Dispatch<SetStateAction<number>>;
   transpose: number;
   onBackToSetlist: () => void;
+  screenNightMode: boolean;
+  onToggleScreenNightMode: () => void;
 }) {
   const [controlsOpen, setControlsOpen] = useState(false);
   const [readerZoom, setReaderZoom] = useState(DEFAULT_READER_ZOOM);
-  const [stageDark, setStageDark] = useState(readStageDarkMode);
 
   useEffect(() => {
     if (!controlsOpen) return undefined;
     const timer = window.setTimeout(() => setControlsOpen(false), 7000);
     return () => window.clearTimeout(timer);
   }, [controlsOpen, performanceIndex, readerZoom, transpose]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STAGE_DARK_MODE_KEY, stageDark ? "1" : "0");
-    } catch {
-      // Stage dark mode is device-local comfort state.
-    }
-  }, [stageDark]);
 
   if (!renderedPerformance) {
     return (
@@ -83,6 +69,7 @@ export function PerformanceView({
     setPerformanceIndex((value) => Math.min(setlistSongs.length - 1, value + 1));
   };
   const transposeLabel = transpose > 0 ? `+${transpose}` : String(transpose);
+  const stageDark = screenNightMode;
   const stageDarkToggleLabel = stageDark ? "Denný režim" : "Nočný režim";
   const originalKey = normalizeKeyInput(originalSong?.key || renderedPerformance.key);
   const renderedKey = normalizeKeyInput(renderedPerformance.key);
@@ -162,7 +149,7 @@ export function PerformanceView({
           </button>
           <button
             type="button"
-            onClick={() => setStageDark((value) => !value)}
+            onClick={onToggleScreenNightMode}
             className={`ml-auto ${nightToggleClass}`}
             aria-pressed={stageDark}
           >
@@ -213,7 +200,7 @@ export function PerformanceView({
           </div>
 
           <div className="mt-3">
-            <button type="button" onClick={() => setStageDark((value) => !value)} className={`w-full ${nightToggleClass}`} aria-pressed={stageDark}>
+            <button type="button" onClick={onToggleScreenNightMode} className={`w-full ${nightToggleClass}`} aria-pressed={stageDark}>
               {stageDarkToggleLabel}
             </button>
           </div>

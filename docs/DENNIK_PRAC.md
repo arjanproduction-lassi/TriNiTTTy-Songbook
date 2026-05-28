@@ -752,6 +752,36 @@ Manualne este vhodne otestovat:
 - Otvorit koncertny rezim a overit, ze Reader zacina na 115 %.
 - Overit, ze A4 preview a print/PDF ostali bez zmeny.
 
+### Fix - zjednotenie nocneho rezimu v performance
+
+Commit:
+
+- `Unify performance night mode with app night mode`
+
+Problem:
+
+- Koncertny rezim mal este vlastny starsi lokalny stav `trinittty-stage-dark-mode`.
+- Po novom otvoreni appky sa vedel rozist label tlacidla s realnym vizualnym stavom performance obrazovky.
+- Pouzivatel musel niekedy ist spat do Piesne a prepnout denny rezim odtial.
+
+Oprava:
+
+- Performance/koncertny rezim uz nepouziva samostatny stage dark stav.
+- Tlacidla v performance teraz prepinaju rovnaky globalny screen night mode ako hlavicka a Setlist.
+- Stary `trinittty-stage-dark-mode` ostava iba ignorovany legacy lokalny zaznam, nema vplyv na UI.
+- A4 renderer, print/PDF, parser, DB, TXT, setlist data a transpozicia ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Otvorit appku s aktivnym nocnym rezimom a rovno ist do Setlistu/performance.
+- V Setliste prepnut na denny rezim a overit, ze sa realne zmeni aj UI.
+- V performance prepnut na denny rezim a overit, ze sa realne zmeni aj UI.
+
 ---
 
 ## Predchadzajuce zdroje historie

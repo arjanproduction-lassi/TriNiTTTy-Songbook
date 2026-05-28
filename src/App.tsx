@@ -1295,6 +1295,8 @@ export default function App() {
             setTranspose={setTranspose}
             transpose={transpose}
             onBackToSetlist={backToSetlistFromPerformance}
+            screenNightMode={screenNightMode}
+            onToggleScreenNightMode={() => setScreenNightMode((enabled) => !enabled)}
           />
         )}
 
