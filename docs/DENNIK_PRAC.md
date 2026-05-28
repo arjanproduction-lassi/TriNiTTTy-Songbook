@@ -720,6 +720,38 @@ Manualne este vhodne otestovat:
 - Export DB s nazvom projektu s medzerami a diakritikou.
 - Import starsieho exportu s `TriNiTTTy Songbook`.
 
+### Pre-RC UI polish - nocny rezim a performance reader
+
+Commit:
+
+- `Polish night toggle and performance reader default`
+
+Problem:
+
+- Tlacidla nocneho rezimu vzdy hovorili `Nocny rezim`, aj ked uz bola appka v nocnom stave.
+- V Setliste bolo prepinanie spat do denneho rezimu nekomfortne, hlavne ked bol Setlist otvoreny uz v nocnom rezime.
+- Koncertny reader startoval na 100 %, hoci realne testovanie ukazalo komfortnejsi zaklad okolo 115 %.
+
+Oprava:
+
+- Globalne tlacidlo teraz ukazuje akciu, ktoru klik spravi: `Nocny rezim` alebo `Denny rezim`.
+- Setlist ma vlastne priame tlacidlo nocny/denny rezim napojene na globalny screen night mode.
+- Koncertny/performance reader ma default `115 %`.
+- Tlacidlo aktualnej hodnoty readera vracia zoom na novy default `115 %`.
+- A4 renderer, print/PDF, parser, DB, TXT, setlist data a transpozicia ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Prepnut nocny/denny rezim z hlavnej hlavicky.
+- Otvorit Setlist v nocnom rezime a prepnut priamo na denny bez navratu do Piesne.
+- Otvorit koncertny rezim a overit, ze Reader zacina na 115 %.
+- Overit, ze A4 preview a print/PDF ostali bez zmeny.
+
 ---
 
 ## Predchadzajuce zdroje historie

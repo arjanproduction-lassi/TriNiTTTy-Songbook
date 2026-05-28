@@ -48,6 +48,8 @@ export function SetlistView({
   startPerformanceAt,
   printSong,
   setView,
+  screenNightMode,
+  onToggleScreenNightMode,
 }: {
   setlists: NamedSetlist[];
   activeSetlistId: number;
@@ -70,6 +72,8 @@ export function SetlistView({
   startPerformanceAt: (index: number) => void;
   printSong: (song: Song) => void;
   setView: (view: View) => void;
+  screenNightMode: boolean;
+  onToggleScreenNightMode: () => void;
 }) {
   const activeSetlist = setlists.find((setlist) => setlist.id === activeSetlistId) ?? setlists[0] ?? null;
   const [setlistNameDraft, setSetlistNameDraft] = useState(activeSetlist?.name ?? "");
@@ -87,6 +91,7 @@ export function SetlistView({
   const sourceKey = setlistPreviewSong ? normalizeKeyInput(setlistPreviewSong.key) : "";
   const renderedKey = renderedSetlistPreview ? normalizeKeyInput(renderedSetlistPreview.key) : "";
   const keyStatus = sourceKey && renderedKey ? `${sourceKey} -> ${renderedKey}` : "";
+  const screenNightToggleLabel = screenNightMode ? "Denný režim" : "Nočný režim";
 
   return (
     <div className="grid min-w-0 gap-3 md:gap-4 xl:grid-cols-[0.76fr_1.24fr]">
@@ -97,6 +102,14 @@ export function SetlistView({
             <p className="mt-1 text-sm text-zinc-500">Klikni na skladbu vľavo a vpravo sa ukáže celý A4 paper.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onToggleScreenNightMode}
+              aria-pressed={screenNightMode}
+              className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${screenNightMode ? "bg-zinc-900 text-white ring-zinc-700" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"}`}
+            >
+              {screenNightToggleLabel}
+            </button>
             <div className="rounded-xl bg-zinc-50 px-3 py-2 text-sm ring-1 ring-zinc-200">
               <div className="text-xs text-zinc-500">Setlisty</div>
               <div className="font-bold">{activeSetlistCount}</div>

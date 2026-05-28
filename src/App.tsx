@@ -1064,6 +1064,7 @@ export default function App() {
       : "bg-zinc-50 text-zinc-700 ring-zinc-200";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
   const displayProjectName = normalizeProjectName(projectName);
+  const screenNightToggleLabel = screenNightMode ? "Denný režim" : "Nočný režim";
 
   const rootClass = printJob
     ? "app-printing min-h-screen bg-white text-zinc-900"
@@ -1125,7 +1126,7 @@ export default function App() {
                 aria-pressed={screenNightMode}
                 className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${screenNightMode ? "bg-zinc-900 text-white ring-zinc-700" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"}`}
               >
-                Nočný režim
+                {screenNightToggleLabel}
               </button>
               {canonicalDirty && (
                 <button onClick={exportCanonicalDatabase} className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white ring-1 ring-amber-500 hover:bg-amber-600">Exportovať databázu</button>
@@ -1278,6 +1279,8 @@ export default function App() {
             startPerformanceAt={startPerformanceAt}
             printSong={printA4Song}
             setView={setView}
+            screenNightMode={screenNightMode}
+            onToggleScreenNightMode={() => setScreenNightMode((enabled) => !enabled)}
           />
         )}
 

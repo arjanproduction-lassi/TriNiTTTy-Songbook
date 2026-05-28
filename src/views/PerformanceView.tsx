@@ -7,6 +7,7 @@ import { normalizeKeyInput } from "../lib/chords";
 import { normalizeSongTitle } from "../lib/import";
 
 const MIN_READER_ZOOM = 100;
+const DEFAULT_READER_ZOOM = 115;
 const MAX_READER_ZOOM = 125;
 const ZOOM_STEP = 5;
 const STAGE_DARK_MODE_KEY = "trinittty-stage-dark-mode";
@@ -41,7 +42,7 @@ export function PerformanceView({
   onBackToSetlist: () => void;
 }) {
   const [controlsOpen, setControlsOpen] = useState(false);
-  const [readerZoom, setReaderZoom] = useState(MIN_READER_ZOOM);
+  const [readerZoom, setReaderZoom] = useState(DEFAULT_READER_ZOOM);
   const [stageDark, setStageDark] = useState(readStageDarkMode);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ export function PerformanceView({
     setPerformanceIndex((value) => Math.min(setlistSongs.length - 1, value + 1));
   };
   const transposeLabel = transpose > 0 ? `+${transpose}` : String(transpose);
+  const stageDarkToggleLabel = stageDark ? "Denný režim" : "Nočný režim";
   const originalKey = normalizeKeyInput(originalSong?.key || renderedPerformance.key);
   const renderedKey = normalizeKeyInput(renderedPerformance.key);
   const keyLabel = originalKey === renderedKey ? renderedKey : `${originalKey} -> ${renderedKey}`;
@@ -164,7 +166,7 @@ export function PerformanceView({
             className={`ml-auto ${nightToggleClass}`}
             aria-pressed={stageDark}
           >
-            Nočný režim
+            {stageDarkToggleLabel}
           </button>
           <button
             type="button"
@@ -206,13 +208,13 @@ export function PerformanceView({
 
           <div className="mt-3 grid grid-cols-3 gap-2">
             <button disabled={readerZoom <= MIN_READER_ZOOM} onClick={() => changeZoom(-1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader -</button>
-            <button onClick={() => setReaderZoom(MIN_READER_ZOOM)} className={stageDark ? "rounded-2xl bg-zinc-900 px-3 py-3 text-sm font-bold text-zinc-200 ring-1 ring-zinc-700" : "rounded-2xl bg-zinc-50 px-3 py-3 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200"}>{readerZoom}%</button>
+            <button onClick={() => setReaderZoom(DEFAULT_READER_ZOOM)} className={stageDark ? "rounded-2xl bg-zinc-900 px-3 py-3 text-sm font-bold text-zinc-200 ring-1 ring-zinc-700" : "rounded-2xl bg-zinc-50 px-3 py-3 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200"}>{readerZoom}%</button>
             <button disabled={readerZoom >= MAX_READER_ZOOM} onClick={() => changeZoom(1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader +</button>
           </div>
 
           <div className="mt-3">
             <button type="button" onClick={() => setStageDark((value) => !value)} className={`w-full ${nightToggleClass}`} aria-pressed={stageDark}>
-              Nočný režim
+              {stageDarkToggleLabel}
             </button>
           </div>
 
