@@ -33,6 +33,8 @@ export function SongsView({
   setlists,
   activeSetlistId,
   databaseVersion,
+  projectName,
+  onProjectNameChange,
   remoteDatabaseUrl,
   remoteDatabaseUrlDraft,
   remoteDatabaseStatus,
@@ -78,6 +80,8 @@ export function SongsView({
   setlists: NamedSetlist[];
   activeSetlistId: number;
   databaseVersion: number;
+  projectName: string;
+  onProjectNameChange: (value: string) => void;
   remoteDatabaseUrl: string;
   remoteDatabaseUrlDraft: string;
   remoteDatabaseStatus: string;
@@ -241,6 +245,16 @@ export function SongsView({
         <Card className="order-2">
           <h2 className="text-lg font-semibold md:text-xl">PWA / lokálna databáza</h2>
           <div className="mt-3"><InfoBox tone="emerald">{storageStatus}</InfoBox></div>
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
+            <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Názov projektu / kapely</label>
+            <input
+              value={projectName}
+              onChange={(event) => onProjectNameChange(event.target.value)}
+              placeholder="TriNiTTTy"
+              className="mt-1 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none"
+            />
+            <div className="mt-2 text-xs text-zinc-500">Používa sa v hlavičke appky a názvoch exportov databázy.</div>
+          </div>
           <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
             {canInstall && <PrimaryButton onClick={onInstall}>Nainštalovať appku</PrimaryButton>}
             <SoftButton onClick={canonicalDirty ? onExportBackup : onDownloadDatabaseCopy}>{canonicalDirty ? "Exportovať databázu" : "Stiahnuť kópiu DB"}</SoftButton>

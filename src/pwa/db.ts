@@ -6,7 +6,8 @@ const DB_VERSION = 2;
 const STORE = "state";
 const SONG_BACKUP_STORE = "song-before-save-backups";
 const STATE_KEY = "app";
-const BACKUP_APP_NAME = "TriNiTTTy Songbook";
+const BACKUP_APP_NAME = "LassiLAB Songbook";
+const DEFAULT_PROJECT_NAME = "TriNiTTTy";
 const BACKUP_SCHEMA_VERSION = 1;
 
 type PersistedStateInput = Omit<PersistedState, "version" | "appName" | "schemaVersion" | "exportedAt" | "songCount" | "setlistCount" | "savedAt">;
@@ -293,12 +294,12 @@ export function makePersistedBackup(state: PersistedStateInput, exportedAt = new
   };
 }
 
-export function downloadBackup(state: PersistedState) {
+export function downloadBackup(state: PersistedState, projectName = DEFAULT_PROJECT_NAME) {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = backupFileName(state);
+  link.download = backupFileName(state, projectName);
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -309,10 +310,20 @@ export function formatDatabaseVersion(version: number) {
   return `v${String(positiveIntegerValue(version, 1)).padStart(3, "0")}`;
 }
 
-export function backupFileName(state: Pick<PersistedState, "databaseVersion" | "exportedAt">) {
+export function backupFileName(state: Pick<PersistedState, "databaseVersion" | "exportedAt">, projectName = DEFAULT_PROJECT_NAME) {
   const exportedAt = new Date(state.exportedAt);
   const date = Number.isNaN(exportedAt.getTime()) ? new Date() : exportedAt;
-  return `DB${formatDatabaseVersion(state.databaseVersion)}_TriNiTTTy_${backupDate(date)}.json`;
+  return `DB${formatDatabaseVersion(state.databaseVersion)}_${sanitizeProjectFileName(projectName)}_${backupDate(date)}.json`;
+}
+
+function sanitizeProjectFileName(value: string) {
+  const safe = value
+    .trim()
+    .replace(/[<>:"/\\|?*\u0000-\u001F]+/g, " ")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  return safe || DEFAULT_PROJECT_NAME;
 }
 
 export function readBackupFile(file: File): Promise<PersistedState> {

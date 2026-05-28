@@ -23,8 +23,10 @@ const LEGACY_STORAGE_KEYS = ["trinittty-phase1-wide-t8", "trinittty-phase1-lean-
 const DEFAULT_SETLISTS: NamedSetlist[] = [{ id: 1, name: "Setlist 1", songIds: [1, 2] }];
 const CANONICAL_STATUS_KEY = "trinittty-canonical-save-status";
 const REMOTE_DATABASE_URL_KEY = "trinittty-remote-database-url";
-const REMOTE_DATABASE_APP_NAME = "TriNiTTTy Songbook";
+const REMOTE_DATABASE_APP_NAMES = new Set(["LassiLAB Songbook", "TriNiTTTy Songbook"]);
 const SCREEN_NIGHT_MODE_KEY = "trinittty-screen-night-mode";
+const PROJECT_NAME_KEY = "lassilab-project-name";
+const DEFAULT_PROJECT_NAME = "TriNiTTTy";
 
 type CanonicalSaveStatus = {
   dirty: boolean;
@@ -85,6 +87,7 @@ export default function App() {
   const [printJobOverflowing, setPrintJobOverflowing] = useState(false);
   const [databaseVersion, setDatabaseVersion] = useState(1);
   const [screenNightMode, setScreenNightMode] = useState(() => readScreenNightMode());
+  const [projectName, setProjectName] = useState(() => readProjectName());
   const { canInstall, installed, install } = useInstallPrompt();
 
   const persistedState = useMemo(() => makePersistedBackup({
@@ -147,6 +150,10 @@ export default function App() {
   }, [screenNightMode]);
 
   useEffect(() => {
+    writeProjectName(projectName);
+  }, [projectName]);
+
+  useEffect(() => {
     if (!canonicalSaveStatus.dirty) return undefined;
 
     const warnBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -198,7 +205,7 @@ export default function App() {
     setPrintJobOverflowing(false);
     enterBrowserPrintMode();
 
-    const previousTitle = document.title || "TriNiTTTy Songbook";
+    const previousTitle = document.title || "LassiLAB Songbook";
     document.title = makePrintDocumentTitle(printJob);
 
     return () => {
@@ -406,7 +413,7 @@ export default function App() {
       const exportedAt = new Date().toISOString();
       const nextDatabaseVersion = Math.max(1, databaseVersion + 1);
       const exportState = makePersistedBackup({ ...persistedState, databaseVersion: nextDatabaseVersion }, exportedAt);
-      downloadBackup(exportState);
+      downloadBackup(exportState, projectName);
       setDatabaseVersion(nextDatabaseVersion);
       markCanonicalSaved(exportedAt);
       setStorageStatus(`Databáza exportovaná: ${formatDatabaseVersion(nextDatabaseVersion)} - ${formatShortTime(exportedAt)}.`);
@@ -419,7 +426,7 @@ export default function App() {
     try {
       const exportedAt = new Date().toISOString();
       const copyState = makePersistedBackup({ ...persistedState, databaseVersion }, exportedAt);
-      downloadBackup(copyState);
+      downloadBackup(copyState, projectName);
       setStorageStatus(`Kópia databázy stiahnutá: ${formatDatabaseVersion(databaseVersion)} - ${formatShortTime(exportedAt)}.`);
     } catch {
       setStorageStatus("Stiahnutie kópie databázy zlyhalo.");
@@ -844,7 +851,7 @@ export default function App() {
 
       try {
         const backupAt = new Date().toISOString();
-        downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt));
+        downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt), projectName);
       } catch {
         setStorageStatus("Import zastavený: nepodarilo sa vytvoriť zálohu aktuálnej databázy.");
         return;
@@ -928,7 +935,7 @@ export default function App() {
 
     try {
       const backupAt = new Date().toISOString();
-      downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt));
+      downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt), projectName);
     } catch {
       setRemoteDatabaseStatus("Import zastavený: nepodarilo sa vytvoriť zálohu aktuálnej databázy.");
       return;
@@ -1056,6 +1063,7 @@ export default function App() {
       ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
       : "bg-zinc-50 text-zinc-700 ring-zinc-200";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
+  const displayProjectName = normalizeProjectName(projectName);
 
   const rootClass = printJob
     ? "app-printing min-h-screen bg-white text-zinc-900"
@@ -1093,8 +1101,8 @@ export default function App() {
         <div className="mb-4 rounded-2xl bg-gradient-to-br from-white to-zinc-100 p-3 shadow-sm ring-1 ring-zinc-200 md:p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">TriNiTTTy</div>
-              <h1 className="mt-0.5 text-xl font-bold tracking-tight">Songbook PWA MVP</h1>
+              <div className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">LassiLAB</div>
+              <h1 className="mt-0.5 text-xl font-bold tracking-tight">LassiLAB Songbook <span className="text-zinc-400">· {displayProjectName}</span></h1>
               {!online && <p className="mt-1 text-xs font-semibold text-amber-700">Offline režim: pracuješ z lokálnej databázy a cache.</p>}
               <p className="mt-0.5 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · DB {formatDatabaseVersion(databaseVersion)} · build {BUILD_DATE}</p>
@@ -1160,6 +1168,8 @@ export default function App() {
             setlists={setlists}
             activeSetlistId={activeSetlistId}
             databaseVersion={databaseVersion}
+            projectName={projectName}
+            onProjectNameChange={setProjectName}
             remoteDatabaseUrl={remoteDatabaseUrl}
             remoteDatabaseUrlDraft={remoteDatabaseUrlDraft}
             remoteDatabaseStatus={remoteDatabaseStatus}
@@ -1326,7 +1336,7 @@ function makePrintDocumentTitle(song: Song) {
     .map(sanitizeFilenamePart)
     .filter(Boolean);
 
-  return parts.length ? parts.join(" - ") : "TriNiTTTy Songbook";
+  return parts.length ? parts.join(" - ") : "LassiLAB Songbook";
 }
 
 function sanitizeFilenamePart(value: string) {
@@ -1450,6 +1460,26 @@ function writeScreenNightMode(enabled: boolean) {
   }
 }
 
+function readProjectName() {
+  try {
+    return normalizeProjectName(window.localStorage.getItem(PROJECT_NAME_KEY) || DEFAULT_PROJECT_NAME);
+  } catch {
+    return DEFAULT_PROJECT_NAME;
+  }
+}
+
+function writeProjectName(value: string) {
+  try {
+    window.localStorage.setItem(PROJECT_NAME_KEY, normalizeProjectName(value));
+  } catch {
+    // Project name is device-local convenience state; the app can run without it.
+  }
+}
+
+function normalizeProjectName(value: string) {
+  return value.trim().replace(/\s+/g, " ") || DEFAULT_PROJECT_NAME;
+}
+
 function readRemoteDatabaseUrl() {
   try {
     return window.localStorage.getItem(REMOTE_DATABASE_URL_KEY) || "";
@@ -1490,7 +1520,7 @@ function normalizeRemoteDatabaseUrl(value: string) {
 
 function validateRemoteDatabasePayload(value: unknown) {
   if (!isUnknownRecord(value)) throw new Error("Remote súbor nie je platný JSON objekt.");
-  if (value.appName !== REMOTE_DATABASE_APP_NAME) throw new Error("Remote súbor nevyzerá ako TriNiTTTy databáza.");
+  if (typeof value.appName !== "string" || !REMOTE_DATABASE_APP_NAMES.has(value.appName)) throw new Error("Remote súbor nevyzerá ako LassiLAB/TriNiTTTy databáza.");
   if (value.schemaVersion !== 1) throw new Error("Remote databáza má nepodporovanú schému.");
   if (typeof value.databaseVersion !== "number") throw new Error("Remote databáza nemá databaseVersion.");
   if (typeof value.exportedAt !== "string") throw new Error("Remote databáza nemá exportedAt.");

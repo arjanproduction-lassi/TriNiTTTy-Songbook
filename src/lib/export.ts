@@ -52,7 +52,7 @@ export function downloadSongText(song: Song) {
   ].map(sanitizeFilenamePart).filter(Boolean);
 
   link.href = url;
-  link.download = `${parts.length ? parts.join(" - ") : "TriNiTTTy Songbook"}.txt`;
+  link.download = `${parts.length ? parts.join(" - ") : "LassiLAB Songbook"}.txt`;
   document.body.appendChild(link);
   link.click();
   link.remove();

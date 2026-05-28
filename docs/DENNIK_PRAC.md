@@ -685,6 +685,41 @@ Manualne este vhodne otestovat:
 - Performance view v nocnom rezime.
 - Print/PDF ostava biele A4.
 
+### Branding - LassiLAB app a nastavitelny nazov projektu
+
+Commit:
+
+- `Add configurable project name branding`
+
+Problem:
+
+- App shell a PWA nazov boli napevno naviazane na `TriNiTTTy`.
+- Pred Core RC baseline bolo treba oddelit nazov appky od nazvu konkretneho projektu/kapely.
+- DB export filename mal stale napevno `TriNiTTTy`.
+
+Oprava:
+
+- Core app brand v UI/PWA je `LassiLAB Songbook`.
+- Projekt/kapela ma jednoduche lokalne nastavenie `Nazov projektu / kapely`.
+- Default projekt ostava `TriNiTTTy`.
+- Nastavenie sa uklada lokalne v `localStorage` pod klucom `lassilab-project-name`.
+- Header zobrazuje `LassiLAB Songbook · <projekt>`.
+- DB export filename pouziva sanitizovany nazov projektu, napriklad `DBv047_Jano_Band_2026-05-28.json`.
+- Nove exporty maju metadata `appName: LassiLAB Songbook`.
+- Remote/import validacia ostava kompatibilna aj so starsim `TriNiTTTy Songbook`.
+- Parser, transpozicia, A4, PDF/print, TXT obsah a DB schema ostali bez zmeny.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Zmenit nazov projektu, refreshnut appku a overit persistenciu.
+- Export DB s nazvom projektu s medzerami a diakritikou.
+- Import starsieho exportu s `TriNiTTTy Songbook`.
+
 ---
 
 ## Predchadzajuce zdroje historie
