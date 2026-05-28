@@ -782,6 +782,41 @@ Manualne este vhodne otestovat:
 - V Setliste prepnut na denny rezim a overit, ze sa realne zmeni aj UI.
 - V performance prepnut na denny rezim a overit, ze sa realne zmeni aj UI.
 
+### Core RC1 baseline - zabetonovanie jadra
+
+Commit:
+
+- `Document Core RC1 baseline`
+
+Tag:
+
+- `core-rc1`
+
+Problem:
+
+- Pred dalsou nadstavbou bolo treba jasne oznacit stabilne jadro appky.
+- README, interny manual a RC1 signoff checklist boli ciastocne starsie nez aktualny stav LassiLAB Songbook.
+- Bolo treba mat citatelny navratovy bod, ak sa neskor pri feature praci nieco pokazi.
+
+Oprava:
+
+- README popisuje LassiLAB Songbook Core RC1, PWA distribuciu a pravidla pre buducu pracu.
+- Interny manual je zosuladeny s aktualnym stavom: LassiLAB brand, projekt/kapela, DB workflow, A4 pravda, PDF, TXT, setlist, performance, nocny rezim.
+- RC1 signoff checklist je aktualizovany pre Core RC1.
+- Pribudol dokument `docs/CORE_RC1_BASELINE.md` s pravidlami, obsahom jadra, limitmi a recovery postupom.
+- Dennik oprav dalej ostava hlavne miesto pre ludsky citatelnu historiu prac.
+
+Overene automaticky:
+
+- `npm run release:check` presiel.
+- Fixture testy hlasia: `Chord anchor fixtures passed: 13`.
+
+Manualne este vhodne otestovat:
+
+- Prejst `RC1_SIGNOFF.md`.
+- Skontrolovat, ze tag `core-rc1` existuje a je pushnuty na GitHub.
+- Overit Vercel deploy po pushi.
+
 ---
 
 ## Predchadzajuce zdroje historie

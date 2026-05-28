@@ -1,306 +1,317 @@
-# TriNiTTTy Songbook - interny manual pouzivania
+# LassiLAB Songbook - interny manual pouzivania
 
-## 1. Co je TriNiTTTy Songbook
+## 1. Co je LassiLAB Songbook
 
-TriNiTTTy Songbook je interna kapelova aplikacia na spravu piesni, akordov, setlistov, transpozicii a A4 nahladov pre skusky a koncertne pouzitie.
+LassiLAB Songbook je lokalna kapelova aplikacia na spravu piesni, akordov, setlistov, transpozicii, A4 nahladov a koncertne citanie.
 
-Zakladna filozofia aplikacie:
+Default projekt/kapela je `TriNiTTTy`, ale nazov projektu sa da zmenit v aplikacii.
+
+Zakladna filozofia:
 
 **A4 je pravda.**
 
-To znamena, ze skladba sa pripravuje tak, aby bola citatelna, pouzitelna a tlacitelna ako A4 leadsheet s akordmi nad textom.
+Skladba sa pripravuje tak, aby bola citatelna, pouzitelna a tlacitelna ako A4 leadsheet s akordmi nad textom.
 
-Aplikacia nie je DAW, notovy editor ani cloudovy system. Je to prakticky kapelovy songbook.
+Aplikacia nie je DAW, notovy editor ani cloudovy system. Je to prakticky offline songbook pre muzikantov.
 
-## 2. Zakladne pravidlo databazy
+## 2. Co je zdroj pravdy
 
-Databaza aplikacie je hlavny zdroj skladieb.
+V aplikacii platia tri jednoduche pravdy:
 
-Databazovy subor ma priponu:
+- Databaza je pravda pre appku.
+- A4 je pravda pre oci.
+- PDF je pravda pre tlac.
 
-`.json`
+Hlavna databaza aplikacie je JSON subor.
 
 Priklad:
 
-`DBv012_TriNiTTTy_2026-05-08.json`
+```text
+DBv047_TriNiTTTy_2026-05-28.json
+```
 
-Databazovy subor sluzi na import do aplikacie.
+PDF a TXT su vystupy. Nesluzia ako hlavne ulozisko appky.
 
-PDF subory sluzia iba na tlac, zdielanie alebo citanie mimo aplikacie.
+## 3. Instalacia / spustenie
 
-Pravidlo:
+Odporucany sposob pre testerov a clenov kapely:
 
-- `.json` = import do aplikacie
-- `.pdf` = tlac alebo zdielanie
-- `.txt` = textovy export pre Word / Google Docs
+1. Otvor HTTPS adresu aplikacie v Chrome alebo Edge.
+2. V prehliadaci pouzi `Install app` alebo `Add to Home screen`.
+3. Spusti nainstalovanu PWA.
+4. Importuj aktualnu JSON databazu.
 
-## 3. Odporucany kapelovy workflow
+Na Android tablete/mobile:
+
+1. Otvor appku v Chrome.
+2. Pouzi `Instalovat aplikaciu` alebo `Pridat na plochu`.
+3. Spusti appku z plochy.
+
+Na PC/notebooku:
+
+1. Otvor appku v Chrome alebo Edge.
+2. Pouzi instalacnu ikonu v adresnom riadku alebo menu prehliadaca.
+3. Spusti appku ako PWA.
+
+## 4. Nazov projektu / kapely
+
+Nazov projektu najdes tu:
+
+```text
+Piesne -> PWA / lokalna databaza -> Nazov projektu / kapely
+```
+
+Default:
+
+```text
+TriNiTTTy
+```
+
+Mozes ho zmenit napriklad na:
+
+```text
+Jano Band
+Lucie revival
+Solo projekt
+```
+
+Pouziva sa:
+
+- v hlavicke appky,
+- v nazvoch exportov databazy.
+
+Nastavenie je lokalne pre konkretne zariadenie.
+
+## 5. Odporucany kapelovy workflow
 
 ### Kapelnik / admin
 
-Kapelnik spravuje hlavnu databazu.
+Kapelnik spravuje master databazu.
 
 Postup:
 
 1. Upravi skladby v aplikacii.
-2. Skontroluje, ze vsetko sedi.
+2. Skontroluje A4 pravdu.
 3. Exportuje databazu.
-4. Ulozi databazu do kapeloveho priecinka na Google Disku alebo inom ulozisku.
-5. Ostatnym oznami, ze je dostupna nova verzia.
+4. Ulozi JSON databazu do kapeloveho priecinka, napriklad na Google Drive.
+5. Ostatnym oznami cislo verzie.
 
 Priklad spravy:
 
-> Chlapci, je tam nova databaza v012. Importujte si ju pred skuskou.
+```text
+Je tam nova databaza DB v047. Importujte si ju pred skuskou.
+```
 
 ### Clen kapely
 
-Clen kapely si databazu neprepisuje podla seba ako master verziu.
+Clen kapely databazu neupravuje ako master verziu.
 
 Postup:
 
-1. Stiahne alebo otvori aktualny databazovy `.json` subor.
-2. V aplikacii pouzije import databazy.
-3. Aplikacia pred importom vytvori zalohu.
-4. Po importe ma aktualny songbook.
+1. Stiahne alebo otvori aktualny `.json` subor.
+2. V appke pouzije import databazy.
+3. Appka pred importom vytvori zalohu.
+4. Po importe ma aktualny songbook pre svoje zariadenie.
 
-## 4. Verzie databazy
+## 6. Verzie databazy
 
-Kazdy export databazy vytvara novy verzovany subor.
-
-Priklad:
-
-`DBv012_TriNiTTTy_2026-05-08.json`
-
-Verzia databazy je dolezita, aby bolo jasne, kto ma aku verziu nacitanu.
-
-V hlavicke aplikacie sa zobrazuje aktualna verzia databazy, napriklad:
-
-`DB v012`
-
-Pred skuskou je dobre skontrolovat, ci vsetci pouzivaju rovnaku verziu.
-
-## 5. Odporucane usporiadanie Google Disku
-
-Odporucany priecinok:
-
-`TriNiTTTy SONGBOOK`
-
-V nom napriklad:
+Databaza ma vlastne cislo verzie, napriklad:
 
 ```text
-DATABASE
-PDF
-ARCHIV
+DB v047
 ```
 
-Alebo jednoduchsie:
+Export oficialnej databazy po realnych zmenach zvysi verziu.
 
-```text
-TriNiTTTy SONGBOOK
-- databazy JSON
-- PDF exporty
-- starsie verzie
-```
+Stiahnutie cistej kopie databazy verziu nezvysi.
 
-## 6. Import databazy
+Import zachova verziu z importovaneho JSON suboru.
 
-Pri importe databazy aplikacia zobrazi:
+Dolezite:
 
-- aktualnu verziu databazy,
+- `Bez lokalnych zmien` znamena iba to, ze toto zariadenie nema nerozrobene lokalne upravy.
+- Neznamena to automaticky, ze zariadenie ma najnovsiu oficialnu kapelovu databazu.
+- Oficialnu verziu treba zatial overit rucne podla cisla DB alebo cez kapelovy zdroj, ak je nastaveny.
+
+## 7. Import databazy
+
+Pri importe appka zobrazi:
+
+- aktualnu verziu,
 - importovanu verziu,
 - datum exportu,
 - pocet skladieb,
 - pocet setlistov.
 
-Pred nahradenim aktualnej databazy sa automaticky vytvori zaloha.
+Pred nahradenim aktualnej databazy sa vytvori zaloha.
 
-Ak importujes starsiu verziu, aplikacia zobrazi varovanie.
+Ak importujes starsiu databazu, appka zobrazi varovanie.
 
 Nikdy neimportuj databazu naslepo.
 
-## 7. Export databazy
+## 8. Export databazy
 
-Export databazy vytvori novy subor s verziou.
+Export databazy vytvori verzovany JSON subor.
 
 Priklad:
 
-`DBv013_TriNiTTTy_2026-05-08.json`
+```text
+DBv047_TriNiTTTy_2026-05-28.json
+```
 
-Kazdy export je archivna verzia. Starsie exporty sa nemazu, pokial nie je iste, ze uz nie su potrebne.
+Ak zmenis nazov projektu, zmeni sa aj stred nazvu suboru:
 
-## 8. Kapelovy zdroj databazy / remote URL
+```text
+DBv047_Jano_Band_2026-05-28.json
+```
 
-Aplikacia ma sekciu **Kapelovy zdroj databazy**.
+JSON je urceny na import do aplikacie.
 
-Tato funkcia sluzi na kontrolovane nacitanie databazy z verejneho alebo priamo dostupneho internetoveho odkazu.
+## 9. Kapelovy zdroj databazy
 
-Do pola nemozno zadavat lokalnu cestu typu:
+Sekcia `Kapelovy zdroj databazy` sluzi na kontrolovane nacitanie databazy z URL.
+
+Toto nie je realtime sync.
+
+Appka vie:
+
+- ulozit URL zdroja,
+- skontrolovat vzdialenu databazu,
+- porovnat metadata/verziu,
+- upozornit na novsiu alebo starsiu verziu,
+- importovat az po potvrdeni,
+- vytvorit zalohu pred importom.
+
+Do pola nepatri lokalna cesta:
 
 ```text
 F:\...
 C:\...
 ```
 
-Prehliadac/PWA z bezpecnostnych dovodov nemoze sam citat subory z disku pocitaca.
+Prehliadac/PWA nemoze sam citat subory z disku pocitaca.
 
-Spravna cesta musi byt internetova URL, napriklad:
+Bezny Google Drive share link nemusi fungovat ako priamy JSON zdroj. Plna Google Drive integracia je buduci plan.
 
-`https://.../DBv012_TriNiTTTy_2026-05-08.json`
+## 10. Google Drive dnes
 
-Bezny Google Drive share link nemusi fungovat ako priamy JSON zdroj. Pre plnu Google Drive integraciu bude neskor potrebne pouzit Google Drive API.
+Najbezpecnejsi aktualny workflow:
 
-Zatial je najbezpecnejsi hotovy workflow:
+```text
+export databazy -> ulozit na Google Drive -> clenovia manualne importuju JSON
+```
 
-**export databazy -> ulozit na Google Disk -> manualny import v aplikacii**
+Google Drive zatial sluzi hlavne ako miesto, kam kapela odlozi JSON databazu a PDF exporty.
 
-## 9. Google Drive integracia - buduci plan
-
-Do buducna sa planuje moznost, aby pouzivatel/admin v aplikacii vybral konkretny Google Drive subor alebo priecinok.
-
-Aplikacia by potom vedela:
-
-- nacitat databazove JSON subory,
-- automaticky najst najnovsiu verziu,
-- ponuknut aj starsie verzie,
-- zobrazit datum, verziu a pocty skladieb,
-- pred importom vytvorit zalohu.
-
-Toto zatial nie je hlavny pracovny workflow.
-
-## 10. PDF export / tlac
+## 11. PDF / tlac
 
 ### PC / notebook
 
-Na PC je PDF export najvernejsia cesta.
-
-Postup:
-
 1. Otvor skladbu.
-2. Klikni na **Tlacit / PDF**.
+2. Klikni `Tlacit / PDF`.
 3. Otvori sa cisty A4 print rezim.
-4. Klikni znovu **Tlacit / PDF**.
-5. V systemovom okne vyber **Ulozit ako PDF**.
-6. Po dokonceni sa vrat do aplikacie cez **Zavriet**.
-
-Toto je referencna A4 pravda.
+4. Klikni znovu `Tlacit / PDF`.
+5. V systemovom okne vyber `Ulozit ako PDF`.
+6. Po dokonceni sa vrat cez `Zavriet`.
 
 ### Android / tablet / mobil
 
-Na Androide funguje PDF cez systemovy tlacovy dialog zariadenia.
-
-Postup:
-
 1. Otvor skladbu.
-2. Klikni **Tlacit / PDF**.
+2. Klikni `Tlacit / PDF`.
 3. Zobrazi sa cisty A4 rezim.
-4. Klikni znovu **Tlacit / PDF**.
+4. Klikni znovu `Tlacit / PDF`.
 5. V Android dialogu vyber ciel ulozenia.
-6. Po dokonceni sa vrat do aplikacie cez **Zavriet**.
 
-Ak chces PDF ulozit do tabletu, v Android dialogu vyber:
+Ak chces ulozit PDF do tabletu, v Android dialogu vyber:
 
-- **Subory**
-- **Stiahnute**
+- `Subory`,
+- `Stiahnute`.
 
-Ak chces PDF ulozit do kapeloveho Google Drive priecinka, vyber Google Disk.
+Ak chces ulozit PDF na Google Drive, vyber Google Disk.
 
-Android moze podla zariadenia alebo verzie systemu ponukat rozne moznosti ulozenia.
+Android moze ponukat rozne moznosti podla zariadenia, verzie Androidu a nastavenia Drive.
 
-## 11. Zname obmedzenie PDF na Androide
+## 12. A4 overflow warning
 
-Android pouziva vlastny systemovy print engine.
+Ak skladba presahuje A4, appka zobrazi warning:
 
-Preto sa spravanie moze lisit podla:
+```text
+Skladba presahuje A4. Spodne riadky sa mozu pri tlaci/PDF odrezat.
+```
 
-- vyrobcu tabletu,
-- verzie Androidu,
-- verzie Chrome,
-- nastavenia Google Drive,
-- systemoveho dialogu tlace.
+Appka obsah automaticky nezmensuje, neprepisuje ani nestranka.
 
-Najvernejsia garantovana A4 PDF cesta je desktopovy Chrome/Edge na PC.
+Pouzivatel ma obsah upravit tak, aby A4 pravda sedela.
 
-Android PDF je prakticky pouzitelna cesta, ale vysledne ulozenie suboru riadi system Androidu.
+## 13. TXT export a Word / Docs
 
-Toto nie je chyba skladby ani A4 renderera.
-
-## 12. TXT export a kopirovanie do Wordu / Docs
-
-Aplikacia vie exportovat skladbu ako cisty monospaced TXT.
+Appka vie exportovat skladbu ako cisty monospaced TXT.
 
 Pouzitie:
 
-- **Export TXT** ulozi textovy subor.
-- **Kopirovat TXT** skopiruje rovnaky monospaced obsah do schranky.
+- `Kopirovat TXT` skopiruje cisty text do schranky.
+- `Export TXT` stiahne `.txt` subor.
 
-Pri vlozeni do Wordu alebo Google Docs treba nastavit:
+Pre Word alebo Google Docs nastav:
 
-- font: `Courier New`
-- velkost: `9 pt`
+```text
+Courier New, 9 pt
+```
 
-Potom akordy ostanu zarovnane nad textom.
-
-Dolezite:
-
-- TXT nie je Word dokument.
-- TXT je cisty text.
-- Zarovnanie drzi iba v monospace fonte.
-
-## 13. Koncertny rezim
-
-Koncertny rezim sluzi na hranie podla setlistu.
-
-Dolezite pravidlo:
-
-**Kazda skladba sa pri otvoreni v koncertnom rezime spusti v povodnej tonine.**
-
-Ak jednu skladbu transponujes napriklad o `+3`, dalsia skladba tuto transpoziciu nezdedi.
-
-Nova skladba = povodna tonina.
-
-Transpozicia sa robi vedome iba na aktualnej skladbe.
+TXT nie je Word dokument. Zarovnanie akordov drzi iba v monospace fonte.
 
 ## 14. Setlisty
 
-Setlist sluzi na pripravu poradia skladieb na skusku alebo koncert.
+Setlist sluzi na pripravu poradia skladieb.
 
 Odporucanie:
 
 1. Pred skuskou priprav setlist.
 2. Skontroluj poradie.
 3. Skontroluj toniny.
-4. V koncertnom rezime sa pohybuj cez skladby podla setlistu.
+4. V koncertnom rezime citaj skladby podla setlistu.
 
-## 15. Rychly A4 nahlad
+Skladba moze byt vo viacerych setlistoch.
 
-V sekcii **Piesne** je rychly A4 nahlad vybranej skladby.
+V kniznici su setlistove chipy klikatelne a vedia otvorit prislusny setlist.
 
-Na PC a tablete sluzi na rychlu kontrolu bez otvorenia celej skladby.
+## 15. Koncertny rezim
 
-Na mobile je nahlad prisposobeny tak, aby bol dostupny hore a zoznam skladieb mal vlastne rolovanie.
+Koncertny rezim sluzi na hranie/citanie podla setlistu.
 
-## 16. Zalohy
+Dolezite:
 
-Aplikacia vytvara zalohy pri dolezitych operaciach, najma:
+- Kazda skladba sa pri prepnutii v koncertnom rezime spusti s transpoziciou `0`.
+- Transpozicia sa robi vedome iba na aktualnej skladbe.
+- Transpozicia jednej skladby sa neprenasa na dalsiu skladbu.
+- Default reader zoom je `115 %`.
+
+## 16. Nocny / denny rezim
+
+Nocny rezim je screen-only pomocnik pre vecernu pracu a podiu.
+
+Pravidla:
+
+- app shell a A4 nahlady na obrazovke mozu byt tmave,
+- print/PDF ostava biele A4,
+- A4 geometria, fonty, stlpce a layout sa nemenia,
+- tlacidlo vzdy ukazuje akciu: `Nocny rezim` alebo `Denny rezim`.
+
+Setlist aj koncertny rezim pouzivaju rovnaky globalny screen night mode.
+
+## 17. Zalohy
+
+Appka vytvara zalohy najma:
 
 - pred importom databazy,
-- pred prepisom existujucej skladby.
+- pred prepisom existujucej skladby,
+- pri bezpecnych restore/copy workflowoch.
 
 Odporucanie:
 
-- pred velkou upravou databazu exportuj,
-- starsie verzie nemaz hned,
+- pred velkou upravou exportuj databazu,
+- starsie exporty nemaz hned,
 - pri pochybnosti obnov zalohu ako kopiu.
-
-## 17. Odporucane pravidla pre kapelu
-
-- Master databazu spravuje kapelnik/admin.
-- Ostatni clenovia si databazu iba importuju.
-- Pripomienky k akordom alebo textom sa posielaju adminovi.
-- Pred skuskou si kazdy skontroluje aktualnu verziu DB.
-- PDF subory sluzia na tlac.
-- JSON subory sluzia na import do aplikacie.
-- V koncertnom rezime sa transponuje iba vedome na aktualnej skladbe.
 
 ## 18. Co zatial nerobime
 
@@ -313,28 +324,21 @@ Zamerne sa zatial neriesi:
 - automaticke merge konfliktov,
 - notovy editor,
 - DAW funkcie,
-- velky komercny system.
-
-Ciel je jednoduchy:
-
-**spolahlivy kapelovy songbook, ktory funguje v skusobni aj na podiu.**
+- APK/desktop wrapper ako hlavny distribucny model.
 
 ## 19. Buduci backlog
 
 Mozne buduce rozsirenia:
 
 - read-only concert mode,
-- dark stage mode,
+- Google Drive integracia cez vybrany subor/priecinok,
+- lepsia kontrola oficialnej kapelovej databazy,
 - jemne farebne zvyraznenie hlasov a cue poznamok,
-- overflow warning pre dlhe riadky,
-- Google Drive integracia cez vybrany priecinok alebo subor,
-- lokalizacia,
-- LassiLab Songbook branding,
-- nativny PDF export mimo systemoveho print dialogu.
+- setlist package export/import,
+- nativny PDF export mimo systemoveho print dialogu,
+- lokalizacia.
 
-Tieto veci nie su aktualne nutne pre zakladnu pracovnu verziu.
-
-## 20. Zakladne motto
+## 20. Motto
 
 Databaza je pravda pre appku.
 

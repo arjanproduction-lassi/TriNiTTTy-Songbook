@@ -1,33 +1,82 @@
-# TriNiTTTy Songbook T8 RC1 Sign-Off
+# LassiLAB Songbook Core RC1 Sign-Off
 
-Use this checklist for internal testing before calling T8 RC1 ready.
+Use this checklist before treating the current build as the stable Core RC1 baseline.
 
-Build under test:
+Baseline target:
 
+- App: LassiLAB Songbook
 - Version: 1.0.0
 - Marker: T8 RC1
-- Build date: 2026-04-30
+- Baseline tag: `core-rc1`
+- Baseline date: 2026-05-28
+- Default project: `TriNiTTTy`
 
-## Windows Chrome Test
+## 1. Automated Validation
 
 Steps:
 
 1. Run `npm run release:check`.
-2. Run `npm run preview:lan`.
-3. Open Chrome on Windows.
-4. Open `http://127.0.0.1:4173/`.
-5. Open `Piesne`.
-6. Open one song detail.
-7. Open `Setlist`.
-8. Start performance mode.
+2. Confirm the production build passes.
+3. Confirm chord fixture tests pass.
 
 Expected result:
 
-- App loads without console-visible crash.
-- Song library opens.
+- TypeScript check passes.
+- Vite production build passes.
+- Chord fixtures report `Chord anchor fixtures passed: 13`.
+
+Result:
+
+- [ ] PASS
+- [ ] FAIL
+
+Notes:
+
+-
+
+## 2. Git / Baseline Check
+
+Steps:
+
+1. Confirm `git status` is clean.
+2. Confirm latest code is pushed to `origin/main`.
+3. Create or verify tag `core-rc1`.
+4. Push tag `core-rc1` to GitHub.
+
+Expected result:
+
+- `main` is clean.
+- `main` matches `origin/main`.
+- `core-rc1` points to the signed-off baseline commit.
+
+Result:
+
+- [ ] PASS
+- [ ] FAIL
+
+Notes:
+
+-
+
+## 3. Desktop Smoke Test
+
+Steps:
+
+1. Open the deployed HTTPS app in Chrome or Edge.
+2. Open `Piesne`.
+3. Open one song detail.
+4. Open `Setlist`.
+5. Start `Koncertny rezim`.
+6. Toggle `Nocny rezim` and `Denny rezim`.
+
+Expected result:
+
+- App loads without crash.
+- Header shows `LassiLAB Songbook` and the project/band name.
 - Song detail A4 preview is visible.
 - Setlist preview is visible.
-- Performance mode opens with the same A4 renderer.
+- Performance mode opens with `Reader 115%`.
+- Night/day toggle changes both label and real visual state.
 
 Result:
 
@@ -38,26 +87,24 @@ Notes:
 
 -
 
-## Android Chrome Test
+## 4. Android / Tablet Smoke Test
 
 Steps:
 
-1. On the PC, run `npm run preview:lan`.
-2. Find the PC LAN IP address, for example `192.168.x.x`.
-3. On Android, connect to the same Wi-Fi.
-4. Open Chrome on Android.
-5. Open `http://<PC-LAN-IP>:4173/`.
-6. Open `Piesne`.
-7. Open one song.
-8. Open `Setlist`.
-9. Start performance mode.
+1. Open the deployed HTTPS app in Android Chrome.
+2. Install as PWA or open in browser.
+3. Import current official JSON database.
+4. Open `Piesne`.
+5. Open `Setlist`.
+6. Start performance mode.
+7. Toggle night/day mode directly from Setlist and Performance.
 
 Expected result:
 
-- App loads from the PC over LAN.
-- The UI is usable on Android.
-- A4 preview remains the same renderer.
-- No install blocker appears from missing manifest/icon basics.
+- UI is usable on tablet/mobile.
+- A4 preview does not horizontally overflow.
+- Setlist and performance night/day toggles work without returning to `Piesne`.
+- Performance mode starts with `Reader 115%`.
 
 Result:
 
@@ -68,25 +115,22 @@ Notes:
 
 -
 
-## Android PWA Install Test
+## 5. PWA Install Test
 
 Steps:
 
-1. Prefer a deployed HTTPS URL for the real install sign-off.
-2. Use LAN URL only as a local smoke test, not as final Android install proof.
-3. Open the deployed HTTPS app URL in Android Chrome.
-4. Wait until the page fully loads.
-5. Open Chrome menu.
-6. Tap `Install app` or `Add to Home screen`.
-7. Confirm install.
-8. Launch `TriNiTTTy` from the Android home screen.
+1. Open the deployed HTTPS URL in Chrome/Edge.
+2. Use browser install action.
+3. Launch installed app.
+4. Reload/reopen the app.
 
 Expected result:
 
-- App installs from Chrome.
-- Installed app launches in standalone mode.
-- App icon appears on the home screen/app launcher.
-- Final sign-off is based on HTTPS install, not only LAN preview.
+- App installs as PWA.
+- Installed app opens in standalone/browser app mode.
+- Project setting persists locally.
+- Imported database persists locally.
+- If a new app build is available, the app can offer an update.
 
 Result:
 
@@ -97,22 +141,26 @@ Notes:
 
 -
 
-## Windows Chrome PWA Install Test
+## 6. Database Export / Import Safety
 
 Steps:
 
-1. Run `npm run preview:lan`.
-2. Open `http://127.0.0.1:4173/` in Chrome.
-3. Wait until the page fully loads.
-4. Use the install icon in the address bar, or Chrome menu -> `Save and share` -> `Install TriNiTTTy Songbook`.
-5. Confirm install.
-6. Launch the installed app from Windows Start.
+1. Confirm header shows current DB version.
+2. Export official database after a real local change.
+3. Confirm filename starts with the next DB version.
+4. Download clean DB copy with no local changes.
+5. Confirm clean copy does not increment databaseVersion.
+6. Import a valid database.
+7. Confirm imported databaseVersion is preserved.
+8. Confirm local clean state does not claim remote freshness.
 
 Expected result:
 
-- Chrome offers install.
-- Installed app opens in a standalone window.
-- Header shows `T8 RC1 · v1.0.0 · build 2026-04-30`.
+- Dirty export increments official DB version.
+- Clean copy keeps current DB version.
+- Import creates backup before replace.
+- Import preserves imported databaseVersion.
+- Header wording separates local clean state from remote/source freshness.
 
 Result:
 
@@ -123,31 +171,23 @@ Notes:
 
 -
 
-## Native Print / Save As PDF Test
+## 7. A4 Truth / Print / PDF
 
 Steps:
 
-1. Open a representative song in `Náhľad`.
-2. Click `Tlačiť / PDF`.
-3. In native Chrome print preview, choose paper size A4.
-4. Check the preview visually.
-5. Save as PDF.
-6. Repeat from `Setlist` preview for one song.
-7. Open the same song in performance mode and visually compare the A4 page before printing from `Setlist`.
-
-Implementation note:
-
-- RC1 performance mode has no separate print button.
-- This is acceptable only because performance, song detail and setlist preview use the shared A4 renderer path.
-- Native print/PDF uses the same `A4Page` print surface, not a Word or separate export layout.
+1. Open a normal song in song detail.
+2. Open the same song in Setlist preview.
+3. Open it in performance mode.
+4. Use `Tlacit / PDF`.
+5. Save as PDF on desktop.
+6. Repeat on Android/tablet if possible.
 
 Expected result:
 
-- Print preview uses the same A4 page as the in-app preview.
-- No app controls appear on the printed page.
-- Columns, section headers, spaces, chords, lyrics, cue and repeat rows match A4 truth.
-- Saved PDF matches native print preview.
-- Performance visual page matches the song/setlist A4 page before printing.
+- A4 visual truth is consistent.
+- Print/PDF output is white A4 truth.
+- No app controls appear in PDF.
+- A4 screen preview may be dark in night mode, but print/PDF remains white.
 
 Result:
 
@@ -158,29 +198,97 @@ Notes:
 
 -
 
-## Backup Export / Import Roundtrip
+## 8. A4 Overflow Warning
+
+Steps:
+
+1. Open a known long song.
+2. Confirm overflow warning appears if rendered A4 content exceeds page capacity.
+3. Open Print/PDF view.
+4. Confirm warning is screen-only and not printed into the PDF.
+
+Expected result:
+
+- Long songs do not silently cut content without warning.
+- Warning is visible before print.
+- Warning UI is not part of the printed A4 page.
+
+Result:
+
+- [ ] PASS
+- [ ] FAIL
+
+Notes:
+
+-
+
+## 9. Transposition / Chord Parsing
+
+Steps:
+
+1. Open a song with normal chords.
+2. Transpose up/down.
+3. Test slash/sus/add/maj/min variants.
+4. Test power chord line such as `/: E5   G5   D5   A5:/ 2x`.
+5. Confirm lyrics with numbers remain lyrics.
+
+Expected result:
+
+- Normal chords transpose correctly.
+- Slash/add/sus/maj/min variants stay supported.
+- Power chords transpose correctly in import/repeat/pair contexts.
+- Lyrics with ordinary numbers are not misclassified as chords.
+
+Result:
+
+- [ ] PASS
+- [ ] FAIL
+
+Notes:
+
+-
+
+## 10. TXT Export / Copy
+
+Steps:
+
+1. Open a song.
+2. Use `Kopirovat TXT`.
+3. Paste into Word/Docs and set Courier New 9 pt.
+4. Use `Export TXT`.
+5. Open TXT in Notepad and Word.
+
+Expected result:
+
+- Clipboard text has no BOM.
+- Downloaded TXT has UTF-8 BOM for Word compatibility.
+- Chord alignment remains correct in monospace font.
+- A4/PDF output is unchanged.
+
+Result:
+
+- [ ] PASS
+- [ ] FAIL
+
+Notes:
+
+-
+
+## 11. Project / Band Name Setting
 
 Steps:
 
 1. Open `Piesne`.
-2. Click `Exportovať backup`.
-3. Confirm downloaded filename format: `trinittty-backup-v1-YYYY-MM-DD-HHmm.json`.
-4. Record the current number of songs and setlists.
-5. Make a small safe change, for example create a temporary setlist named `RC1_RESTORE_TEST`.
-6. Use `Reset dát` to create a clean restore target.
-7. Confirm the app returned to demo/default data.
-8. Click `Importovať backup`.
-9. Select the exported JSON backup.
-10. Confirm the library and setlists return exactly to the exported state.
-11. Confirm `RC1_RESTORE_TEST` is not present if it was created after the backup export.
+2. In `PWA / lokalna databaza`, change `Nazov projektu / kapely`.
+3. Reload app.
+4. Export/download DB copy.
 
 Expected result:
 
-- Backup downloads with the expected filename format.
-- JSON imports without crash.
-- Songs and setlists are restored.
-- Restore works into a clean/reset app state, not only over an already populated state.
-- A corrupted or wrong JSON file shows a safe failure message.
+- Header shows `LassiLAB Songbook - <project>`.
+- Setting persists locally.
+- DB filename uses sanitized project name.
+- Old exports with `TriNiTTTy Songbook` remain import-compatible.
 
 Result:
 
@@ -191,128 +299,13 @@ Notes:
 
 -
 
-## Library Setlist Picker Manual Click Test
+## Sign-Off Decision
 
-Steps:
+Core RC1 decision:
 
-1. Open `Setlist`.
-2. Create a second test setlist.
-3. Go back to `Piesne`.
-4. On any song card, click `Setlisty…`.
-5. Toggle the song in the current setlist.
-6. Toggle the same song in the other setlist.
-7. Click outside the picker.
-8. Reopen the picker.
-9. Open a picker on one song, then open a picker on another song.
-10. Confirm the first picker closed and did not remain stale.
-11. Go to `Setlist` and delete the temporary test setlist.
-12. Return to `Piesne`.
-13. Confirm the deleted setlist disappeared from all `Setlisty…` pickers.
-14. Confirm `In:` chips no longer show the deleted setlist name.
+- [ ] APPROVED as stable baseline
+- [ ] HOLD - fix listed issue first
 
-Expected result:
-
-- Picker lists all setlists.
-- Active setlist is marked `(aktuálny)`.
-- A song can belong to multiple setlists.
-- `In:` chips show setlists containing that song.
-- Picker closes on outside click and on `Zavrieť`.
-- Opening another song picker closes the previously open picker.
-- Deleting a temporary setlist cleans up picker rows and `In:` chips.
-- With only one setlist, the original simple add/remove button behavior remains.
-
-Result:
-
-- [ ] PASS
-- [ ] FAIL
-
-Notes:
-
--
-
-## Offline / Online / Update Flow
-
-Steps:
-
-1. Run `npm run release:check`.
-2. Run `npm run preview:lan`.
-3. Open `http://127.0.0.1:4173/` in Chrome.
-4. Wait until the app fully loads.
-5. Stop the preview server.
-6. Reload the same URL.
-7. Restart `npm run preview:lan`.
-8. Reload again.
-9. For update testing, deploy or serve a newer build with a changed `public/sw.js` version.
-
-Expected result:
-
-- Offline reload opens the cached app shell.
-- Returning online reloads normally.
-- When a new service worker is available, the app offers `Aktualizovať appku`.
-- Clicking update reloads into the new version.
-
-Result:
-
-- [ ] PASS
-- [ ] FAIL
-
-Notes:
-
--
-
-## A4 Truth Regression Check
-
-Steps:
-
-1. Open `Peniaze neklamú` in editor A4 preview.
-2. Open the same song in song detail.
-3. Open it in setlist preview.
-4. Open it in performance mode.
-5. Print / Save as PDF.
-6. Repeat with `Človečina`.
-7. Repeat with `Stíchol som / bolesť otcov`.
-
-Expected result:
-
-- The same canonical A4 renderer is used.
-- No line, section, chord, cue, repeat row or space disappears.
-- No view introduces a different formatting engine.
-
-Result:
-
-- [ ] PASS
-- [ ] FAIL
-
-Notes:
-
--
-
-## Transposed A4 Truth Check
-
-Steps:
-
-1. Open `Peniaze neklamú` in song detail.
-2. Set transposition to `+1`.
-3. Compare song detail A4 with setlist preview A4.
-4. Open performance mode and compare the same song visually.
-5. Set transposition to `-1`.
-6. Repeat detail, setlist and performance comparison.
-7. Repeat the same `+1` and `-1` flow with `Človečina`.
-8. Repeat the same `+1` and `-1` flow with `Stíchol som / bolesť otcov`.
-9. For `Stíchol som / bolesť otcov`, explicitly inspect the standalone chord row in `Intro`.
-
-Expected result:
-
-- Pair chords remain anchored over the same intended lyric positions.
-- Detail, setlist and performance show the same transposed A4 result.
-- Transposition changes chord names, not the renderer or page layout engine.
-- Any remaining standalone chord-row drift is recorded as a known non-pair risk, not silently ignored.
-
-Result:
-
-- [ ] PASS
-- [ ] FAIL
-
-Notes:
+Final notes:
 
 -
