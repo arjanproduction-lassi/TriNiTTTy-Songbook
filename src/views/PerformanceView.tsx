@@ -6,10 +6,13 @@ import { Card, TransposeControls } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
 import { normalizeSongTitle } from "../lib/import";
 
-const MIN_READER_ZOOM = 100;
-const DEFAULT_READER_ZOOM = 115;
-const MAX_READER_ZOOM = 125;
-const ZOOM_STEP = 5;
+const READER_BASELINE_INTERNAL_ZOOM = 115;
+const READER_BASELINE_DISPLAY_ZOOM = 100;
+const READER_ZOOM_LEVELS = [70, 85, READER_BASELINE_DISPLAY_ZOOM, 115, 130, 145, 160, 175, 190, 200];
+const MIN_READER_DISPLAY_ZOOM = READER_ZOOM_LEVELS[0];
+const MAX_READER_DISPLAY_ZOOM = READER_ZOOM_LEVELS[READER_ZOOM_LEVELS.length - 1];
+const MIN_READER_INTERNAL_ZOOM = (MIN_READER_DISPLAY_ZOOM / READER_BASELINE_DISPLAY_ZOOM) * READER_BASELINE_INTERNAL_ZOOM;
+const MAX_READER_INTERNAL_ZOOM = (MAX_READER_DISPLAY_ZOOM / READER_BASELINE_DISPLAY_ZOOM) * READER_BASELINE_INTERNAL_ZOOM;
 
 type WakeLockSentinelLike = {
   released: boolean;
@@ -50,7 +53,7 @@ export function PerformanceView({
   onToggleScreenNightMode: () => void;
 }) {
   const [controlsOpen, setControlsOpen] = useState(false);
-  const [readerZoom, setReaderZoom] = useState(DEFAULT_READER_ZOOM);
+  const [readerZoom, setReaderZoom] = useState(READER_BASELINE_DISPLAY_ZOOM);
   const [wakeLockWanted, setWakeLockWanted] = useState(false);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [wakeLockMessage, setWakeLockMessage] = useState("");
@@ -180,7 +183,14 @@ export function PerformanceView({
   const previousDisabled = performanceIndex <= 0;
   const nextDisabled = performanceIndex >= setlistSongs.length - 1;
   const currentPosition = setlistSongs.length ? performanceIndex + 1 : 0;
-  const changeZoom = (direction: number) => setReaderZoom((value) => Math.min(MAX_READER_ZOOM, Math.max(MIN_READER_ZOOM, value + direction * ZOOM_STEP)));
+  const readerZoomLabel = readerZoom === READER_BASELINE_DISPLAY_ZOOM ? "Základ" : `${readerZoom}%`;
+  const internalReaderZoom = (readerZoom / READER_BASELINE_DISPLAY_ZOOM) * READER_BASELINE_INTERNAL_ZOOM;
+  const changeZoom = (direction: number) => setReaderZoom((value) => {
+    const currentIndex = READER_ZOOM_LEVELS.indexOf(value);
+    const safeIndex = currentIndex === -1 ? READER_ZOOM_LEVELS.indexOf(READER_BASELINE_DISPLAY_ZOOM) : currentIndex;
+    const nextIndex = Math.min(READER_ZOOM_LEVELS.length - 1, Math.max(0, safeIndex + direction));
+    return READER_ZOOM_LEVELS[nextIndex];
+  });
   const goPrevious = () => {
     setTranspose(0);
     setPerformanceIndex((value) => Math.max(0, value - 1));
@@ -246,12 +256,20 @@ export function PerformanceView({
           <span className="shrink-0">Transpozícia: {transposeLabel}</span>
           <span className="shrink-0">{renderedPerformance.bpm} BPM</span>
           {timeSignature && <span className="shrink-0">Takt: {timeSignature}</span>}
-          <span className="shrink-0">Reader {readerZoom}%</span>
+          <span className="shrink-0">Reader {readerZoomLabel}</span>
         </div>
       </div>
 
       <div className="min-h-0 flex-1">
-        <FitA4Sheet song={renderedPerformance} sections={performanceSections} readerZoom={readerZoom} className="a4-performance-fit h-full" showOverflowWarning={false} />
+        <FitA4Sheet
+          song={renderedPerformance}
+          sections={performanceSections}
+          readerZoom={internalReaderZoom}
+          minZoom={MIN_READER_INTERNAL_ZOOM}
+          maxZoom={MAX_READER_INTERNAL_ZOOM}
+          className="a4-performance-fit h-full"
+          showOverflowWarning={false}
+        />
       </div>
 
       <div
@@ -330,9 +348,9 @@ export function PerformanceView({
           </div>
 
           <div className="mt-3 grid grid-cols-3 gap-2">
-            <button disabled={readerZoom <= MIN_READER_ZOOM} onClick={() => changeZoom(-1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader -</button>
-            <button onClick={() => setReaderZoom(DEFAULT_READER_ZOOM)} className={stageDark ? "rounded-2xl bg-zinc-900 px-3 py-3 text-sm font-bold text-zinc-200 ring-1 ring-zinc-700" : "rounded-2xl bg-zinc-50 px-3 py-3 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200"}>{readerZoom}%</button>
-            <button disabled={readerZoom >= MAX_READER_ZOOM} onClick={() => changeZoom(1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader +</button>
+            <button disabled={readerZoom <= MIN_READER_DISPLAY_ZOOM} onClick={() => changeZoom(-1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader -</button>
+            <button onClick={() => setReaderZoom(READER_BASELINE_DISPLAY_ZOOM)} className={stageDark ? "rounded-2xl bg-zinc-900 px-3 py-3 text-sm font-bold text-zinc-200 ring-1 ring-zinc-700" : "rounded-2xl bg-zinc-50 px-3 py-3 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200"}>{readerZoomLabel}</button>
+            <button disabled={readerZoom >= MAX_READER_DISPLAY_ZOOM} onClick={() => changeZoom(1)} className={`${secondaryButtonClass} px-3 py-3`}>Reader +</button>
           </div>
 
           <div className="mt-3">
