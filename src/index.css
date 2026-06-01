@@ -7,6 +7,7 @@
   --cue-female: #dc2626;
   --cue-duet: #15803d;
   --cue-solo: #a16207;
+  --cue-choir: #0f766e;
   --cue-cue: #6d28d9;
   --cue-stop: #be185d;
   --cue-spoken: #0e7490;
@@ -64,6 +65,7 @@ html,
     --cue-female: #fca5a5;
     --cue-duet: #86efac;
     --cue-solo: #fde68a;
+    --cue-choir: #5eead4;
     --cue-cue: #c4b5fd;
     --cue-stop: #f9a8d4;
     --cue-spoken: #67e8f9;
@@ -244,6 +246,7 @@ html,
     --cue-female: #fca5a5;
     --cue-duet: #86efac;
     --cue-solo: #fde68a;
+    --cue-choir: #5eead4;
     --cue-cue: #c4b5fd;
     --cue-stop: #f9a8d4;
     --cue-spoken: #67e8f9;

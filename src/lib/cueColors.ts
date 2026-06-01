@@ -13,6 +13,7 @@ export const CUE_COLOR_OPTIONS: CueColorOption[] = [
   { id: "female", label: "Žena", description: "Ženský spev", swatch: "#dc2626" },
   { id: "duet", label: "Duet", description: "Spoločný spev", swatch: "#16a34a" },
   { id: "solo", label: "Sólo", description: "Sólo / medzihra", swatch: "#ca8a04" },
+  { id: "choir", label: "Zbor", description: "Zbor / viac hlasov", swatch: "#0d9488" },
   { id: "cue", label: "Nástup", description: "Nástup / cue", swatch: "#7c3aed" },
   { id: "stop", label: "Stop", description: "Stop / pozor", swatch: "#db2777" },
   { id: "spoken", label: "Hovorené", description: "Hovorené slovo", swatch: "#0891b2" },

@@ -11,6 +11,7 @@ export type CueColorId =
   | "female"
   | "duet"
   | "solo"
+  | "choir"
   | "cue"
   | "stop"
   | "spoken"
