@@ -553,8 +553,8 @@ export default function App() {
   }
 
   function startEditingSong(song: Song) {
-    const rawText = serializeLines(song.lines);
-    const clonedLines = parseImportText(rawText);
+    const clonedLines = JSON.parse(JSON.stringify(song.lines)) as Line[];
+    const rawText = serializeLines(clonedLines);
     setDraft({
       title: normalizeSongTitle(song.title),
       artist: song.artist,

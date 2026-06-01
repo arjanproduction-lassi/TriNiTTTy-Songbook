@@ -876,6 +876,33 @@ Pravidla pre buducu implementaciu:
 
 ---
 
+### Cue Color Layer v1 - zisteny follow-up bug
+
+Status:
+
+- opravene
+- detail je v `docs/NEXT_TASKS.md`
+
+Problem:
+
+- Po ulozeni zafarbenej skladby sa farby spravne zobrazia v setliste/A4.
+- Pri neskorsom otvoreni cez `Upravit skladbu` si editor nemusi pamatat priradene cue farby.
+- Pouzivatel by musel farby zadavat znova, co je zbytocne zdrziavanie.
+
+Ocakavane riesenie:
+
+- Editacia existujucej skladby musi startovat z ulozenych `song.lines` vratane `cueColorId`.
+- Raw text moze ostat len cisty fallback, ale nesmie ticho znicit cue metadata pri beznom editovani.
+- Parser, transpozicia, A4 geometria a print/PDF sa pri tejto oprave nemaju menit.
+
+Oprava:
+
+- `Upravit skladbu` otvara blokovy editor z klonovanych ulozenych `song.lines`, nie z raw text reparsu.
+- `cueColorId` tak zostava v importLines a dalsie ulozenie farby nezahodi.
+- Raw import cesta ostava cista a navrat do raw textu stale varuje, ze cue farby sa stratia.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:

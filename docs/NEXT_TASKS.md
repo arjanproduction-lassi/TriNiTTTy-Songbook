@@ -388,3 +388,49 @@ What not to do in v1:
 Future v2 idea:
 
 If real songs prove that line-level cues are not enough, consider invisible inline cue ranges stored as metadata beside the text. This must be treated as a larger editor/data safety pass because text edits can invalidate ranges.
+
+## Cue Color Layer v1 Follow-Up Bug: Preserve Colors When Reopening Editor
+
+Status:
+
+- found during manual testing after Cue Color Layer v1 reached `main`
+- fixed by the cue color editor reopen bugfix
+
+Problem:
+
+Colored songs render correctly in setlist/A4 views after save. However, when the user later opens the same song through `Upravit skladbu`, the block editor may not remember the existing cue colors and Peter has to assign colors again.
+
+Expected behavior:
+
+- saved cue colors must persist when reopening an existing song in the editor
+- editing a colored song must start from the saved `song.lines`, including `cueColorId`
+- saving again must not drop cue colors unless the user explicitly removes them
+- setlist/detail/performance rendering should keep working as now
+
+Likely cause:
+
+The edit flow may still pass through raw text serialization/parsing in a way that cannot carry cue color metadata. The block editor should initialize from a cloned `song.lines` structure when editing an existing saved song.
+
+Fix:
+
+Existing song edit now initializes block editor lines from cloned saved `song.lines`, including `cueColorId`. Raw text remains available as a clean fallback/export-style representation, but normal block editing no longer reparses through metadata-free raw text.
+
+Scope guard:
+
+- do not change parser
+- do not add inline text markers
+- do not change A4 geometry
+- do not change print/PDF pipeline
+- do not change transposition logic
+- keep the existing warning when returning from colored block mode to raw import
+
+Manual test for the fix:
+
+1. Open a song in block editor.
+2. Assign cue colors to several sections/lines.
+3. Save the song.
+4. Open the song in setlist/detail and confirm colors appear.
+5. Click `Upravit skladbu`.
+6. Confirm the editor palette still shows the saved colors on the same lines.
+7. Save again without changing colors.
+8. Confirm colors remain in A4/setlist/performance.
