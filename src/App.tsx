@@ -6,7 +6,7 @@ import { NavButton } from "./components/ui";
 import { A4OverflowWarning, A4Page } from "./components/A4Sheet";
 import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
-import { copyCueColor, normalizeCueColorId } from "./lib/cueColors";
+import { copyCueColor, hasCueColors, normalizeCueColorId } from "./lib/cueColors";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
 import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
@@ -483,6 +483,9 @@ export default function App() {
   }
 
   function returnToRawImport() {
+    if (hasCueColors(importLines) && !window.confirm("Návrat do raw importu odstráni cue farby, pretože čistý text ich nevie bezpečne uložiť. Pokračovať?")) {
+      return;
+    }
     applyEditorSnapshotWithHistory({ draft, importLines, importMode: "raw" });
     setSelectedImportIndex(null);
   }

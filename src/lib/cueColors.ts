@@ -29,6 +29,10 @@ export function lineCueColorId(line: Line): CueColorId | undefined {
   return line.type === "space" ? undefined : line.cueColorId;
 }
 
+export function hasCueColors(lines: readonly Line[]) {
+  return lines.some((line) => Boolean(lineCueColorId(line)));
+}
+
 export function setLineCueColor(line: Line, cueColorId: CueColorId | ""): Line {
   if (line.type === "space") return line;
   if (!cueColorId) {
