@@ -6,6 +6,7 @@ import { NavButton } from "./components/ui";
 import { A4OverflowWarning, A4Page } from "./components/A4Sheet";
 import { makePairLine, pairChordLine } from "./lib/chordAnchors";
 import { normalizeKeyInput, transposeSong } from "./lib/chords";
+import { copyCueColor, normalizeCueColorId } from "./lib/cueColors";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
 import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
@@ -1385,13 +1386,13 @@ function splitSelectedLine(line: Line, request: SplitBlockRequest): SplitResult 
     const lyricSplit = splitTextByMarkerOrCaret(line.lyrics, request?.field === "lyrics" ? request.caret : null);
     if (lyricSplit) {
       const chordSplit = splitTextAtIndex(chordLine, lyricSplit.index);
-      return { ok: true, lines: [makePairLine(chordSplit.left, lyricSplit.left), makePairLine(chordSplit.right, lyricSplit.right)] };
+      return { ok: true, lines: [copyCueColor(line, makePairLine(chordSplit.left, lyricSplit.left)), copyCueColor(line, makePairLine(chordSplit.right, lyricSplit.right))] };
     }
 
     const chordSplit = splitTextByMarkerOrCaret(chordLine, request?.field === "chords" ? request.caret : null);
     if (chordSplit) {
       const splitLyrics = splitTextAtIndex(line.lyrics, chordSplit.index);
-      return { ok: true, lines: [makePairLine(chordSplit.left, splitLyrics.left), makePairLine(chordSplit.right, splitLyrics.right)] };
+      return { ok: true, lines: [copyCueColor(line, makePairLine(chordSplit.left, splitLyrics.left)), copyCueColor(line, makePairLine(chordSplit.right, splitLyrics.right))] };
     }
 
     return { ok: false, message: "Umiestni kurzor v akordovom/textovom riadku alebo použi znak | tam, kde chceš pár rozdeliť." };
@@ -1564,7 +1565,7 @@ function loadLegacyState(): PersistedState | null {
   return null;
 }
 
-type LegacyLine = Partial<{ type: string; text: string; chords: string; lyrics: string }>;
+type LegacyLine = Partial<{ type: string; text: string; chords: string; lyrics: string; cueColorId: string }>;
 type LegacySong = Partial<Omit<Song, "lines">> & { lines?: LegacyLine[] };
 
 const TEXT_LINE_TYPES = new Set(["section", "chords", "lyrics", "cue", "repeat"]);
@@ -1663,10 +1664,14 @@ function normalizeLegacySong(value: unknown): Song | null {
 function normalizeLegacyLine(value: unknown): Line | null {
   if (!value || typeof value !== "object") return null;
   const line = value as LegacyLine;
+  const cueColorId = normalizeCueColorId(line.cueColorId);
   if (line.type === "space") return { type: "space" };
-  if (line.type === "pair") return makePairLine(String(line.chords ?? ""), String(line.lyrics ?? ""));
+  if (line.type === "pair") {
+    const next = makePairLine(String(line.chords ?? ""), String(line.lyrics ?? ""));
+    return cueColorId ? { ...next, cueColorId } : next;
+  }
   if (typeof line.type === "string" && TEXT_LINE_TYPES.has(line.type) && typeof line.text === "string") {
-    return { type: line.type as Exclude<Line["type"], "pair" | "space">, text: line.text };
+    return { type: line.type as Exclude<Line["type"], "pair" | "space">, text: line.text, ...(cueColorId ? { cueColorId } : {}) };
   }
   return null;
 }

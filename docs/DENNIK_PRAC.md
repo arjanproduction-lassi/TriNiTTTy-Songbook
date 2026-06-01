@@ -852,6 +852,30 @@ Manualne este vhodne otestovat:
 
 ---
 
+### Backlog dohoda - Cue Color Layer v1
+
+Status:
+
+- zapisane ako buduca uloha, neimplementovane
+- detail je v `docs/NEXT_TASKS.md`
+
+Dohodnuty smer:
+
+- Farby maju sluzit ako stage/rehearsal cue vrstva, nie ako dalsie poznamky v koncertnom rezime.
+- V1 ma riesit farbu/rolu na sekciu, blok alebo cely riadok.
+- Inline farbenie jednotlivych slov sa zamerne odklada.
+- Text piesne ma ostat cisty, bez viditelnych markerov typu `[M]`, `[Z]`, `[D]`.
+- Dovod: kazdy znak navyse berie miesto v A4 riadku a moze rozbit rytmus dvojstlpcoveho leadsheetu.
+
+Pravidla pre buducu implementaciu:
+
+- Farba je render layer, nie destruktivne text formatting.
+- Cue vrstva nesmie menit parser, transpoziciu, chord detection ani A4 geometriu.
+- V1 nesmie byt Word-like rich text editor.
+- Najprv otestovat prakticku hodnotu sekcia/blok/riadok, az potom uvazovat o vacsich inline metadata rozsahoch.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:

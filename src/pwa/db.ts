@@ -1,5 +1,6 @@
 import type { DriveFileMemory, ImportDraft, Line, NamedSetlist, Notation, PersistedState, Song } from "../types";
 import { makePairLine, normalizeChordAnchors, normalizePairLine, renderChordAnchors } from "../lib/chordAnchors";
+import { normalizeCueColorId } from "../lib/cueColors";
 
 const DB_NAME = "trinittty-songbook";
 const DB_VERSION = 2;
@@ -63,20 +64,23 @@ function positiveId(value: unknown, fallback: number) {
 
 function normalizeLine(value: unknown): Line | null {
   if (!isRecord(value)) return null;
+  const cueColorId = normalizeCueColorId(value.cueColorId);
 
   if (value.type === "space") return { type: "space" };
   if (value.type === "pair") {
     const chordAnchors = normalizeChordAnchors(value.chordAnchors);
     const chords = stringValue(value.chords, chordAnchors.length ? renderChordAnchors(chordAnchors) : "");
-    return chordAnchors.length
+    const line = chordAnchors.length
       ? normalizePairLine({ type: "pair", chords, lyrics: stringValue(value.lyrics), chordAnchors })
       : makePairLine(chords, stringValue(value.lyrics));
+    return cueColorId ? { ...line, cueColorId } : line;
   }
 
   if (typeof value.type === "string" && TEXT_LINE_TYPES.has(value.type)) {
     return {
       type: value.type as Exclude<Line["type"], "pair" | "space">,
       text: stringValue(value.text),
+      ...(cueColorId ? { cueColorId } : {}),
     };
   }
 

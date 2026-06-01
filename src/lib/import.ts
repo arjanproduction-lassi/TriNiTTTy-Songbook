@@ -1,4 +1,4 @@
-import type { ImportDraft, Line, SectionGroup, Song } from "../types";
+import type { CueColorId, ImportDraft, Line, SectionGroup, Song } from "../types";
 import { makePairLine, pairChordLine } from "./chordAnchors";
 import { isChordLikeLine, normalizeKeyInput } from "./chords";
 
@@ -90,7 +90,7 @@ export function buildSections(lines: Line[]): SectionGroup[] {
   lines.forEach((line, index) => {
     if (line.type === "section") {
       if (current.blocks.length || !current.implicit) sections.push(current);
-      current = { id: `section-${counter++}`, title: line.text, blocks: [] };
+      current = { id: `section-${counter++}`, title: line.text, index, cueColorId: line.cueColorId, blocks: [] };
     } else {
       current.blocks.push({ index, line });
     }
@@ -122,17 +122,19 @@ export function makeSong(draft: ImportDraft, lines: Line[], id: number): Song {
 
 export function convertLine(line: Line, nextType: Line["type"]): Line {
   const fallbackText = line.type === "pair" ? line.lyrics || pairChordLine(line) : line.type === "space" ? "" : line.text;
+  const cueColorId = line.type === "space" ? undefined : line.cueColorId;
+  const cuePatch: { cueColorId?: CueColorId } = cueColorId ? { cueColorId } : {};
   if (nextType === "space") return { type: "space" };
   if (nextType === "section") return { type: "section", text: fallbackText || "Nová sekcia" };
   if (nextType === "pair") {
     const chords = line.type === "pair" ? pairChordLine(line) : line.type === "chords" ? line.text : "";
     const lyrics = line.type === "pair" ? line.lyrics : line.type === "lyrics" ? line.text : fallbackText;
-    return makePairLine(chords, lyrics);
+    return { ...makePairLine(chords, lyrics), ...cuePatch };
   }
-  if (nextType === "cue") return { type: "cue", text: line.type === "cue" ? line.text : `cue: ${fallbackText}`.trim() };
-  if (nextType === "repeat") return { type: "repeat", text: line.type === "repeat" ? line.text : "/: :/ 4x" };
-  if (nextType === "chords") return { type: "chords", text: line.type === "pair" ? pairChordLine(line) : fallbackText };
-  return { type: "lyrics", text: line.type === "pair" ? line.lyrics : fallbackText };
+  if (nextType === "cue") return { type: "cue", text: line.type === "cue" ? line.text : `cue: ${fallbackText}`.trim(), ...cuePatch };
+  if (nextType === "repeat") return { type: "repeat", text: line.type === "repeat" ? line.text : "/: :/ 4x", ...cuePatch };
+  if (nextType === "chords") return { type: "chords", text: line.type === "pair" ? pairChordLine(line) : fallbackText, ...cuePatch };
+  return { type: "lyrics", text: line.type === "pair" ? line.lyrics : fallbackText, ...cuePatch };
 }
 
 export function importDiagnostics(lines: Line[]) {

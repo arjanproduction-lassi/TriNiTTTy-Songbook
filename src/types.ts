@@ -6,19 +6,33 @@ export type ChordAnchor = {
   col: number;
 };
 
+export type CueColorId =
+  | "male"
+  | "female"
+  | "duet"
+  | "solo"
+  | "cue"
+  | "stop"
+  | "spoken"
+  | "neutral";
+
+export type CueColorMeta = {
+  cueColorId?: CueColorId;
+};
+
 export type PairLine = {
   type: "pair";
   chords: string;
   lyrics: string;
   chordAnchors: ChordAnchor[];
-};
+} & CueColorMeta;
 
 export type Line =
-  | { type: "section"; text: string }
-  | { type: "chords"; text: string }
-  | { type: "lyrics"; text: string }
-  | { type: "cue"; text: string }
-  | { type: "repeat"; text: string }
+  | ({ type: "section"; text: string } & CueColorMeta)
+  | ({ type: "chords"; text: string } & CueColorMeta)
+  | ({ type: "lyrics"; text: string } & CueColorMeta)
+  | ({ type: "cue"; text: string } & CueColorMeta)
+  | ({ type: "repeat"; text: string } & CueColorMeta)
   | PairLine
   | { type: "space" };
 
@@ -67,6 +81,8 @@ export type ImportDraft = {
 export type SectionGroup = {
   id: string;
   title: string;
+  index?: number;
+  cueColorId?: CueColorId;
   implicit?: boolean;
   blocks: Array<{ index: number; line: Line }>;
 };

@@ -5,6 +5,7 @@ import { A4Sheet } from "../components/A4Sheet";
 import { Card, Field, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { pairChordLine, withPairChords, withPairLyrics } from "../lib/chordAnchors";
 import { normalizeKeyInput } from "../lib/chords";
+import { CUE_COLOR_OPTIONS, cueColorLabel, lineCueColorId, setLineCueColor } from "../lib/cueColors";
 import { convertLine, importDiagnostics, normalizeSongTitle } from "../lib/import";
 
 type ImportViewProps = {
@@ -288,7 +289,17 @@ function BlockNavigator({
     <div className="mt-3 max-h-[calc(100vh-15rem)] space-y-3 overflow-auto pr-1">
       {sections.map((section) => (
         <div key={section.id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-2">
-          <div className="text-sm font-semibold">{section.implicit ? "[ Bez sekcie ]" : `[ ${section.title} ]`}</div>
+          {section.implicit || typeof section.index !== "number" ? (
+            <div className="text-sm font-semibold">{section.implicit ? "[ Bez sekcie ]" : `[ ${section.title} ]`}</div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onSelect(section.index as number)}
+              className={`w-full rounded-lg px-2 py-1 text-left text-sm font-semibold ${selectedIndex === section.index ? "bg-amber-100 text-amber-950 ring-1 ring-amber-400" : "hover:bg-zinc-100"}`}
+            >
+              [ {section.title} ]
+            </button>
+          )}
           <div className="mt-2 space-y-1.5">
             {section.blocks.map(({ index, line }, i) => (
               <button
@@ -303,6 +314,57 @@ function BlockNavigator({
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function CueColorPicker({
+  line,
+  onChange,
+}: {
+  line: Line;
+  onChange: (nextLine: Line) => void;
+}) {
+  if (line.type === "space") {
+    return (
+      <div className="rounded-xl bg-zinc-50 px-3 py-2 text-xs text-zinc-500 ring-1 ring-zinc-200">
+        Cue farba sa nepriraďuje prázdnemu bloku.
+      </div>
+    );
+  }
+
+  const selectedCueColor = lineCueColorId(line);
+
+  return (
+    <div className="rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-semibold text-zinc-700">Cue farba</div>
+          <div className="text-xs text-zinc-500">Farba nemení text ani akordy.</div>
+        </div>
+        <div className="text-xs font-semibold text-zinc-500">{cueColorLabel(selectedCueColor)}</div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(setLineCueColor(line, ""))}
+          className={`rounded-full px-3 py-2 text-xs font-semibold ring-1 ${selectedCueColor ? "bg-white text-zinc-600 ring-zinc-200" : "bg-zinc-900 text-white ring-zinc-900"}`}
+        >
+          Bez farby
+        </button>
+        {CUE_COLOR_OPTIONS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onChange(setLineCueColor(line, option.id))}
+            title={option.description}
+            className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ${selectedCueColor === option.id ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-100"}`}
+          >
+            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: option.swatch }} />
+            {option.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -325,7 +387,11 @@ function SelectedBlockEditor({
         Blok #{selectedImportIndex + 1} • {selectedImportLine.type}
       </div>
       <div>
-        <label className="mb-2 block text-sm font-medium text-zinc-600">Typ bloku</label>
+        <CueColorPicker
+          line={selectedImportLine}
+          onChange={(nextLine) => replaceImportLine(selectedImportIndex, nextLine)}
+        />
+        <label className="mb-2 mt-3 block text-sm font-medium text-zinc-600">Typ bloku</label>
         <select value={selectedImportLine.type} onChange={(e) => replaceImportLine(selectedImportIndex, convertLine(selectedImportLine, e.target.value as Line["type"]))} className="w-full rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm">
           <option value="section">section</option>
           <option value="pair">pair</option>

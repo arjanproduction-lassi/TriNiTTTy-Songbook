@@ -66,6 +66,7 @@ export function normalizePairLine(line: PairLine): PairLine {
     chords: renderChordAnchors(chordAnchors),
     lyrics: line.lyrics,
     chordAnchors,
+    ...(line.cueColorId ? { cueColorId: line.cueColorId } : {}),
   };
 }
 
@@ -74,7 +75,8 @@ export function pairChordLine(line: PairLine) {
 }
 
 export function withPairChords(line: PairLine, chords: string) {
-  return makePairLine(chords, line.lyrics);
+  const next = makePairLine(chords, line.lyrics);
+  return line.cueColorId ? { ...next, cueColorId: line.cueColorId } : next;
 }
 
 export function withPairLyrics(line: PairLine, lyrics: string): PairLine {

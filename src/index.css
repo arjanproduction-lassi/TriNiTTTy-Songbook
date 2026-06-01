@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --cue-male: #1d4ed8;
+  --cue-female: #dc2626;
+  --cue-duet: #15803d;
+  --cue-solo: #a16207;
+  --cue-cue: #6d28d9;
+  --cue-stop: #be185d;
+  --cue-spoken: #0e7490;
+  --cue-neutral: #3f3f46;
+}
+
 body {
   margin: 0;
   overflow-x: hidden;
@@ -49,6 +60,14 @@ html,
   .app-night {
     color-scheme: dark;
     background: #09090b;
+    --cue-male: #93c5fd;
+    --cue-female: #fca5a5;
+    --cue-duet: #86efac;
+    --cue-solo: #fde68a;
+    --cue-cue: #c4b5fd;
+    --cue-stop: #f9a8d4;
+    --cue-spoken: #67e8f9;
+    --cue-neutral: #d4d4d8;
   }
 
   .app-night .screen-surface {
@@ -219,6 +238,23 @@ html,
   .app-night .performance-stage-dark .a4-print-surface .bg-white {
     background: #111827 !important;
   }
+
+  .performance-stage-dark {
+    --cue-male: #93c5fd;
+    --cue-female: #fca5a5;
+    --cue-duet: #86efac;
+    --cue-solo: #fde68a;
+    --cue-cue: #c4b5fd;
+    --cue-stop: #f9a8d4;
+    --cue-spoken: #67e8f9;
+    --cue-neutral: #d4d4d8;
+  }
+
+  .app-night .screen-surface .a4-print-surface .a4-cue-color,
+  .performance-stage-dark .a4-print-surface .a4-cue-color,
+  .a4-print-surface .a4-cue-color {
+    color: var(--a4-cue-color) !important;
+  }
 }
 
 @page {
@@ -242,6 +278,10 @@ html,
 
   .a4-print-surface :is(.text-zinc-600, .text-zinc-500, .text-zinc-400) {
     color: #52525b !important;
+  }
+
+  .a4-print-surface .a4-cue-color {
+    color: var(--a4-cue-color) !important;
   }
 
   .a4-print-surface :is(.border-zinc-200, .border-zinc-300) {

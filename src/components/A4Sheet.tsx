@@ -3,6 +3,7 @@ import type { CSSProperties, HTMLAttributes, MutableRefObject, Ref } from "react
 import type { SectionGroup, Song } from "../types";
 import { normalizeKeyInput } from "../lib/chords";
 import { pairChordLine } from "../lib/chordAnchors";
+import { cueColorClassName, cueColorStyle, lineCueColorId } from "../lib/cueColors";
 import { normalizeSongTitle } from "../lib/import";
 
 const A4_WIDTH_PX = 210 * 96 / 25.4;
@@ -87,10 +88,20 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
         </div>
       </div>
       <div className="mt-4 columns-2" style={{ columnGap: "10mm" }}>
-        {sections.map((section) => (
+        {sections.map((section) => {
+          const sectionSelected = selectedIndex === section.index;
+          const sectionProps: HTMLAttributes<HTMLDivElement> = onSelectBlock && typeof section.index === "number"
+            ? { role: "button", tabIndex: 0, onClick: () => onSelectBlock(section.index as number) }
+            : {};
+
+          return (
           <div key={section.id} className="mb-4 break-inside-avoid">
             {!section.implicit && (
-              <div className="mb-2 border-y border-zinc-300 py-0.5 text-right font-semibold uppercase tracking-[0.08em] text-zinc-700" style={{ fontSize: "9pt" }}>
+              <div
+                className={`mb-2 rounded-md border-y border-zinc-300 py-0.5 text-right font-semibold uppercase tracking-[0.08em] text-zinc-700 ${sectionSelected ? "bg-amber-100/80 ring-1 ring-amber-400" : onSelectBlock ? "hover:bg-zinc-100" : ""} ${cueColorClassName(section.cueColorId)}`}
+                style={{ fontSize: "9pt", ...cueColorStyle(section.cueColorId) }}
+                {...sectionProps}
+              >
                 [{section.title}]
               </div>
             )}
@@ -99,24 +110,28 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
                 const selected = selectedIndex === index;
                 const wrapperClass = `mb-1 rounded-md ${selected ? "bg-amber-100/80 ring-1 ring-amber-400" : onSelectBlock ? "hover:bg-zinc-100" : ""}`;
                 const commonProps: HTMLAttributes<HTMLDivElement> = onSelectBlock ? { role: "button", tabIndex: 0, onClick: () => onSelectBlock(index) } : {};
+                const cueColorId = lineCueColorId(line);
+                const cueClassName = cueColorClassName(cueColorId);
+                const cueStyle = cueColorStyle(cueColorId);
                 if (line.type === "space") return <div key={index} className={`h-3 ${selected ? "bg-amber-100/80 ring-1 ring-amber-400" : ""}`} {...commonProps} />;
                 if (line.type === "pair") {
                   const chordLine = pairChordLine(line);
                   return (
                     <div key={index} className={wrapperClass} {...commonProps}>
                       {!!chordLine && <div className="font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-800">{chordLine}</div>}
-                      {!!line.lyrics && <div className="font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900">{line.lyrics}</div>}
+                      {!!line.lyrics && <div className={`font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900 ${cueClassName}`} style={cueStyle}>{line.lyrics}</div>}
                     </div>
                   );
                 }
-                if (line.type === "cue") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] italic leading-[1.05] whitespace-pre text-zinc-700`} {...commonProps}>{line.text}</div>;
-                if (line.type === "repeat") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-700`} {...commonProps}>{line.text}</div>;
-                if (line.type === "chords") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-800`} {...commonProps}>{line.text}</div>;
-                return <div key={index} className={`${wrapperClass} font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900`} {...commonProps}>{line.text}</div>;
+                if (line.type === "cue") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] italic leading-[1.05] whitespace-pre text-zinc-700 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                if (line.type === "repeat") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-700 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                if (line.type === "chords") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-800 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                return <div key={index} className={`${wrapperClass} font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

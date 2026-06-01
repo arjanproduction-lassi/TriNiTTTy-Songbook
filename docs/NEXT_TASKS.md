@@ -339,3 +339,52 @@ Use one user-chosen Google Drive JSON file as interim canonical storage, remembe
 Scope guard:
 
 If direct Google Drive auth/file access is not already wired, do not build a full OAuth architecture as a side quest. Stop and report that Drive auth is a separate task.
+
+## Deferred Separate Task: Cue Color Layer v1
+
+Product idea:
+
+Use color as a stage/rehearsal navigation layer without adding extra visible words into the leadsheet.
+
+Problem:
+
+Concert/performance mode has very limited screen space. Extra cue notes would make the reader crowded. Inline text markers such as `[M]` or `[Z]` also consume precious A4 line width and can break lyric rhythm, especially in two-column one-page songs.
+
+Core principle:
+
+Color is a render layer, not destructive text formatting.
+
+Version 1 scope:
+
+- allow cue color/role on a section, block, or full line
+- no inline word-by-word coloring in v1
+- no hidden text markers inside the lyric content
+- preserve clean song text and chord data
+- cue colors must not affect chord parsing or transposition
+- cue colors must not change A4 geometry, wrapping, spacing, or columns
+- use a small role palette first, for example:
+  - muz / male vocal
+  - zena / female vocal
+  - duet
+  - solo
+  - cue / stop / nastup
+- allow future configurable palette, but do not build a large theme editor in v1
+
+Screen/output policy to decide before implementation:
+
+- screen preview and performance mode should show cue colors
+- print/PDF behavior must be an explicit product decision:
+  - either print cue colors
+  - or keep printable A4 monochrome / neutral
+  - or make this a simple print option later
+
+What not to do in v1:
+
+- do not implement Word-like rich text editing
+- do not color arbitrary text ranges/words yet
+- do not add visible `[M]`, `[Z]`, `[D]` markers into lyrics
+- do not change parser, transposition, A4 renderer geometry, print/PDF pipeline, or DB workflow
+
+Future v2 idea:
+
+If real songs prove that line-level cues are not enough, consider invisible inline cue ranges stored as metadata beside the text. This must be treated as a larger editor/data safety pass because text edits can invalidate ranges.
