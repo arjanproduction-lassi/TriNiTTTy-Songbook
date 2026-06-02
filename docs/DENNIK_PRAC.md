@@ -703,7 +703,7 @@ Oprava:
 - Projekt/kapela ma jednoduche lokalne nastavenie `Nazov projektu / kapely`.
 - Default projekt ostava `TriNiTTTy`.
 - Nastavenie sa uklada lokalne v `localStorage` pod klucom `lassilab-project-name`.
-- Header zobrazuje `LassiLAB Songbook · <projekt>`.
+- Header povodne zobrazoval `LassiLAB Songbook · <projekt>`.
 - DB export filename pouziva sanitizovany nazov projektu, napriklad `DBv047_Jano_Band_2026-05-28.json`.
 - Nove exporty maju metadata `appName: LassiLAB Songbook`.
 - Remote/import validacia ostava kompatibilna aj so starsim `TriNiTTTy Songbook`.
@@ -719,6 +719,20 @@ Manualne este vhodne otestovat:
 - Zmenit nazov projektu, refreshnut appku a overit persistenciu.
 - Export DB s nazvom projektu s medzerami a diakritikou.
 - Import starsieho exportu s `TriNiTTTy Songbook`.
+
+### Branding header cleanup - neutralny app header
+
+Problem:
+
+- Hlavny app header zobrazoval aj lokalny nazov projektu, napriklad `LassiLAB Songbook · TriNiTTTy`.
+- Pre sirsiu distribuciu medzi inych muzikantov je vhodne, aby hlavicka appky ostala neutralna.
+
+Oprava:
+
+- Hlavny header teraz zobrazuje iba `LassiLAB Songbook`.
+- Nastavenie `Nazov projektu / kapely` ostava zachovane.
+- DB export filename nadalej pouziva sanitizovany nazov projektu.
+- Import/export metadata, A4, PDF/print, parser, transpozicia, setlist, performance a cue farby ostali bez zmeny.
 
 ### Pre-RC UI polish - nocny rezim a performance reader
 

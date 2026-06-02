@@ -1067,7 +1067,6 @@ export default function App() {
       ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
       : "bg-zinc-50 text-zinc-700 ring-zinc-200";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
-  const displayProjectName = normalizeProjectName(projectName);
   const screenNightToggleLabel = screenNightMode ? "Denný režim" : "Nočný režim";
 
   const rootClass = printJob
@@ -1107,7 +1106,7 @@ export default function App() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="text-xs font-semibold uppercase tracking-[0.24em] text-zinc-500">LassiLAB</div>
-              <h1 className="mt-0.5 text-xl font-bold tracking-tight">LassiLAB Songbook <span className="text-zinc-400">· {displayProjectName}</span></h1>
+              <h1 className="mt-0.5 text-xl font-bold tracking-tight">LassiLAB Songbook</h1>
               {!online && <p className="mt-1 text-xs font-semibold text-amber-700">Offline režim: pracuješ z lokálnej databázy a cache.</p>}
               <p className="mt-0.5 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · DB {formatDatabaseVersion(databaseVersion)} · build {BUILD_DATE}</p>
