@@ -864,6 +864,22 @@ Manualne este vhodne otestovat:
 - Odist z performance rezimu a overit, ze sa zariadenie moze spravat normalne.
 - Skusit prehliadac bez Wake Lock podpory, ak je dostupny.
 
+### Performance Reader zoom - lokalne ulozenie pre rozne tablety
+
+Problem:
+
+- Rozne velkosti tabletov potrebuju inu citaciu mierku v koncertnom/performance rezime.
+- Reader zoom bol doteraz iba React state, takze po restarte appky sa vratil na `Zaklad`.
+
+Oprava:
+
+- Performance Reader zoom sa uklada lokalne do `localStorage` pod klucom `lassilab-performance-reader-zoom`.
+- Kazdy browser/tablet si tak drzi vlastny komfortny zoom.
+- Default bez ulozenej hodnoty ostava `Zaklad`.
+- Povolené hodnoty zostavaju screen-only: `70 %`, `85 %`, `Zaklad`, `115 %`, `130 %`, `145 %`, `160 %`, `175 %`, `190 %`, `200 %`.
+- Nacitana hodnota sa validuje a zarovna na najblizsi povoleny krok.
+- A4 renderer, print/PDF, parser, transpozicia, DB schema, import/export a song data ostali bez zmeny.
+
 ---
 
 ### Backlog dohoda - Cue Color Layer v1

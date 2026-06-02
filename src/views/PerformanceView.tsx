@@ -13,6 +13,32 @@ const MIN_READER_DISPLAY_ZOOM = READER_ZOOM_LEVELS[0];
 const MAX_READER_DISPLAY_ZOOM = READER_ZOOM_LEVELS[READER_ZOOM_LEVELS.length - 1];
 const MIN_READER_INTERNAL_ZOOM = (MIN_READER_DISPLAY_ZOOM / READER_BASELINE_DISPLAY_ZOOM) * READER_BASELINE_INTERNAL_ZOOM;
 const MAX_READER_INTERNAL_ZOOM = (MAX_READER_DISPLAY_ZOOM / READER_BASELINE_DISPLAY_ZOOM) * READER_BASELINE_INTERNAL_ZOOM;
+const PERFORMANCE_READER_ZOOM_KEY = "lassilab-performance-reader-zoom";
+
+function normalizeReaderDisplayZoom(value: number) {
+  if (!Number.isFinite(value)) return READER_BASELINE_DISPLAY_ZOOM;
+  const clamped = Math.min(MAX_READER_DISPLAY_ZOOM, Math.max(MIN_READER_DISPLAY_ZOOM, value));
+  return READER_ZOOM_LEVELS.reduce((closest, level) => (
+    Math.abs(level - clamped) < Math.abs(closest - clamped) ? level : closest
+  ), READER_BASELINE_DISPLAY_ZOOM);
+}
+
+function readPerformanceReaderZoom() {
+  try {
+    const raw = window.localStorage.getItem(PERFORMANCE_READER_ZOOM_KEY);
+    return raw ? normalizeReaderDisplayZoom(Number(raw)) : READER_BASELINE_DISPLAY_ZOOM;
+  } catch {
+    return READER_BASELINE_DISPLAY_ZOOM;
+  }
+}
+
+function writePerformanceReaderZoom(value: number) {
+  try {
+    window.localStorage.setItem(PERFORMANCE_READER_ZOOM_KEY, String(normalizeReaderDisplayZoom(value)));
+  } catch {
+    // Reader zoom is device-local comfort state. Performance mode still works without storage.
+  }
+}
 
 type WakeLockSentinelLike = {
   released: boolean;
@@ -53,7 +79,7 @@ export function PerformanceView({
   onToggleScreenNightMode: () => void;
 }) {
   const [controlsOpen, setControlsOpen] = useState(false);
-  const [readerZoom, setReaderZoom] = useState(READER_BASELINE_DISPLAY_ZOOM);
+  const [readerZoom, setReaderZoom] = useState(() => readPerformanceReaderZoom());
   const [wakeLockWanted, setWakeLockWanted] = useState(false);
   const [wakeLockActive, setWakeLockActive] = useState(false);
   const [wakeLockMessage, setWakeLockMessage] = useState("");
@@ -135,6 +161,10 @@ export function PerformanceView({
     const timer = window.setTimeout(() => setControlsOpen(false), 7000);
     return () => window.clearTimeout(timer);
   }, [controlsOpen, performanceIndex, readerZoom, transpose]);
+
+  useEffect(() => {
+    writePerformanceReaderZoom(readerZoom);
+  }, [readerZoom]);
 
   useEffect(() => {
     if (wakeLockWanted) {
