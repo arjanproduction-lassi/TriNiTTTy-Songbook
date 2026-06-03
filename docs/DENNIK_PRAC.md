@@ -953,6 +953,28 @@ Oprava:
 
 ---
 
+### Manualny DB workflow cleanup - Drive/remote UI odlozene
+
+Problem:
+
+- Google Drive/remote databazovy zdroj bol v appke viditelny, ale bez nastaveneho a spolahlivo otestovaneho prostredia posobil ako nefunkcna polovicna funkcia.
+- Pre Core pouzitie je dolezite, aby pouzivatel videl iba veci, ktore su realne spolahlive: lokalna databaza, rucny export/import a zalohy.
+
+Oprava:
+
+- Z hlavneho UI v sekcii `PWA / lokalna databaza` boli skryte panely `Kapelovy zdroj databazy` a `Google Drive admin`.
+- Viditelny ostava jednoduchy workflow: lokalny stav, nazov projektu/kapely, instalacia PWA, `Exportovat databazu` pri zmenach, `Stiahnut kopiu DB` v cistom stave a `Importovat backup`.
+- Hlavicka databazy zobrazuje iba lokalnu pravdu: `Zmeny nie su exportovane` alebo `Bez lokalnych zmien`.
+- Existujuce Drive/remote technicke zaklady ostavaju ako odlozeny backlog, ale bez pouzivatelskeho tlaku v UI.
+- A4 renderer, print/PDF, parser, transpozicia, TXT export, DB schema a import/export format ostali bez zmeny.
+
+Buduci smer:
+
+- Drive/kapelovy zdroj riesit az ako samostatnu nadstavbu po jasnom rozhodnuti a testoch.
+- Zakladny rezim appky ostava rucny export/import, lebo je najjednoduchsi a najspolahlivejsi pre Core.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:

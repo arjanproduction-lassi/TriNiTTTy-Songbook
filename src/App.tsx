@@ -12,7 +12,7 @@ import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
 import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
-import { chooseDriveFolder, chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
+import { chooseDriveFolder, chooseDriveJsonFile, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
 import { SongsView } from "./views/SongsView";
 import { ImportView } from "./views/ImportView";
 import { SongView } from "./views/SongView";
@@ -1077,16 +1077,10 @@ export default function App() {
   const canonicalDirty = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
   const canonicalStatusText = canonicalDirty
     ? "Zmeny nie sú exportované"
-    : remoteDatabaseCheck?.status === "same"
-      ? "Databáza aktuálna podľa zdroja"
-      : remoteDatabaseCheck?.status === "newer"
-        ? `Dostupná novšia DB ${formatDatabaseVersion(remoteDatabaseCheck.state.databaseVersion)}`
-        : "Bez lokálnych zmien";
-  const canonicalStatusClass = canonicalDirty || remoteDatabaseCheck?.status === "newer"
+    : "Bez lokálnych zmien";
+  const canonicalStatusClass = canonicalDirty
     ? "bg-amber-50 text-amber-900 ring-amber-300"
-    : remoteDatabaseCheck?.status === "same"
-      ? "bg-emerald-50 text-emerald-900 ring-emerald-200"
-      : "bg-zinc-50 text-zinc-700 ring-zinc-200";
+    : "bg-zinc-50 text-zinc-700 ring-zinc-200";
   const localAutosaveText = lastLocalAutosaveAt ? `Lokálne uložené: ${formatShortTime(lastLocalAutosaveAt)}` : "Lokálne autosave pripravené";
   const screenNightToggleLabel = screenNightMode ? "Denný režim" : "Nočný režim";
 
@@ -1192,32 +1186,8 @@ export default function App() {
             setlistNamesForSong={setlistNamesForSong}
             setlists={setlists}
             activeSetlistId={activeSetlistId}
-            databaseVersion={databaseVersion}
             projectName={projectName}
             onProjectNameChange={setProjectName}
-            remoteDatabaseUrl={remoteDatabaseUrl}
-            remoteDatabaseUrlDraft={remoteDatabaseUrlDraft}
-            remoteDatabaseStatus={remoteDatabaseStatus}
-            remoteDatabaseCheck={remoteDatabaseCheck}
-            onRemoteDatabaseUrlDraftChange={setRemoteDatabaseUrlDraft}
-            onSaveRemoteDatabaseUrl={saveRemoteDatabaseUrl}
-            onClearRemoteDatabaseUrl={clearRemoteDatabaseUrl}
-            onCheckRemoteDatabaseUpdate={() => { void checkRemoteDatabaseUpdate(); }}
-            onImportRemoteDatabaseUpdate={() => { void importRemoteDatabaseUpdate(); }}
-            driveFile={driveFile}
-            driveFolder={driveFolder}
-            driveStatus={driveStatus}
-            driveConfigured={isGoogleDriveConfigured()}
-            driveConfigMessage={googleDriveConfigMessage()}
-            onChooseDriveFile={() => { void chooseDriveFile(); }}
-            onChooseDriveFolder={() => { void chooseDriveDatabaseFolder(); }}
-            onLoadFromDrive={() => { void loadFromDrive(); }}
-            onSaveToDrive={() => { void saveToDrive(); }}
-            onForgetDriveFile={() => {
-              setDriveFile(null);
-              setDriveStatus("Drive file zabudnutý. Vyber ho znova cez Change Drive file.");
-            }}
-            onForgetDriveFolder={forgetDriveDatabaseFolder}
           />
         )}
 

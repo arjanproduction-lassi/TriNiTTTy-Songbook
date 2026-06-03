@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { DriveFileMemory, DriveFolderMemory, NamedSetlist, RemoteDatabaseCheck, Song } from "../types";
+import type { NamedSetlist, Song } from "../types";
 import { FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
@@ -32,29 +32,8 @@ export function SongsView({
   setlistNamesForSong,
   setlists,
   activeSetlistId,
-  databaseVersion,
   projectName,
   onProjectNameChange,
-  remoteDatabaseUrl,
-  remoteDatabaseUrlDraft,
-  remoteDatabaseStatus,
-  remoteDatabaseCheck,
-  onRemoteDatabaseUrlDraftChange,
-  onSaveRemoteDatabaseUrl,
-  onClearRemoteDatabaseUrl,
-  onCheckRemoteDatabaseUpdate,
-  onImportRemoteDatabaseUpdate,
-  driveFile,
-  driveFolder,
-  driveStatus,
-  driveConfigured,
-  driveConfigMessage,
-  onChooseDriveFile,
-  onChooseDriveFolder,
-  onLoadFromDrive,
-  onSaveToDrive,
-  onForgetDriveFile,
-  onForgetDriveFolder,
 }: {
   songs: Song[];
   deletedSongs: Song[];
@@ -82,35 +61,13 @@ export function SongsView({
   setlistNamesForSong: (songId: number) => string[];
   setlists: NamedSetlist[];
   activeSetlistId: number;
-  databaseVersion: number;
   projectName: string;
   onProjectNameChange: (value: string) => void;
-  remoteDatabaseUrl: string;
-  remoteDatabaseUrlDraft: string;
-  remoteDatabaseStatus: string;
-  remoteDatabaseCheck: RemoteDatabaseCheck | null;
-  onRemoteDatabaseUrlDraftChange: (value: string) => void;
-  onSaveRemoteDatabaseUrl: () => void;
-  onClearRemoteDatabaseUrl: () => void;
-  onCheckRemoteDatabaseUpdate: () => void;
-  onImportRemoteDatabaseUpdate: () => void;
-  driveFile: DriveFileMemory | null;
-  driveFolder: DriveFolderMemory | null;
-  driveStatus: string;
-  driveConfigured: boolean;
-  driveConfigMessage: string;
-  onChooseDriveFile: () => void;
-  onChooseDriveFolder: () => void;
-  onLoadFromDrive: () => void;
-  onSaveToDrive: () => void;
-  onForgetDriveFile: () => void;
-  onForgetDriveFolder: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
   const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
   const pickerRef = useRef<HTMLDivElement>(null);
   const hasMultipleSetlists = setlists.length > 1;
-  const remoteCheckLabel = remoteDatabaseCheck ? remoteStatusLabel(remoteDatabaseCheck.status) : "";
   const quickPreviewZoomLabel = `${quickPreviewZoom}%`;
 
   useEffect(() => {
@@ -274,74 +231,6 @@ export function SongsView({
             </label>
           </div>
           <p className="mt-3 text-sm text-zinc-500">Piesne, setlist a nastavenia sa ukladajú do IndexedDB v tomto zariadení.</p>
-
-          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
-            <div className="font-semibold text-zinc-800">Kapelový zdroj databázy</div>
-            <label className="mt-3 block text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">URL kapelovej databázy</label>
-            <input
-              value={remoteDatabaseUrlDraft}
-              onChange={(event) => onRemoteDatabaseUrlDraftChange(event.target.value)}
-              placeholder="https://.../DBv003_TriNiTTTy_2026-05-08.json"
-              className="mt-1 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none"
-            />
-            <div className="mt-2 text-xs text-zinc-500">
-              {remoteDatabaseUrl ? `Uložený zdroj: ${remoteDatabaseUrl}` : "Zdroj databázy zatiaľ nie je uložený."}
-            </div>
-            {!remoteDatabaseCheck && (
-              <div className="mt-2 text-xs text-zinc-500">Oficiálnu verziu over ručne podľa čísla DB alebo cez kapelový zdroj.</div>
-            )}
-            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
-              <SoftButton onClick={onSaveRemoteDatabaseUrl}>Uložiť URL</SoftButton>
-              <SoftButton disabled={!remoteDatabaseUrl && !remoteDatabaseUrlDraft.trim()} onClick={onCheckRemoteDatabaseUpdate}>Skontrolovať aktualizáciu</SoftButton>
-              <SoftButton disabled={!remoteDatabaseUrl && !remoteDatabaseUrlDraft.trim()} onClick={onClearRemoteDatabaseUrl}>Vymazať URL</SoftButton>
-            </div>
-            <div className="mt-3 rounded-xl bg-white px-3 py-2 text-sm text-zinc-700 ring-1 ring-zinc-200">{remoteDatabaseStatus}</div>
-            {remoteDatabaseCheck && (
-              <div className="mt-3 rounded-xl bg-white p-3 text-sm ring-1 ring-zinc-200">
-                <div className={`inline-flex rounded-lg px-2 py-1 text-xs font-bold ring-1 ${remoteStatusClass(remoteDatabaseCheck.status)}`}>
-                  {remoteCheckLabel}
-                </div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <div>Aktuálna verzia: <strong>{formatLocalDatabaseVersion(databaseVersion)}</strong></div>
-                  <div>Dostupná verzia: <strong>{formatLocalDatabaseVersion(remoteDatabaseCheck.state.databaseVersion)}</strong></div>
-                  <div>Exportované: <strong>{formatRemoteDate(remoteDatabaseCheck.state.exportedAt || remoteDatabaseCheck.state.savedAt)}</strong></div>
-                  <div>Skontrolované: <strong>{formatRemoteDate(remoteDatabaseCheck.checkedAt)}</strong></div>
-                  <div>Skladby: <strong>{remoteDatabaseCheck.state.songCount}</strong></div>
-                  <div>Setlisty: <strong>{remoteDatabaseCheck.state.setlistCount}</strong></div>
-                </div>
-                <div className="mt-3 text-xs font-semibold text-amber-700">Pred importom sa vytvorí záloha aktuálnej lokálnej databázy.</div>
-                <div className="mt-3">
-                  <PrimaryButton onClick={onImportRemoteDatabaseUpdate}>Importovať túto verziu</PrimaryButton>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
-            <div className="font-semibold text-zinc-800">Google Drive admin</div>
-            <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
-              <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Kapelový DB priečinok</div>
-              <div className="mt-1 text-zinc-700">
-                {driveFolder ? driveFolder.folderName : "DB priečinok nie je vybraný."}
-              </div>
-              {!!driveFolder?.displayPath && <div className="mt-1 text-xs text-zinc-500">{driveFolder.displayPath}</div>}
-              <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
-                <SoftButton disabled={!driveConfigured} onClick={onChooseDriveFolder}>{driveFolder ? "Zmeniť DB priečinok" : "Vybrať DB priečinok"}</SoftButton>
-                {driveFolder && <SoftButton onClick={onForgetDriveFolder}>Zabudnúť DB priečinok</SoftButton>}
-              </div>
-            </div>
-            <div className="mt-1 text-zinc-600">
-              {driveFile ? `Drive file: ${driveFile.fileName}` : "Drive file nie je vybraný. Starší file režim ostáva ako fallback."}
-            </div>
-            {!!driveFile?.displayPath && <div className="mt-1 text-xs text-zinc-500">{driveFile.displayPath}</div>}
-            <div className="mt-2 text-xs text-zinc-500">{driveConfigured ? driveStatus : driveConfigMessage}</div>
-            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
-              <SoftButton disabled={!driveConfigured} onClick={onChooseDriveFile}>{driveFile ? "Change Drive file" : "Choose Drive file"}</SoftButton>
-              <SoftButton disabled={!driveConfigured} onClick={onLoadFromDrive}>Load from Drive</SoftButton>
-              <SoftButton disabled={!driveConfigured} onClick={onSaveToDrive}>Save to Drive</SoftButton>
-              {driveFile && <SoftButton onClick={onForgetDriveFile}>Zabudnúť Drive file</SoftButton>}
-            </div>
-          </div>
         </Card>
       </div>
 
@@ -398,33 +287,4 @@ export function SongsView({
       </Card>
     </div>
   );
-}
-
-function formatLocalDatabaseVersion(version: number) {
-  const normalized = Math.max(1, Math.floor(Number.isFinite(version) ? version : 1));
-  return `v${String(normalized).padStart(3, "0")}`;
-}
-
-function formatRemoteDate(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "neznáme";
-  return date.toLocaleString("sk-SK", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function remoteStatusLabel(status: RemoteDatabaseCheck["status"]) {
-  if (status === "newer") return "Dostupná novšia DB";
-  if (status === "older") return "Staršia verzia";
-  return "Databáza aktuálna podľa zdroja";
-}
-
-function remoteStatusClass(status: RemoteDatabaseCheck["status"]) {
-  if (status === "newer") return "bg-emerald-50 text-emerald-900 ring-emerald-200";
-  if (status === "older") return "bg-amber-50 text-amber-900 ring-amber-200";
-  return "bg-zinc-50 text-zinc-700 ring-zinc-200";
 }
