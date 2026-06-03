@@ -8,7 +8,8 @@ import { normalizeSongTitle } from "../lib/import";
 
 const A4_WIDTH_PX = 210 * 96 / 25.4;
 const A4_HEIGHT_PX = 297 * 96 / 25.4;
-const A4_OVERFLOW_TOLERANCE_MM = 2;
+// Screen DOM height can be a little stricter than the browser print engine on dense two-column sheets.
+const A4_OVERFLOW_TOLERANCE_MM = 5;
 const A4_OVERFLOW_TOLERANCE_PX = Math.ceil(A4_OVERFLOW_TOLERANCE_MM * 96 / 25.4);
 export const A4_OVERFLOW_WARNING = "Skladba presahuje A4. Spodné riadky sa môžu pri tlači/PDF odrezať.";
 
