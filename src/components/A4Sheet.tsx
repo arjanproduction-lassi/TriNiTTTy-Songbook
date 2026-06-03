@@ -8,8 +8,7 @@ import { normalizeSongTitle } from "../lib/import";
 
 const A4_WIDTH_PX = 210 * 96 / 25.4;
 const A4_HEIGHT_PX = 297 * 96 / 25.4;
-// Screen DOM height can be a little stricter than the browser print engine on dense two-column sheets.
-const A4_OVERFLOW_TOLERANCE_MM = 5;
+const A4_OVERFLOW_TOLERANCE_MM = 2;
 const A4_OVERFLOW_TOLERANCE_PX = Math.ceil(A4_OVERFLOW_TOLERANCE_MM * 96 / 25.4);
 export const A4_OVERFLOW_WARNING = "Skladba presahuje A4. Spodné riadky sa môžu pri tlači/PDF odrezať.";
 
@@ -30,6 +29,17 @@ function assignRef(ref: Ref<HTMLDivElement> | undefined, value: HTMLDivElement |
 }
 
 function measureA4Overflow(page: HTMLDivElement) {
+  const measuredContent = Array.from(page.querySelectorAll<HTMLElement>("[data-a4-measure]"));
+  if (measuredContent.length) {
+    const pageRect = page.getBoundingClientRect();
+    const scaleY = pageRect.height && page.offsetHeight ? pageRect.height / page.offsetHeight : 1;
+    const maxContentBottom = measuredContent.reduce((bottom, element) => {
+      return Math.max(bottom, element.getBoundingClientRect().bottom);
+    }, pageRect.top);
+    const renderedContentHeight = Math.ceil((maxContentBottom - pageRect.top) / (scaleY || 1));
+    return renderedContentHeight > Math.ceil(A4_HEIGHT_PX) + A4_OVERFLOW_TOLERANCE_PX;
+  }
+
   const renderedHeight = Math.ceil(Math.max(page.scrollHeight, page.offsetHeight));
   return renderedHeight > Math.ceil(A4_HEIGHT_PX) + A4_OVERFLOW_TOLERANCE_PX;
 }
@@ -80,7 +90,7 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
 
   return (
     <div ref={setPageRefs} className="a4-print-surface mx-auto bg-white text-zinc-900 shadow-lg ring-1 ring-zinc-300" style={pageStyle}>
-      <div className="border-b border-zinc-300 pb-3" style={{ fontSize: "9pt", lineHeight: 1.08 }}>
+      <div data-a4-measure className="border-b border-zinc-300 pb-3" style={{ fontSize: "9pt", lineHeight: 1.08 }}>
         <div className="font-bold" style={{ fontSize: "13pt" }}>{normalizeSongTitle(song.title)} - {song.artist}</div>
         <div className="mt-1 flex flex-wrap gap-4 font-semibold text-zinc-700" style={{ fontSize: "9pt" }}>
           <span>BPM {song.bpm}</span>
@@ -100,6 +110,7 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
           <div key={section.id} className="mb-4 break-inside-avoid">
             {!section.implicit && (
               <div
+                data-a4-measure
                 className={`mb-2 rounded-md border-y border-zinc-300 py-0.5 text-right font-semibold uppercase tracking-[0.08em] text-zinc-700 ${sectionSelected ? "bg-amber-100/80 ring-1 ring-amber-400" : onSelectBlock ? "hover:bg-zinc-100" : ""} ${cueColorClassName(section.cueColorId)}`}
                 style={{ fontSize: "9pt", ...cueColorStyle(section.cueColorId) }}
                 {...sectionProps}
@@ -119,16 +130,16 @@ export function A4Page({ song, sections, selectedIndex, onSelectBlock, responsiv
                 if (line.type === "pair") {
                   const chordLine = pairChordLine(line);
                   return (
-                    <div key={index} className={wrapperClass} {...commonProps}>
+                    <div key={index} data-a4-measure className={wrapperClass} {...commonProps}>
                       {!!chordLine && <div className="font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-800">{chordLine}</div>}
                       {!!line.lyrics && <div className={`font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900 ${cueClassName}`} style={cueStyle}>{line.lyrics}</div>}
                     </div>
                   );
                 }
-                if (line.type === "cue") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] italic leading-[1.05] whitespace-pre text-zinc-700 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
-                if (line.type === "repeat") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-700 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
-                if (line.type === "chords") return <div key={index} className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-800 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
-                return <div key={index} className={`${wrapperClass} font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                if (line.type === "cue") return <div key={index} data-a4-measure className={`${wrapperClass} font-mono text-[9pt] italic leading-[1.05] whitespace-pre text-zinc-700 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                if (line.type === "repeat") return <div key={index} data-a4-measure className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-700 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                if (line.type === "chords") return <div key={index} data-a4-measure className={`${wrapperClass} font-mono text-[9pt] font-semibold leading-[1.05] whitespace-pre text-zinc-800 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
+                return <div key={index} data-a4-measure className={`${wrapperClass} font-mono text-[9pt] leading-[1.05] whitespace-pre text-zinc-900 ${cueClassName}`} style={cueStyle} {...commonProps}>{line.text}</div>;
               })}
             </div>
           </div>
