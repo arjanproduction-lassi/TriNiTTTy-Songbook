@@ -1,4 +1,4 @@
-import type { DriveFileMemory, PersistedState } from "../types";
+import type { DriveFileMemory, DriveFolderMemory, PersistedState } from "../types";
 import { normalizePersistedState } from "./db";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -113,6 +113,43 @@ export async function chooseDriveJsonFile(): Promise<DriveFileMemory> {
           return;
         }
         resolve({ fileId, fileName, rememberedAt: new Date().toISOString() });
+      })
+      .build()
+      .setVisible(true);
+  });
+}
+
+export async function chooseDriveFolder(): Promise<DriveFolderMemory> {
+  await ensureGoogleDriveReady();
+  const token = await requestAccessToken();
+
+  return new Promise((resolve, reject) => {
+    const picker = window.google?.picker;
+    if (!picker) {
+      reject(new Error("Google Picker sa nepodarilo načítať."));
+      return;
+    }
+
+    const view = new picker.DocsView(picker.ViewId.DOCS);
+    view.setMimeTypes("application/vnd.google-apps.folder");
+    view.setIncludeFolders(true);
+    view.setSelectFolderEnabled(true);
+
+    new picker.PickerBuilder()
+      .addView(view)
+      .setOAuthToken(token)
+      .setDeveloperKey(API_KEY)
+      .setOrigin(window.location.origin)
+      .setCallback((data: GooglePickerData) => {
+        if (data.action !== picker.Action.PICKED) return;
+        const doc = data.docs?.[0];
+        const folderId = String(doc?.id || "").trim();
+        const folderName = String(doc?.name || "DATABASE").trim();
+        if (!folderId) {
+          reject(new Error("Drive priečinok nemá folder ID."));
+          return;
+        }
+        resolve({ folderId, folderName, rememberedAt: new Date().toISOString() });
       })
       .build()
       .setVisible(true);

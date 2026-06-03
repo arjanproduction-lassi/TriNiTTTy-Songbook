@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type SetStateAction } from "react";
-import type { DriveFileMemory, EditorMode, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, RemoteDatabaseCheck, Song, View } from "./types";
+import type { DriveFileMemory, DriveFolderMemory, EditorMode, ImportDraft, ImportMode, Line, NamedSetlist, Notation, PersistedState, RemoteDatabaseCheck, Song, View } from "./types";
 import { DEFAULT_DRAFT, DEFAULT_IMPORT_TEXT, EMPTY_SONG_DRAFT } from "./data/defaultImport";
 import { INITIAL_SONGS } from "./data/songs";
 import { NavButton } from "./components/ui";
@@ -12,7 +12,7 @@ import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
 import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
-import { chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
+import { chooseDriveFolder, chooseDriveJsonFile, googleDriveConfigMessage, isGoogleDriveConfigured, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
 import { SongsView } from "./views/SongsView";
 import { ImportView } from "./views/ImportView";
 import { SongView } from "./views/SongView";
@@ -27,6 +27,7 @@ const REMOTE_DATABASE_URL_KEY = "trinittty-remote-database-url";
 const REMOTE_DATABASE_APP_NAMES = new Set(["LassiLAB Songbook", "TriNiTTTy Songbook"]);
 const SCREEN_NIGHT_MODE_KEY = "trinittty-screen-night-mode";
 const PROJECT_NAME_KEY = "lassilab-project-name";
+const DRIVE_DB_FOLDER_KEY = "lassilab-drive-db-folder";
 const DEFAULT_PROJECT_NAME = "TriNiTTTy";
 
 type CanonicalSaveStatus = {
@@ -74,6 +75,7 @@ export default function App() {
   const [canonicalSaveStatus, setCanonicalSaveStatus] = useState<CanonicalSaveStatus>(() => readCanonicalSaveStatus());
   const [lastLocalAutosaveAt, setLastLocalAutosaveAt] = useState<string | null>(null);
   const [driveFile, setDriveFile] = useState<DriveFileMemory | null>(null);
+  const [driveFolder, setDriveFolder] = useState<DriveFolderMemory | null>(() => readDriveFolder());
   const [driveStatus, setDriveStatus] = useState("Drive admin sync je vypnutý.");
   const [remoteDatabaseUrl, setRemoteDatabaseUrl] = useState(() => readRemoteDatabaseUrl());
   const [remoteDatabaseUrlDraft, setRemoteDatabaseUrlDraft] = useState(() => readRemoteDatabaseUrl());
@@ -961,6 +963,23 @@ export default function App() {
     }
   }
 
+  async function chooseDriveDatabaseFolder() {
+    try {
+      const folder = await chooseDriveFolder();
+      setDriveFolder(folder);
+      writeDriveFolder(folder);
+      setDriveStatus(`Drive DB priečinok: ${folder.folderName}`);
+    } catch (error) {
+      setDriveStatus(error instanceof Error ? error.message : "Výber Drive priečinka zlyhal.");
+    }
+  }
+
+  function forgetDriveDatabaseFolder() {
+    setDriveFolder(null);
+    writeDriveFolder(null);
+    setDriveStatus("Drive DB priečinok zabudnutý. Vyber ho znova.");
+  }
+
   async function loadFromDrive() {
     try {
       const file = driveFile || await chooseDriveJsonFile();
@@ -1011,6 +1030,8 @@ export default function App() {
     setDraft(DEFAULT_DRAFT);
     resetEditorHistory();
     setDriveFile(null);
+    setDriveFolder(null);
+    writeDriveFolder(null);
     setDriveStatus("Drive admin sync je vypnutý.");
     setDatabaseVersion(1);
     markCanonicalDirty();
@@ -1184,16 +1205,19 @@ export default function App() {
             onCheckRemoteDatabaseUpdate={() => { void checkRemoteDatabaseUpdate(); }}
             onImportRemoteDatabaseUpdate={() => { void importRemoteDatabaseUpdate(); }}
             driveFile={driveFile}
+            driveFolder={driveFolder}
             driveStatus={driveStatus}
             driveConfigured={isGoogleDriveConfigured()}
             driveConfigMessage={googleDriveConfigMessage()}
             onChooseDriveFile={() => { void chooseDriveFile(); }}
+            onChooseDriveFolder={() => { void chooseDriveDatabaseFolder(); }}
             onLoadFromDrive={() => { void loadFromDrive(); }}
             onSaveToDrive={() => { void saveToDrive(); }}
             onForgetDriveFile={() => {
               setDriveFile(null);
               setDriveStatus("Drive file zabudnutý. Vyber ho znova cez Change Drive file.");
             }}
+            onForgetDriveFolder={forgetDriveDatabaseFolder}
           />
         )}
 
@@ -1481,6 +1505,34 @@ function writeProjectName(value: string) {
     window.localStorage.setItem(PROJECT_NAME_KEY, normalizeProjectName(value));
   } catch {
     // Project name is device-local convenience state; the app can run without it.
+  }
+}
+
+function readDriveFolder(): DriveFolderMemory | null {
+  try {
+    const raw = window.localStorage.getItem(DRIVE_DB_FOLDER_KEY);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as Partial<DriveFolderMemory>;
+    const folderId = typeof value.folderId === "string" ? value.folderId.trim() : "";
+    const folderName = typeof value.folderName === "string" ? value.folderName.trim() : "";
+    if (!folderId || !folderName) return null;
+    return {
+      folderId,
+      folderName,
+      displayPath: typeof value.displayPath === "string" && value.displayPath.trim() ? value.displayPath.trim() : undefined,
+      rememberedAt: typeof value.rememberedAt === "string" ? value.rememberedAt : new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeDriveFolder(value: DriveFolderMemory | null) {
+  try {
+    if (value) window.localStorage.setItem(DRIVE_DB_FOLDER_KEY, JSON.stringify(value));
+    else window.localStorage.removeItem(DRIVE_DB_FOLDER_KEY);
+  } catch {
+    // Drive folder is device-local convenience state; manual import/export still works without it.
   }
 }
 

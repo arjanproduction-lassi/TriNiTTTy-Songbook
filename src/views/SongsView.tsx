@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { DriveFileMemory, NamedSetlist, RemoteDatabaseCheck, Song } from "../types";
+import type { DriveFileMemory, DriveFolderMemory, NamedSetlist, RemoteDatabaseCheck, Song } from "../types";
 import { FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
@@ -45,13 +45,16 @@ export function SongsView({
   onCheckRemoteDatabaseUpdate,
   onImportRemoteDatabaseUpdate,
   driveFile,
+  driveFolder,
   driveStatus,
   driveConfigured,
   driveConfigMessage,
   onChooseDriveFile,
+  onChooseDriveFolder,
   onLoadFromDrive,
   onSaveToDrive,
   onForgetDriveFile,
+  onForgetDriveFolder,
 }: {
   songs: Song[];
   deletedSongs: Song[];
@@ -92,13 +95,16 @@ export function SongsView({
   onCheckRemoteDatabaseUpdate: () => void;
   onImportRemoteDatabaseUpdate: () => void;
   driveFile: DriveFileMemory | null;
+  driveFolder: DriveFolderMemory | null;
   driveStatus: string;
   driveConfigured: boolean;
   driveConfigMessage: string;
   onChooseDriveFile: () => void;
+  onChooseDriveFolder: () => void;
   onLoadFromDrive: () => void;
   onSaveToDrive: () => void;
   onForgetDriveFile: () => void;
+  onForgetDriveFolder: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
   const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
@@ -313,8 +319,19 @@ export function SongsView({
 
           <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
             <div className="font-semibold text-zinc-800">Google Drive admin</div>
+            <div className="mt-2 rounded-xl bg-white p-3 ring-1 ring-zinc-200">
+              <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">Kapelový DB priečinok</div>
+              <div className="mt-1 text-zinc-700">
+                {driveFolder ? driveFolder.folderName : "DB priečinok nie je vybraný."}
+              </div>
+              {!!driveFolder?.displayPath && <div className="mt-1 text-xs text-zinc-500">{driveFolder.displayPath}</div>}
+              <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
+                <SoftButton disabled={!driveConfigured} onClick={onChooseDriveFolder}>{driveFolder ? "Zmeniť DB priečinok" : "Vybrať DB priečinok"}</SoftButton>
+                {driveFolder && <SoftButton onClick={onForgetDriveFolder}>Zabudnúť DB priečinok</SoftButton>}
+              </div>
+            </div>
             <div className="mt-1 text-zinc-600">
-              {driveFile ? `Drive file: ${driveFile.fileName}` : "Drive file nie je vybraný."}
+              {driveFile ? `Drive file: ${driveFile.fileName}` : "Drive file nie je vybraný. Starší file režim ostáva ako fallback."}
             </div>
             {!!driveFile?.displayPath && <div className="mt-1 text-xs text-zinc-500">{driveFile.displayPath}</div>}
             <div className="mt-2 text-xs text-zinc-500">{driveConfigured ? driveStatus : driveConfigMessage}</div>

@@ -63,6 +63,13 @@ export type DriveFileMemory = {
   rememberedAt: string;
 };
 
+export type DriveFolderMemory = {
+  folderId: string;
+  folderName: string;
+  displayPath?: string;
+  rememberedAt: string;
+};
+
 export type View = "songs" | "import" | "song" | "setlist" | "performance";
 export type ImportMode = "raw" | "block";
 export type EditorMode = "create" | "edit";

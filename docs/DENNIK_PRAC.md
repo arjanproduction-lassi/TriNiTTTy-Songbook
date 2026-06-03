@@ -880,6 +880,26 @@ Oprava:
 - Nacitana hodnota sa validuje a zarovna na najblizsi povoleny krok.
 - A4 renderer, print/PDF, parser, transpozicia, DB schema, import/export a song data ostali bez zmeny.
 
+### Drive nadstavba Faza A - zapamatany DB priecinok
+
+Problem:
+
+- Manualny export/import cez systemovy dialog casto otvara posledny pouzity Windows adresar, nie kapelovy databazovy priecinok.
+- Existujuci Drive scaffold pracoval hlavne s jednym vybranym JSON suborom.
+
+Oprava / nadstavba:
+
+- Do Google Drive admin sekcie pribudol vyber `Kapelovy DB priecinok`.
+- Appka si lokalne pamata Google Drive `folderId` a nazov priecinka pod klucom `lassilab-drive-db-folder`.
+- Priecinok sa da zmenit alebo zabudnut.
+- Toto je iba device-local konfiguracia; neuklada sa do DB exportu a nemeni import/export format.
+- Stary Drive file scaffold ostava ako fallback.
+- Zatial nejde o sync, automaticky merge ani tiche prepisovanie dat.
+
+Buduci dalsi krok:
+
+- Z vybraneho Drive priecinka nacitat DB exporty, najst najvyssiu `databaseVersion` podla JSON metadata a ponuknut kontrolovany import po potvrdeni.
+
 ---
 
 ### Backlog dohoda - Cue Color Layer v1
