@@ -975,6 +975,24 @@ Buduci smer:
 
 ---
 
+### Song Notes V1 - lahke poznamky ku skladbe
+
+Problem:
+
+- Pri skuske sa casto objavi drobna vec na opravu: tonina, text, aranz, A4 problem alebo cast skladby.
+- Bolo treba jednoduchu pamatovu poznamku priamo pri skladbe, bez task managera a bez rusenia koncertneho rezimu.
+
+Oprava:
+
+- Do skladby pribudlo pole `notes` ako obycajny text.
+- Stare skladby bez poznamky sa normalizuju s prazdnou hodnotou.
+- V kniznici sa pri skladbe s poznamkou zobrazi iba mala ikona.
+- V detaile skladby pribudlo tlacidlo `Poznamka`, ktore otvori jednoduchu textarea.
+- Poznamka sa uklada s lokalnou databazou a prenasa sa cez JSON export/import.
+- Performance/koncertny rezim, A4 renderer, print/PDF, parser, transpozicia a TXT export ostali bez zmeny.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:

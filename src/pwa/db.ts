@@ -103,6 +103,7 @@ function normalizeSong(value: unknown, fallbackId: number): Song | null {
     timeSignature: stringValue(value.timeSignature).trim() || undefined,
     duration: stringValue(value.duration, "0:00") || "0:00",
     capo: stringValue(value.capo, "-") || "-",
+    notes: stringValue(value.notes),
     lines: lines.length ? lines : [{ type: "lyrics", text: "" }],
     deletedAt: stringValue(value.deletedAt).trim() || undefined,
   };

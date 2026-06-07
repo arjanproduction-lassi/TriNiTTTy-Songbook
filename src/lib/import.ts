@@ -116,6 +116,7 @@ export function makeSong(draft: ImportDraft, lines: Line[], id: number): Song {
     timeSignature: draft.timeSignature.trim() || undefined,
     duration: draft.duration || "0:00",
     capo: draft.capo || "-",
+    notes: "",
     lines,
   };
 }

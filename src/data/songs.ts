@@ -13,6 +13,7 @@ export const INITIAL_SONGS: Song[] = [
     key: "Em",
     duration: "4:02",
     capo: "-",
+    notes: "",
     lines: [
       { type: "section", text: "Verse 1" },
       makePairLine("Em      C", "Kam stratila sa nám človečina"),
@@ -31,6 +32,7 @@ export const INITIAL_SONGS: Song[] = [
     key: "Gm",
     duration: "0:00",
     capo: "-",
+    notes: "",
     lines: [
       { type: "section", text: "Intro" },
       { type: "chords", text: "Gm A# F Gm   Gm A# F Gm" },

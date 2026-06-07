@@ -109,7 +109,10 @@ export function SongsView({
               return (
               <div key={song.id} className="min-w-0 rounded-xl border border-zinc-200 bg-zinc-50 p-3 md:rounded-2xl md:p-4 xl:p-3">
                 <div className="flex min-w-0 flex-col gap-1 md:gap-2 xl:gap-1">
-                  <div className="min-w-0 break-words text-base font-semibold md:text-lg xl:text-base">{normalizeSongTitle(song.title)}</div>
+                  <div className="min-w-0 break-words text-base font-semibold md:text-lg xl:text-base">
+                    {normalizeSongTitle(song.title)}
+                    {(song.notes || "").trim() && <span className="ml-1 align-middle" title="Poznámka ku skladbe">📝</span>}
+                  </div>
                   <div className="text-sm text-zinc-500">{song.artist}</div>
                   <div className="flex flex-wrap gap-1.5 md:gap-2 xl:gap-1.5">
                     <Chip>{normalizeKeyInput(song.key)}</Chip>

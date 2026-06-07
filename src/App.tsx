@@ -511,7 +511,7 @@ export default function App() {
       const title = normalizeSongTitle(normalizedDraft.title || originalSong.title || "bez názvu");
       if (!window.confirm(`Naozaj chceš prepísať skladbu "${title}"? Pôvodná verzia bude nahradená.`)) return;
 
-      const updatedSong = makeSong(normalizedDraft, linesForSave, editingSongId);
+      const updatedSong = { ...makeSong(normalizedDraft, linesForSave, editingSongId), notes: originalSong.notes || "" };
       if (updatedSong.id !== originalSong.id) {
         setStorageStatus("Bezpečnostná brzda: ID upravovanej skladby sa nezhoduje. Uloženie bolo zastavené.");
         return;
@@ -1043,6 +1043,12 @@ export default function App() {
   const setlistNamesForSong = (songId: number) => setlists.filter((item) => item.songIds.includes(songId)).map((item) => item.name);
   const openSong = (song: Song) => { setSelectedSongId(song.id); setTranspose(0); setView("song"); };
   const openInSetlist = (songId: number) => { setSetlistPreviewSongId(songId); setView("setlist"); };
+  const updateSongNotes = (songId: number, notes: string) => {
+    const currentSong = songs.find((song) => song.id === songId);
+    if (!currentSong || (currentSong.notes || "") === notes) return;
+    setSongs((current) => current.map((song) => (song.id === songId ? { ...song, notes } : song)));
+    markCanonicalDirty();
+  };
   const openSongInSetlist = (songId: number, setlistId: number) => {
     const nextSetlist = setlists.find((item) => item.id === setlistId);
     if (!nextSetlist) return;
@@ -1250,6 +1256,7 @@ export default function App() {
             exportSongText={exportSongText}
             deleteSong={deleteSong}
             printSong={printA4Song}
+            updateSongNotes={updateSongNotes}
           />
         )}
 
@@ -1680,6 +1687,7 @@ function normalizeLegacySong(value: unknown): Song | null {
     timeSignature: typeof song.timeSignature === "string" ? song.timeSignature : undefined,
     duration: String(song.duration ?? "0:00"),
     capo: String(song.capo ?? "-"),
+    notes: String(song.notes ?? ""),
     lines: lines.length ? lines : [{ type: "lyrics", text: "" }],
     deletedAt: typeof song.deletedAt === "string" ? song.deletedAt : undefined,
   };

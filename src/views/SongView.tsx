@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import type { Notation, SectionGroup, Song } from "../types";
 import { A4Sheet, FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, PrimaryButton, SoftButton, TransposeControls } from "../components/ui";
@@ -25,6 +25,7 @@ export function SongView({
   exportSongText,
   deleteSong,
   printSong,
+  updateSongNotes,
 }: {
   songs: Song[];
   selectedSongId: number;
@@ -45,7 +46,14 @@ export function SongView({
   exportSongText: (song: Song) => void;
   deleteSong: (songId: number) => void;
   printSong: (song: Song) => void;
+  updateSongNotes: (songId: number, notes: string) => void;
 }) {
+  const [notesOpen, setNotesOpen] = useState(false);
+
+  useEffect(() => {
+    setNotesOpen(false);
+  }, [selectedSongId]);
+
   if (!selectedSong || !renderedSong) {
     return (
       <Card>
@@ -77,8 +85,20 @@ export function SongView({
               <PrimaryButton onClick={() => copySong(renderedSong)}>Kopírovať TXT</PrimaryButton>
               <SoftButton onClick={() => exportSongText(renderedSong)}>Export TXT</SoftButton>
               <SoftButton onClick={() => printSong(renderedSong)}>Tlačiť / PDF</SoftButton>
+              <SoftButton onClick={() => setNotesOpen((open) => !open)}>Poznámka 📝</SoftButton>
               <button onClick={() => deleteSong(selectedSong.id)} className="rounded-2xl bg-rose-600 px-4 py-3 text-sm font-semibold text-white">Zmazať skladbu</button>
             </div>
+            {notesOpen && (
+              <div className="rounded-2xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
+                <label className="block text-sm font-semibold text-zinc-700">Poznámka ku skladbe</label>
+                <textarea
+                  value={selectedSong.notes || ""}
+                  onChange={(event) => updateSongNotes(selectedSong.id, event.target.value)}
+                  placeholder="Čo opraviť po skúške?"
+                  className="mt-2 min-h-28 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none"
+                />
+              </div>
+            )}
             <div className="text-xs text-zinc-500">Po vložení do Wordu/Docs nastav font Courier New a veľkosť 9 pt, aby akordy ostali zarovnané.</div>
             {copyStatus && <div className="rounded-2xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600 ring-1 ring-zinc-200">{copyStatus}</div>}
           </div>

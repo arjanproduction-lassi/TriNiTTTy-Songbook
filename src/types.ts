@@ -46,6 +46,7 @@ export type Song = {
   timeSignature?: string;
   duration: string;
   capo: string;
+  notes: string;
   lines: Line[];
   deletedAt?: string;
 };
