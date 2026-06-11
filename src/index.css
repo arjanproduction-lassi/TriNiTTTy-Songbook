@@ -186,6 +186,38 @@ html,
     --tw-ring-color: #52525b !important;
   }
 
+  .app-night .screen-surface .editor-block-selected {
+    background-color: rgb(146 64 14 / 0.28) !important;
+    border-color: #f59e0b !important;
+    color: #f8fafc !important;
+    box-shadow: inset 3px 0 0 #fbbf24, 0 0 0 1px rgb(245 158 11 / 0.58) !important;
+  }
+
+  .app-night .screen-surface .editor-block-selected :is(.text-zinc-500, .text-zinc-600, .text-zinc-700) {
+    color: #fde68a !important;
+  }
+
+  .app-night .screen-surface .editor-cue-chip {
+    background-color: #18181b !important;
+    color: #e4e4e7 !important;
+    --tw-ring-color: #3f3f46 !important;
+  }
+
+  .app-night .screen-surface .editor-cue-chip:hover {
+    background-color: #27272a !important;
+  }
+
+  .app-night .screen-surface .editor-cue-chip-active {
+    background-color: #d4d4d8 !important;
+    color: #09090b !important;
+    --tw-ring-color: #d4d4d8 !important;
+  }
+
+  .app-night .screen-surface .a4-print-surface [class*="bg-amber-100/80"] {
+    background-color: rgb(146 64 14 / 0.3) !important;
+    color: #f8fafc !important;
+  }
+
   .app-night .screen-surface .a4-print-surface {
     background: #111827 !important;
     color: #e5e7eb !important;

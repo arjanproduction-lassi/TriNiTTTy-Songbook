@@ -1232,6 +1232,8 @@ export default function App() {
             refreshSongBackups={() => { void refreshEditorBackups(); }}
             restoreSongBackupAsCopy={(backupId) => { void restoreSongBackupAsCopy(backupId); }}
             deleteSongBackup={(backupId) => { void deleteSongBackup(backupId); }}
+            screenNightMode={screenNightMode}
+            onToggleScreenNightMode={() => setScreenNightMode((enabled) => !enabled)}
           />
         )}
 

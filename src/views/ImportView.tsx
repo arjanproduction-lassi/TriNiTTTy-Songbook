@@ -42,6 +42,8 @@ type ImportViewProps = {
   refreshSongBackups: () => void;
   restoreSongBackupAsCopy: (backupId: string) => void;
   deleteSongBackup: (backupId: string) => void;
+  screenNightMode: boolean;
+  onToggleScreenNightMode: () => void;
 };
 
 type SplitBlockRequest = {
@@ -295,7 +297,7 @@ function BlockNavigator({
             <button
               type="button"
               onClick={() => onSelect(section.index as number)}
-              className={`w-full rounded-lg px-2 py-1 text-left text-sm font-semibold ${selectedIndex === section.index ? "bg-amber-100 text-amber-950 ring-1 ring-amber-400" : "hover:bg-zinc-100"}`}
+              className={`w-full rounded-lg px-2 py-1 text-left text-sm font-semibold ${selectedIndex === section.index ? "editor-block-selected bg-amber-100 text-amber-950 ring-1 ring-amber-400" : "hover:bg-zinc-100"}`}
             >
               [ {section.title} ]
             </button>
@@ -305,7 +307,7 @@ function BlockNavigator({
               <button
                 key={index}
                 onClick={() => onSelect(index)}
-                className={`w-full rounded-xl border px-3 py-2 text-left ${selectedIndex === index ? "border-amber-400 bg-amber-100" : "border-zinc-200 bg-white hover:bg-zinc-100"}`}
+                className={`w-full rounded-xl border px-3 py-2 text-left ${selectedIndex === index ? "editor-block-selected border-amber-400 bg-amber-100" : "border-zinc-200 bg-white hover:bg-zinc-100"}`}
               >
                 <div className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">{i + 1}. {line.type}</div>
                 <div className="mt-1 truncate font-mono text-sm">{blockLabel(line)}</div>
@@ -348,7 +350,7 @@ function CueColorPicker({
         <button
           type="button"
           onClick={() => onChange(setLineCueColor(line, ""))}
-          className={`rounded-full px-3 py-2 text-xs font-semibold ring-1 ${selectedCueColor ? "bg-white text-zinc-600 ring-zinc-200" : "bg-zinc-900 text-white ring-zinc-900"}`}
+          className={`editor-cue-chip rounded-full px-3 py-2 text-xs font-semibold ring-1 ${selectedCueColor ? "bg-white text-zinc-600 ring-zinc-200" : "editor-cue-chip-active bg-zinc-900 text-white ring-zinc-900"}`}
         >
           Bez farby
         </button>
@@ -358,7 +360,7 @@ function CueColorPicker({
             type="button"
             onClick={() => onChange(setLineCueColor(line, option.id))}
             title={option.description}
-            className={`flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ${selectedCueColor === option.id ? "bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-100"}`}
+            className={`editor-cue-chip flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold ring-1 ${selectedCueColor === option.id ? "editor-cue-chip-active bg-zinc-900 text-white ring-zinc-900" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-100"}`}
           >
             <span className="h-3 w-3 rounded-full" style={{ backgroundColor: option.swatch }} />
             {option.label}
@@ -467,10 +469,13 @@ export function ImportView(props: ImportViewProps) {
     refreshSongBackups,
     restoreSongBackupAsCopy,
     deleteSongBackup,
+    screenNightMode,
+    onToggleScreenNightMode,
   } = props;
   const workspaceRef = useRef<HTMLDivElement | null>(null);
   const [paneWidths, setPaneWidths] = useState<PaneWidths>(() => clampPaneWidths(readPaneWidths()));
   const [backupsOpen, setBackupsOpen] = useState(false);
+  const screenNightToggleLabel = screenNightMode ? "Denný režim" : "Nočný režim";
 
   useEffect(() => {
     try {
@@ -535,7 +540,17 @@ export function ImportView(props: ImportViewProps) {
               <div className="text-sm font-semibold text-zinc-900">Šírka okien importu</div>
               <div className="text-xs text-zinc-500">Vľavo raw vstup, vpravo pravdivý A4 náhľad.</div>
             </div>
-            <SplitControl leftLabel="Editor" rightLabel="Náhľad" value={importSplit} min={26} max={62} step={2} onChange={setImportSplit} />
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={onToggleScreenNightMode}
+                aria-pressed={screenNightMode}
+                className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${screenNightMode ? "bg-zinc-900 text-white ring-zinc-700" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"}`}
+              >
+                {screenNightToggleLabel}
+              </button>
+              <SplitControl leftLabel="Editor" rightLabel="Náhľad" value={importSplit} min={26} max={62} step={2} onChange={setImportSplit} />
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto xl:overflow-visible">
@@ -609,6 +624,14 @@ export function ImportView(props: ImportViewProps) {
             {editorMode === "edit" && editingSongId !== null && <SoftButton onClick={toggleBackupsOpen}>Zálohy ({songBackups.length})</SoftButton>}
             <SoftButton onClick={returnToRawImport}>Späť na raw import</SoftButton>
             <SoftButton onClick={startNewSongDraft}>Pridať skladbu</SoftButton>
+            <button
+              type="button"
+              onClick={onToggleScreenNightMode}
+              aria-pressed={screenNightMode}
+              className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${screenNightMode ? "bg-zinc-900 text-white ring-zinc-700" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"}`}
+            >
+              {screenNightToggleLabel}
+            </button>
             <PrimaryButton onClick={saveImportedSong}>{editorMode === "edit" ? "Uložiť a prepísať skladbu" : "Vytvoriť skladbu"}</PrimaryButton>
           </div>
         </div>

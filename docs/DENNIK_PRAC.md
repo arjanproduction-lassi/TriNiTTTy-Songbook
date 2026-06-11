@@ -993,6 +993,23 @@ Oprava:
 
 ---
 
+### Editor night toggle a cue kontrast
+
+Problem:
+
+- Pri editovani v nocnom rezime nebol priamy prepinac `Nocny/Denny rezim` v editorovom workflow.
+- Vybrany blok a cue ovladacie prvky mohli byt v tmavom rezime menej citatelne.
+
+Oprava:
+
+- Raw import aj siroky blokovy editor maju vlastne tlacidlo `Nocny rezim` / `Denny rezim`.
+- Tlacidlo pouziva rovnaky globalny screen-only night mode ako hlavicka appky.
+- Prepinanie nemení editor state, vybrany blok ani rozpracovany obsah.
+- V tmavom rezime bol zjemneny kontrast vybraneho bloku a cue chipov tak, aby text ostal citatelny.
+- A4 renderer, print/PDF, parser, transpozicia, DB schema, TXT export a koncertny rezim ostali bez zmeny.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:
