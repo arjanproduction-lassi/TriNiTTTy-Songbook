@@ -17,10 +17,12 @@
 body {
   margin: 0;
   overflow-x: hidden;
+  background: #fafafa;
 }
 
 html,
 #root {
+  min-height: 100%;
   max-width: 100%;
   overflow-x: hidden;
 }
@@ -58,6 +60,11 @@ html,
 }
 
 @media screen {
+  html:has(.app-night),
+  body:has(.app-night) {
+    background: #09090b;
+  }
+
   .app-night {
     color-scheme: dark;
     background: #09090b;
