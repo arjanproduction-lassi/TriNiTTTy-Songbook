@@ -1234,6 +1234,9 @@ export default function App() {
               <p className="mt-0.5 text-sm text-zinc-600">Knižnica, import/edit, A4 preview, setlist, performance, transpozitor, lokálna databáza.</p>
               <p className="mt-1 text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-400">{RC_MARKER} · v{APP_VERSION} · DB {formatDatabaseVersion(databaseVersion)} · build {BUILD_DATE}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-xl bg-zinc-900 px-3 py-1.5 text-sm font-black tracking-wide text-white ring-1 ring-zinc-900">
+                  DB {formatDatabaseVersion(databaseVersion)}
+                </span>
                 <span className={`rounded-xl px-3 py-1.5 text-sm font-bold ring-1 ${canonicalStatusClass}`}>
                   {canonicalStatusText}
                 </span>
