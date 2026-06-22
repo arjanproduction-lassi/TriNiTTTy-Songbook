@@ -1010,6 +1010,28 @@ Oprava:
 
 ---
 
+### Verejne demo data a ochrana sukromnych databaz
+
+Problem:
+
+- Verejna PWA nesmie pri cistej instalacii obsahovat sukromne alebo rozpracovane skladby.
+- Seed data pre novych testerov maju byt oddelene od realnych pracovnych databaz kapely.
+
+Oprava:
+
+- Vstavane `INITIAL_SONGS` boli nahradene jedinou bezpecnou demo skladbou `Na Kralovej holi` so zdrojom `Slovenska ludova`.
+- Uvodna import sablona bola vycistena na rovnaku demo skladbu, aby novy tester nevidel sukromny pracovny text.
+- Reset dat vracia appku iba do verejneho demo stavu.
+- Existujuce lokalne databazy pouzivatelov sa nasadenim neprepisuju; demo data sa pouziju iba pri cistej instalacii alebo po potvrdenom resete.
+- Do `.gitignore` pribudli vzory pre lokalne/private DB exporty, aby sa produkcne JSON databazy omylom necommitovali.
+- Parser, A4 renderer, print/PDF, transpozicia, TXT export, DB schema/import/export metadata a koncertny rezim ostali bez zmeny.
+
+Poznamka:
+
+- Produkcne databazy sa maju do verejnej appky dostavat iba rucnym importom pouzivatela, nie ako bundle v repozitari.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:

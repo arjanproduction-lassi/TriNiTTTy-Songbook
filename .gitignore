@@ -8,3 +8,7 @@ preview*.log
 vite*.log
 .DS_Store
 Thumbs.db
+
+# Local/private Songbook database exports must not be committed.
+DBv*_*.json
+*_BandDB_*.json

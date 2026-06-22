@@ -1,46 +1,44 @@
 import type { ImportDraft } from "../types";
 
 export const DEFAULT_IMPORT_TEXT = `[Intro]
-D#m
+Am Em Am
 
 [Verse 1]
-D#m
-Peniaze neklamú. Oni to nevedia.
-Otázky nekladú, oči ti zalepia.
+Am                 Em
+Na Kráľovej holi stojí strom zelený,
+G                  D
+na Kráľovej holi stojí strom zelený,
+C               G
+vrch má naklonený, vrch má naklonený,
+Am              Em Am
+vrch má naklonený do slovenskej zemi.
 
 [Verse 2]
-D#m
-Z vrecák čistých ľudí po chrbtoch šplhajú,
-F#                     G#
-tam kde ich netreba pod nohy padajú.
-
-[Pre-Chorus]
-D#m
-Kam tečú tie prúdy, tam pravdu hľadať treba.
-F#
-Kam tečú tie prúdy, tam - hľadať - Pravdu Treba
-cue: Tam... - Tečú…
-
-[Chorus]
-C#                     D#m
-Z vrecák čistých ľudí. Prúdy riek. Tečú…
+Am                 Em
+Odkážte vy vetry, odkázajte svetu,
+G                  D
+odkážte vy vetry, odkázajte svetu,
+C               G
+že sa moja milá, že sa moja milá,
+Am              Em Am
+že sa moja milá po mne nerozsmúti.
 
 [End]`;
 
 export const DEFAULT_DRAFT: ImportDraft = {
-  title: "Peniaze neklamú",
-  artist: "TriNiTTTy",
-  bpm: "86",
-  key: "D#m",
-  timeSignature: "",
-  duration: "6:18",
+  title: "Na Kráľovej holi",
+  artist: "Slovenská ľudová",
+  bpm: "80",
+  key: "Am",
+  timeSignature: "4/4",
+  duration: "0:00",
   capo: "-",
   rawText: DEFAULT_IMPORT_TEXT,
 };
 
 export const EMPTY_SONG_DRAFT: ImportDraft = {
   title: "",
-  artist: "TriNiTTTy",
+  artist: "",
   bpm: "",
   key: "",
   timeSignature: "",
