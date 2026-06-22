@@ -1093,6 +1093,7 @@ export default function App() {
   const rootClass = printJob
     ? "app-printing min-h-screen bg-white text-zinc-900"
     : `min-h-screen ${screenNightMode ? "app-night bg-zinc-950 text-zinc-100" : "bg-zinc-50 text-zinc-900"}`;
+  const screenSurfaceClass = `screen-surface ${view === "import" ? "editor-screen-surface" : ""} ${performanceView ? "min-h-screen" : "mx-auto max-w-[1760px] p-3 md:p-4"}`;
 
   return (
     <div className={rootClass}>
@@ -1121,7 +1122,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-      <div className={`screen-surface ${performanceView ? "min-h-screen" : "mx-auto max-w-[1760px] p-3 md:p-4"}`}>
+      <div className={screenSurfaceClass}>
         {!performanceView && (
         <div className="mb-4 rounded-2xl bg-gradient-to-br from-white to-zinc-100 p-3 shadow-sm ring-1 ring-zinc-200 md:p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

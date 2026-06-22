@@ -84,6 +84,11 @@ html,
     color: #e4e4e7;
   }
 
+  .app-night .screen-surface.editor-screen-surface {
+    min-height: 100vh;
+    background: #111318;
+  }
+
   .app-night .screen-surface [class*="bg-white/"],
   .app-night .screen-surface [class*="bg-zinc-50/"],
   .app-night .screen-surface [class*="bg-zinc-100/"] {
