@@ -1032,6 +1032,22 @@ Poznamka:
 
 ---
 
+### Pouzivatelsky manual v appke
+
+Problem:
+
+- Tester alebo novy pouzivatel nema citat developerske poznamky, aby pochopil zakladny workflow appky.
+
+Oprava:
+
+- Do hlavnej hlavicky pribudlo nenapadne tlacidlo `Manual`.
+- Tlacidlo otvara screen-only pomocny panel so slovenskym rychlym navodom pre kniznicu, editor, poznamky, setlisty, koncertny rezim, A4/PDF, TXT, databazu a PWA instalaciu.
+- Pribudol subor `docs/USER_MANUAL.md` s rovnakym praktickym obsahom.
+- Manual sa nezobrazuje v A4, PDF, TXT ani DB exportoch.
+- Parser, A4 renderer, print/PDF, TXT export, DB import/export, setlisty, performance, wake lock, night mode a Song Notes ostali bez zmeny.
+
+---
+
 ## Predchadzajuce zdroje historie
 
 Pred vznikom tohto dennika sa historia prac drzala hlavne tu:

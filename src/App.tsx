@@ -21,7 +21,7 @@ import { PerformanceView } from "./views/PerformanceView";
 import { APP_VERSION, BUILD_DATE, RC_MARKER } from "./buildInfo";
 
 const LEGACY_STORAGE_KEYS = ["trinittty-phase1-wide-t8", "trinittty-phase1-lean-t3"];
-const DEFAULT_SETLISTS: NamedSetlist[] = [{ id: 1, name: "Setlist 1", songIds: [1, 2] }];
+const DEFAULT_SETLISTS: NamedSetlist[] = [{ id: 1, name: "Setlist 1", songIds: [1] }];
 const CANONICAL_STATUS_KEY = "trinittty-canonical-save-status";
 const REMOTE_DATABASE_URL_KEY = "trinittty-remote-database-url";
 const REMOTE_DATABASE_APP_NAMES = new Set(["LassiLAB Songbook", "TriNiTTTy Songbook"]);
@@ -48,6 +48,106 @@ type SplitBlockRequest = {
 
 const EDITOR_HISTORY_LIMIT = 50;
 
+const USER_MANUAL_SECTIONS = [
+  {
+    title: "Rýchly štart",
+    items: [
+      "Otvor appku a pozri si bezpečnú demo skladbu.",
+      "Otvor skladbu, skontroluj A4 náhľad a skús transpozíciu.",
+      "Vytvor vlastnú skladbu cez Import alebo Pridať skladbu.",
+      "Po úpravách exportuj databázu ako JSON súbor.",
+    ],
+  },
+  {
+    title: "Knižnica piesní",
+    items: [
+      "Vyhľadávanie filtruje názov, interpreta a obsah skladby.",
+      "Otvorenie skladby zobrazí detail, A4 náhľad a exportné akcie.",
+      "Upraviť skladbu otvorí blokový editor.",
+      "Setlist chipy slúžia na rýchly prechod do setlistu.",
+      "Ikona 📝 znamená, že skladba má poznámku.",
+    ],
+  },
+  {
+    title: "Editor skladby",
+    items: [
+      "Vyplň názov, interpreta, BPM, tóninu, takt a dĺžku.",
+      "Bloky môžu byť section, chords, lyrics, pair, repeat alebo cue podľa existujúcej logiky appky.",
+      "A4 master preview je kontrola toho, čo bude fungovať ako papierový leadsheet.",
+      "Uloženie mení lokálnu databázu v tomto zariadení.",
+    ],
+  },
+  {
+    title: "Poznámky ku skladbe",
+    items: [
+      "Poznámka je jednoduchý text ku konkrétnej skladbe.",
+      "Keď existuje, v knižnici svieti 📝.",
+      "Po vybavení poznámku zmaž.",
+      "Poznámky nie sú task manager, nemajú priority ani termíny.",
+    ],
+  },
+  {
+    title: "Setlisty",
+    items: [
+      "Vytvor setlist, pomenuj ho a pridaj skladby z knižnice.",
+      "Skontroluj poradie a otvor vybranú skladbu v náhľade setlistu.",
+      "Setlist slúži na skúšobňu aj prípravu koncertného poradia.",
+    ],
+  },
+  {
+    title: "Koncertný režim",
+    items: [
+      "Koncertný režim je určený na hranie a čítanie, nie na editáciu.",
+      "Použi späť/ďalšia, transpozíciu a Reader zoom podľa zariadenia.",
+      "Nočný režim zníži svietenie displeja.",
+      "Nezhasínať displej zapne Wake Lock tam, kde ho prehliadač podporuje.",
+    ],
+  },
+  {
+    title: "A4 / tlač / PDF",
+    items: [
+      "A4 preview je kontrolný papierový náhľad.",
+      "Print/PDF ostáva biela A4 pravda aj v nočnom režime.",
+      "Varovanie pri presahu A4 znamená, že sa skladba môže nezmestiť na jednu stranu.",
+      "Nočný režim je iba obrazovka, nie tlač.",
+    ],
+  },
+  {
+    title: "TXT export / copy",
+    items: [
+      "Export TXT a Kopírovať TXT sú čistý monospaced text pre Word alebo Google Docs.",
+      "Pre zachovanie akordov použi Courier New veľkosť 9 pt.",
+    ],
+  },
+  {
+    title: "Databáza",
+    items: [
+      "Appka ukladá dáta lokálne v zariadení.",
+      "Export databázy vytvorí JSON súbor.",
+      "Import databázy načíta JSON a pred nahradením dát používa existujúcu bezpečnostnú logiku záloh.",
+      "Najvyššie DBv číslo je prakticky najnovšia verzia.",
+      "Medzi zariadeniami je zatiaľ manuálny export/import.",
+    ],
+  },
+  {
+    title: "PWA inštalácia",
+    items: [
+      "PC Chrome/Edge: použi Install app v prehliadači.",
+      "Android Chrome: Add to Home screen alebo Install app.",
+      "iPad/iPhone Safari: Share → Add to Home Screen.",
+      "Prvé načítanie potrebuje internet; offline správanie závisí od PWA cache a prehliadača.",
+    ],
+  },
+  {
+    title: "Bezpečnostné pravidlo",
+    items: [
+      "Ostrú databázu pravidelne exportuj.",
+      "Public demo dáta nie sú tvoja osobná databáza.",
+      "Súkromné DB exporty necommituj do repozitára.",
+    ],
+  },
+];
+
 export default function App() {
   const [songs, setSongs] = useState<Song[]>(INITIAL_SONGS);
   const [view, setView] = useState<View>("songs");
@@ -55,7 +155,7 @@ export default function App() {
   const [selectedSongId, setSelectedSongId] = useState(1);
   const [transpose, setTranspose] = useState(0);
   const [notation, setNotation] = useState<Notation>("intl");
-  const [setlist, setSetlist] = useState<number[]>([1, 2]);
+  const [setlist, setSetlist] = useState<number[]>([1]);
   const [setlists, setSetlists] = useState<NamedSetlist[]>(DEFAULT_SETLISTS);
   const [activeSetlistId, setActiveSetlistId] = useState(1);
   const [setlistPreviewSongId, setSetlistPreviewSongId] = useState(1);
@@ -81,6 +181,7 @@ export default function App() {
   const [remoteDatabaseUrlDraft, setRemoteDatabaseUrlDraft] = useState(() => readRemoteDatabaseUrl());
   const [remoteDatabaseStatus, setRemoteDatabaseStatus] = useState(() => readRemoteDatabaseUrl() ? "Zdroj databázy je uložený lokálne." : "Remote databáza nie je nastavená.");
   const [remoteDatabaseCheck, setRemoteDatabaseCheck] = useState<RemoteDatabaseCheck | null>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [songBackups, setSongBackups] = useState<SongBeforeSaveBackup[]>([]);
   const [songBackupsLoading, setSongBackupsLoading] = useState(false);
   const [songBackupStatus, setSongBackupStatus] = useState("");
@@ -1147,6 +1248,13 @@ export default function App() {
               <NavButton current={view} target="setlist" onClick={setView}>Setlist</NavButton>
               <button
                 type="button"
+                onClick={() => setHelpOpen(true)}
+                className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-zinc-700 ring-1 ring-zinc-200 hover:bg-zinc-50"
+              >
+                Manuál
+              </button>
+              <button
+                type="button"
                 onClick={() => setScreenNightMode((enabled) => !enabled)}
                 aria-pressed={screenNightMode}
                 className={`rounded-xl px-3 py-2 text-sm font-bold ring-1 ${screenNightMode ? "bg-zinc-900 text-white ring-zinc-700" : "bg-white text-zinc-700 ring-zinc-200 hover:bg-zinc-50"}`}
@@ -1307,8 +1415,43 @@ export default function App() {
           />
         )}
 
+        {helpOpen && <UserManualDialog onClose={() => setHelpOpen(false)} />}
       </div>
       )}
+    </div>
+  );
+}
+
+function UserManualDialog({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-zinc-950/65 p-3 md:p-6" role="dialog" aria-modal="true" aria-labelledby="user-manual-title">
+      <div className="w-full max-w-5xl rounded-2xl bg-white shadow-2xl ring-1 ring-zinc-200">
+        <div className="sticky top-0 z-10 flex flex-col gap-3 rounded-t-2xl border-b border-zinc-200 bg-white/95 p-4 backdrop-blur md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Pomoc</div>
+            <h2 id="user-manual-title" className="text-xl font-bold text-zinc-900">LassiLAB Songbook manuál</h2>
+            <p className="mt-1 text-sm text-zinc-600">Krátky praktický prehľad pre skúšobňu, editor, A4 a databázu.</p>
+          </div>
+          <button type="button" onClick={onClose} className="self-start rounded-xl bg-zinc-900 px-4 py-2 text-sm font-bold text-white md:self-center">
+            Zavrieť
+          </button>
+        </div>
+        <div className="grid gap-3 p-4 md:grid-cols-2">
+          {USER_MANUAL_SECTIONS.map((section) => (
+            <section key={section.title} className="rounded-xl bg-zinc-50 p-3 ring-1 ring-zinc-200">
+              <h3 className="text-base font-bold text-zinc-900">{section.title}</h3>
+              <ul className="mt-2 space-y-1.5 text-sm leading-snug text-zinc-700">
+                {section.items.map((item) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
