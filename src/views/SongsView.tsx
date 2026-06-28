@@ -34,6 +34,12 @@ export function SongsView({
   activeSetlistId,
   projectName,
   onProjectNameChange,
+  workingDbFolderSupported,
+  workingDbFolderName,
+  workingDbFolderStatus,
+  onChooseWorkingDbFolder,
+  onExportToWorkingDbFolder,
+  onImportNewestFromWorkingDbFolder,
 }: {
   songs: Song[];
   deletedSongs: Song[];
@@ -63,6 +69,12 @@ export function SongsView({
   activeSetlistId: number;
   projectName: string;
   onProjectNameChange: (value: string) => void;
+  workingDbFolderSupported: boolean;
+  workingDbFolderName: string | null;
+  workingDbFolderStatus: string;
+  onChooseWorkingDbFolder: () => void;
+  onExportToWorkingDbFolder: () => void;
+  onImportNewestFromWorkingDbFolder: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
   const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
@@ -220,6 +232,42 @@ export function SongsView({
               className="mt-1 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none"
             />
             <div className="mt-2 text-xs text-zinc-500">Používa sa v hlavičke appky a názvoch exportov databázy.</div>
+          </div>
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
+            <div className="font-semibold text-zinc-900">Pracovný DB priečinok</div>
+            <p className="mt-1 text-xs leading-snug text-zinc-500">
+              Voliteľný lokálny priečinok pre ručný export/import JSON databáz. Nie je to sync.
+            </p>
+            <div className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">
+              {workingDbFolderStatus}
+              {workingDbFolderName && <span className="mt-1 block text-zinc-500">Priečinok: {workingDbFolderName}</span>}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
+              <SoftButton
+                onClick={onChooseWorkingDbFolder}
+                disabled={!workingDbFolderSupported}
+                className="disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Vybrať DB priečinok
+              </SoftButton>
+              <SoftButton
+                onClick={onExportToWorkingDbFolder}
+                disabled={!workingDbFolderSupported || !workingDbFolderName}
+                className="disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Uložiť DB do priečinka
+              </SoftButton>
+              <SoftButton
+                onClick={onImportNewestFromWorkingDbFolder}
+                disabled={!workingDbFolderSupported || !workingDbFolderName}
+                className="disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Načítať najnovšiu DB z priečinka
+              </SoftButton>
+            </div>
+            {!workingDbFolderSupported && (
+              <p className="mt-2 text-xs text-zinc-500">Použi klasický export/import nižšie.</p>
+            )}
           </div>
           <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
             {canInstall && <PrimaryButton onClick={onInstall}>Nainštalovať appku</PrimaryButton>}

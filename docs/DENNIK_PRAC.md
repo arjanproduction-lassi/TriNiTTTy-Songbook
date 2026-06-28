@@ -49,6 +49,62 @@ Kazdy zaznam by mal mat:
 
 ---
 
+## 2026-06-28
+
+### UX / DATA SAFETY - Pracovny DB priecinok
+
+Commit:
+
+- `Add working DB folder helper` (hash je v Git historii tohto commitu)
+
+Problem:
+
+- Pri manualnom DB workflow musel pouzivatel stale hladat spravny priecinok pre export/import.
+- Na PC s Google Drive for Desktop alebo inym zdielanym priecinkom to zbytocne zdrziavalo.
+
+Oprava:
+
+- Do sekcie `PWA / lokalna databaza` pribudol volitelny `Pracovny DB priecinok`.
+- Pouziva File System Access API tam, kde ho prehliadac podporuje.
+- Appka si pamata realny `FileSystemDirectoryHandle` v IndexedDB, nie textovu cestu typu `C:\...`.
+- Pouzivatel vie rucne:
+  - vybrat DB priecinok,
+  - ulozit DB JSON do priecinka,
+  - nacitat najnovsiu platnu DB z priecinka po potvrdeni.
+
+Bezpecnost:
+
+- Nie je to sync.
+- Ziadny automaticky import na starte.
+- Ziadne polling kontroly.
+- Ziadny Google login, OAuth ani Drive API.
+- Ziadny tichy prepis lokalnej databazy.
+- Import z priecinka pouziva potvrdenie a pred importom vytvori zalohu aktualnej lokalnej databazy.
+- Export do priecinka zachovava existujucu DB version logiku: dirty export vytvori novu oficialnu verziu, cista DB ulozi kopiu aktualnej verzie.
+
+Nedotknute:
+
+- Parser.
+- Transpozitor.
+- A4 renderer.
+- Print/PDF pipeline.
+- TXT export/copy.
+- DB schema a metadata kompatibilita.
+- Setlisty.
+- Koncertny rezim.
+- Night mode.
+- Wake Lock.
+- Song Notes.
+
+Manualne este vhodne otestovat:
+
+- PC Chrome/Edge: vybrat lokalny alebo Google Drive for Desktop priecinok.
+- Ulozit dirty DB do priecinka a overit novu DB verziu.
+- Ulozit cistu DB do priecinka a overit, ze sa DB verzia nezvysi.
+- Nacitat najnovsiu DB z priecinka a potvrdit import.
+- Skusit priecinok s neplatnymi JSON subormi: appka ich ma ignorovat.
+- Skusit prehliadac bez podpory: ostava klasicky export/import.
+
 ## 2026-05-11
 
 ### BUGFIX / UX - A4 overflow warning pre dlhe piesne

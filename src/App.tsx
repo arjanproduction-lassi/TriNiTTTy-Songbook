@@ -13,6 +13,7 @@ import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, dow
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveFolder, chooseDriveJsonFile, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
+import { chooseWorkingDbFolder, findNewestDatabaseInWorkingFolder, isWorkingDbFolderSupported, loadRememberedWorkingDbFolder, workingDbFolderUnsupportedMessage, writeDatabaseToWorkingFolder, type WorkingDbFolder } from "./pwa/fileSystemDbFolder";
 import { SongsView } from "./views/SongsView";
 import { ImportView } from "./views/ImportView";
 import { SongView } from "./views/SongView";
@@ -127,6 +128,8 @@ const USER_MANUAL_SECTIONS = [
       "Import databázy načíta JSON a pred nahradením dát používa existujúcu bezpečnostnú logiku záloh.",
       "Najvyššie DBv číslo je prakticky najnovšia verzia.",
       "Medzi zariadeniami je zatiaľ manuálny export/import.",
+      "Pracovný DB priečinok môže byť Google Drive for Desktop, OneDrive, Dropbox, USB alebo lokálny priečinok.",
+      "Nie je to sync: čítanie a zápis do priečinka spúšťa vždy používateľ.",
     ],
   },
   {
@@ -177,6 +180,9 @@ export default function App() {
   const [driveFile, setDriveFile] = useState<DriveFileMemory | null>(null);
   const [driveFolder, setDriveFolder] = useState<DriveFolderMemory | null>(() => readDriveFolder());
   const [driveStatus, setDriveStatus] = useState("Drive admin sync je vypnutý.");
+  const workingDbFolderSupported = isWorkingDbFolderSupported();
+  const [workingDbFolder, setWorkingDbFolder] = useState<WorkingDbFolder | null>(null);
+  const [workingDbFolderStatus, setWorkingDbFolderStatus] = useState(() => workingDbFolderSupported ? "Priečinok nie je nastavený." : workingDbFolderUnsupportedMessage());
   const [remoteDatabaseUrl, setRemoteDatabaseUrl] = useState(() => readRemoteDatabaseUrl());
   const [remoteDatabaseUrlDraft, setRemoteDatabaseUrlDraft] = useState(() => readRemoteDatabaseUrl());
   const [remoteDatabaseStatus, setRemoteDatabaseStatus] = useState(() => readRemoteDatabaseUrl() ? "Zdroj databázy je uložený lokálne." : "Remote databáza nie je nastavená.");
@@ -256,6 +262,32 @@ export default function App() {
   useEffect(() => {
     writeProjectName(projectName);
   }, [projectName]);
+
+  useEffect(() => {
+    if (!workingDbFolderSupported) {
+      setWorkingDbFolder(null);
+      setWorkingDbFolderStatus(workingDbFolderUnsupportedMessage());
+      return undefined;
+    }
+
+    let cancelled = false;
+    loadRememberedWorkingDbFolder()
+      .then((folder) => {
+        if (cancelled) return;
+        if (!folder) {
+          setWorkingDbFolderStatus("Priečinok nie je nastavený.");
+          return;
+        }
+
+        setWorkingDbFolder(folder);
+        setWorkingDbFolderStatus(`Pracovný DB priečinok je nastavený: ${folder.name}`);
+      })
+      .catch(() => {
+        if (!cancelled) setWorkingDbFolderStatus("Priečinok potrebuje nové povolenie. Vyber ho znova.");
+      });
+
+    return () => { cancelled = true; };
+  }, [workingDbFolderSupported]);
 
   useEffect(() => {
     if (!canonicalSaveStatus.dirty) return undefined;
@@ -534,6 +566,107 @@ export default function App() {
       setStorageStatus(`Kópia databázy stiahnutá: ${formatDatabaseVersion(databaseVersion)} - ${formatShortTime(exportedAt)}.`);
     } catch {
       setStorageStatus("Stiahnutie kópie databázy zlyhalo.");
+    }
+  }
+
+  async function chooseWorkingDatabaseFolder() {
+    if (!workingDbFolderSupported) {
+      setWorkingDbFolderStatus(workingDbFolderUnsupportedMessage());
+      return;
+    }
+
+    try {
+      const folder = await chooseWorkingDbFolder();
+      setWorkingDbFolder(folder);
+      setWorkingDbFolderStatus(`Pracovný DB priečinok je nastavený: ${folder.name}`);
+    } catch (error) {
+      setWorkingDbFolderStatus(error instanceof Error ? error.message : "Výber pracovného DB priečinka zlyhal.");
+    }
+  }
+
+  async function exportDatabaseToWorkingFolder() {
+    if (!workingDbFolderSupported) {
+      setWorkingDbFolderStatus(workingDbFolderUnsupportedMessage());
+      return;
+    }
+    if (!workingDbFolder) {
+      setWorkingDbFolderStatus("Priečinok nie je nastavený. Najprv vyber DB priečinok.");
+      return;
+    }
+
+    try {
+      const hasCanonicalChanges = canonicalSaveStatus.dirty || !canonicalSaveStatus.lastCanonicalSaveAt;
+      const exportedAt = new Date().toISOString();
+      const nextDatabaseVersion = hasCanonicalChanges ? Math.max(1, databaseVersion + 1) : databaseVersion;
+      const exportState = makePersistedBackup({ ...persistedState, databaseVersion: nextDatabaseVersion }, exportedAt);
+      const { fileName } = await writeDatabaseToWorkingFolder(workingDbFolder, exportState, projectName);
+
+      if (hasCanonicalChanges) {
+        setDatabaseVersion(nextDatabaseVersion);
+        markCanonicalSaved(exportedAt);
+      }
+
+      setWorkingDbFolderStatus(`DB uložená do priečinka: ${fileName}`);
+      setStorageStatus(`DB uložená do pracovného priečinka: ${formatDatabaseVersion(nextDatabaseVersion)}.`);
+    } catch (error) {
+      setWorkingDbFolderStatus(error instanceof Error ? error.message : "Uloženie DB do priečinka zlyhalo.");
+    }
+  }
+
+  async function importNewestDatabaseFromWorkingFolder() {
+    if (!workingDbFolderSupported) {
+      setWorkingDbFolderStatus(workingDbFolderUnsupportedMessage());
+      return;
+    }
+    if (!workingDbFolder) {
+      setWorkingDbFolderStatus("Priečinok nie je nastavený. Najprv vyber DB priečinok.");
+      return;
+    }
+
+    try {
+      setWorkingDbFolderStatus("Hľadám najnovšiu DB v pracovnom priečinku...");
+      const candidate = await findNewestDatabaseInWorkingFolder(workingDbFolder);
+      if (!candidate) {
+        setWorkingDbFolderStatus("V pracovnom priečinku sa nenašla platná DB.");
+        return;
+      }
+
+      const state = candidate.state;
+      const importedOlder = state.databaseVersion < databaseVersion;
+      const importedSame = state.databaseVersion === databaseVersion;
+      const importSummary = [
+        `Lokálna databáza: ${formatDatabaseVersion(databaseVersion)}`,
+        `Nájdená databáza v priečinku: ${formatDatabaseVersion(state.databaseVersion)}`,
+        `Súbor: ${candidate.fileName}`,
+        `Exportované: ${formatBackupDateTime(state.exportedAt || state.savedAt)}`,
+        `Skladby: ${state.songCount}`,
+        `Setlisty: ${state.setlistCount}`,
+        importedOlder ? "Pozor: nájdená databáza je staršia než lokálna." : "",
+        importedSame ? "Nájdená databáza má rovnakú verziu ako lokálna." : "",
+        "",
+        "Pred importom vytvorím zálohu aktuálnej lokálnej databázy.",
+        "Importovať?",
+      ].filter(Boolean).join("\n");
+
+      if (!window.confirm(importSummary)) {
+        setWorkingDbFolderStatus("Import z pracovného priečinka zrušený.");
+        return;
+      }
+
+      try {
+        const backupAt = new Date().toISOString();
+        downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt), projectName);
+      } catch {
+        setWorkingDbFolderStatus("Import zastavený: nepodarilo sa vytvoriť zálohu aktuálnej databázy.");
+        return;
+      }
+
+      applyPersistedState(state);
+      markImportedDatabaseClean(state);
+      setWorkingDbFolderStatus(`Importovaná DB z priečinka: ${formatDatabaseVersion(state.databaseVersion)} (${candidate.fileName})`);
+      setStorageStatus(`DB importovaná z pracovného priečinka: ${formatDatabaseVersion(state.databaseVersion)} · bez lokálnych zmien.`);
+    } catch (error) {
+      setWorkingDbFolderStatus(error instanceof Error ? error.message : "Načítanie najnovšej DB z priečinka zlyhalo.");
     }
   }
 
@@ -1306,6 +1439,12 @@ export default function App() {
             activeSetlistId={activeSetlistId}
             projectName={projectName}
             onProjectNameChange={setProjectName}
+            workingDbFolderSupported={workingDbFolderSupported}
+            workingDbFolderName={workingDbFolder?.name ?? null}
+            workingDbFolderStatus={workingDbFolderStatus}
+            onChooseWorkingDbFolder={() => { void chooseWorkingDatabaseFolder(); }}
+            onExportToWorkingDbFolder={() => { void exportDatabaseToWorkingFolder(); }}
+            onImportNewestFromWorkingDbFolder={() => { void importNewestDatabaseFromWorkingFolder(); }}
           />
         )}
 

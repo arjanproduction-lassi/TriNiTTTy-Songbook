@@ -93,6 +93,15 @@ Základné pravidlo:
 - Najvyššie DBv číslo je prakticky najnovšia verzia.
 - Medzi zariadeniami je zatiaľ manuálny export/import.
 
+### Pracovný DB priečinok
+
+- Pracovný DB priečinok je voliteľná pomôcka pre ručný export/import databázy.
+- Môže to byť Google Drive for Desktop, OneDrive, Dropbox, USB alebo obyčajný lokálny priečinok.
+- Appka si pamätá priečinok v tomto prehliadači, ak to prehliadač dovolí.
+- Nie je to cloud sync: appka nič sama neimportuje ani neexportuje na pozadí.
+- Synchronizáciu Google Drive/OneDrive/Dropbox rieši operačný systém alebo ich desktopová aplikácia, nie LassiLAB Songbook.
+- Ak prehliadač túto funkciu nepodporuje, použi klasický export/import JSON súboru.
+
 ---
 
 ## PWA inštalácia

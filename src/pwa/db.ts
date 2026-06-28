@@ -7,6 +7,7 @@ const DB_VERSION = 2;
 const STORE = "state";
 const SONG_BACKUP_STORE = "song-before-save-backups";
 const STATE_KEY = "app";
+const WORKING_DB_FOLDER_KEY = "working-db-folder";
 const BACKUP_APP_NAME = "LassiLAB Songbook";
 const DEFAULT_PROJECT_NAME = "TriNiTTTy";
 const BACKUP_SCHEMA_VERSION = 1;
@@ -38,6 +39,12 @@ export type SongBeforeSaveBackup = {
   songId: number;
   songTitle: string;
   song: Song;
+};
+
+export type StoredWorkingDbFolder = {
+  handle: unknown;
+  name: string;
+  rememberedAt: string;
 };
 
 function isRecord(value: unknown): value is UnknownRecord {
@@ -283,6 +290,31 @@ export function saveState(state: PersistedState) {
 export function clearState() {
   if (!("indexedDB" in window)) return Promise.resolve();
   return runStore<undefined>("readwrite", (store) => store.delete(STATE_KEY)).then(() => undefined);
+}
+
+export function loadWorkingDbFolder(): Promise<StoredWorkingDbFolder | null> {
+  if (!("indexedDB" in window)) return Promise.resolve(null);
+  return runStore<unknown>("readonly", (store) => store.get(WORKING_DB_FOLDER_KEY))
+    .then((value) => {
+      if (!isRecord(value) || !value.handle || typeof value.name !== "string") return null;
+      return {
+        handle: value.handle,
+        name: value.name,
+        rememberedAt: stringValue(value.rememberedAt, new Date().toISOString()),
+      };
+    })
+    .catch(() => null);
+}
+
+export function saveWorkingDbFolder(handle: unknown, name: string): Promise<StoredWorkingDbFolder> {
+  if (!("indexedDB" in window)) return Promise.reject(new Error("IndexedDB nie je dostupné, pracovný priečinok sa nedá zapamätať."));
+  const folder: StoredWorkingDbFolder = { handle, name, rememberedAt: new Date().toISOString() };
+  return runStore<IDBValidKey>("readwrite", (store) => store.put(folder, WORKING_DB_FOLDER_KEY)).then(() => folder);
+}
+
+export function clearWorkingDbFolder() {
+  if (!("indexedDB" in window)) return Promise.resolve();
+  return runStore<undefined>("readwrite", (store) => store.delete(WORKING_DB_FOLDER_KEY)).then(() => undefined);
 }
 
 export function makePersistedBackup(state: PersistedStateInput, exportedAt = new Date().toISOString()): PersistedState {
