@@ -46,6 +46,7 @@ export function SongsView({
   officialDriveDbLastCheckedVersion,
   officialDriveDbCheckStatus,
   onChooseOfficialDriveDbSource,
+  onSaveOfficialDriveDbSourceFromInput,
   onCheckOfficialDriveDbSource,
   onDisconnectOfficialDriveDbSource,
 }: {
@@ -89,11 +90,13 @@ export function SongsView({
   officialDriveDbLastCheckedVersion: number | null;
   officialDriveDbCheckStatus: "newer" | "same" | "older" | null;
   onChooseOfficialDriveDbSource: () => void;
+  onSaveOfficialDriveDbSourceFromInput: (input: string) => void;
   onCheckOfficialDriveDbSource: () => void;
   onDisconnectOfficialDriveDbSource: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
   const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
+  const [officialDriveDbInput, setOfficialDriveDbInput] = useState("");
   const pickerRef = useRef<HTMLDivElement>(null);
   const hasMultipleSetlists = setlists.length > 1;
   const quickPreviewZoomLabel = `${quickPreviewZoom}%`;
@@ -297,6 +300,30 @@ export function SongsView({
               {officialDriveDbCheckStatus === "newer" && <span className="mt-1 block text-emerald-700">Novšia Drive DB bola nájdená.</span>}
               {officialDriveDbCheckStatus === "same" && <span className="mt-1 block text-zinc-500">Drive DB je zhodná s lokálnou po poslednej kontrole.</span>}
               {officialDriveDbCheckStatus === "older" && <span className="mt-1 block text-amber-700">Drive DB je staršia než lokálna.</span>}
+            </div>
+            <div className="mt-3 rounded-xl bg-white p-2.5 ring-1 ring-zinc-200">
+              <label className="block text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                Drive link / file ID
+              </label>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={officialDriveDbInput}
+                  onChange={(event) => setOfficialDriveDbInput(event.target.value)}
+                  placeholder="Vlož odkaz na TriNiTTTy_latest.json alebo file ID"
+                  className="min-w-0 flex-1 rounded-xl border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm outline-none"
+                />
+                <SoftButton
+                  onClick={() => {
+                    onSaveOfficialDriveDbSourceFromInput(officialDriveDbInput);
+                    setOfficialDriveDbInput("");
+                  }}
+                >
+                  Uložiť link/ID
+                </SoftButton>
+              </div>
+              <p className="mt-2 text-xs leading-snug text-zinc-500">
+                Ak výber súboru zlyháva, skopíruj odkaz na oficiálny JSON súbor z Google Drive a vlož ho sem.
+              </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
               <SoftButton onClick={onChooseOfficialDriveDbSource}>Vybrať oficiálny DB súbor</SoftButton>

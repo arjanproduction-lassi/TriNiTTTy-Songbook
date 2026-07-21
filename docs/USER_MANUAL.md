@@ -108,6 +108,7 @@ Základné pravidlo:
 - Nie je to sync: appka Drive kontroluje iba po kliknutí na `Skontrolovať DB z Google Drive`.
 - Admin stále robí normálne verzované exporty `DBv###_Projekt_YYYY-MM-DD.json` ako archív.
 - Pre členov kapely môže admin udržiavať stabilnú latest kópiu, napríklad `TriNiTTTy_latest.json`.
+- Ak výber súboru cez Google okno zlyháva, skopíruj odkaz na `latest` JSON súbor z Google Drive a vlož ho do poľa Drive link / file ID.
 - Súbor `latest` obsahuje normálnu databázu s `databaseVersion` vo vnútri.
 - Ak Drive ukáže novšiu DB, appka importuje až po potvrdení a pred importom vytvorí zálohu.
 - Ak Drive zlyhá, použi klasický export/import alebo pracovný DB priečinok.

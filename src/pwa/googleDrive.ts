@@ -80,9 +80,18 @@ export function isGoogleDriveConfigured() {
   return Boolean(CLIENT_ID && API_KEY);
 }
 
+export function isGoogleDriveAuthConfigured() {
+  return Boolean(CLIENT_ID);
+}
+
 export function googleDriveConfigMessage() {
   if (isGoogleDriveConfigured()) return "";
   return "Google Drive nie je nakonfigurovaný. Doplň VITE_GOOGLE_CLIENT_ID a VITE_GOOGLE_API_KEY.";
+}
+
+export function googleDriveAuthConfigMessage() {
+  if (isGoogleDriveAuthConfigured()) return "";
+  return "Google Drive prihlásenie nie je nakonfigurované. Doplň VITE_GOOGLE_CLIENT_ID.";
 }
 
 export async function chooseDriveJsonFile(): Promise<DriveFileMemory> {
@@ -166,7 +175,7 @@ export async function chooseDriveFolder(): Promise<DriveFolderMemory> {
 }
 
 export async function loadBackupFromDrive(fileId: string): Promise<PersistedState> {
-  await ensureGoogleDriveReady();
+  await ensureGoogleDriveAccessReady();
   let response = await fetchDriveMedia(fileId);
   if (response.status === 401) {
     accessToken = "";
@@ -191,7 +200,7 @@ async function readDriveJsonResponse(response: Response): Promise<PersistedState
 }
 
 export async function saveBackupToDrive(fileId: string, state: PersistedState) {
-  await ensureGoogleDriveReady();
+  await ensureGoogleDriveAccessReady();
   const token = await requestAccessToken();
   const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(fileId)}?uploadType=media`, {
     method: "PATCH",
@@ -207,6 +216,11 @@ export async function saveBackupToDrive(fileId: string, state: PersistedState) {
 async function ensureGoogleDriveReady() {
   if (!isGoogleDriveConfigured()) throw new Error(googleDriveConfigMessage());
   await Promise.all([loadGis(), loadGapi()]);
+}
+
+async function ensureGoogleDriveAccessReady() {
+  if (!isGoogleDriveAuthConfigured()) throw new Error(googleDriveAuthConfigMessage());
+  await loadGis();
 }
 
 function loadGis() {

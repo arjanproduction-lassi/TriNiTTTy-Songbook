@@ -13,7 +13,7 @@ import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, dow
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveFolder, chooseDriveJsonFile, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
-import { chooseOfficialDriveDbSource, fetchOfficialDriveDbCandidate, readOfficialDriveDbSource, withLastCheckedVersion, writeOfficialDriveDbSource, type OfficialDriveDbSource } from "./pwa/googleDriveDbSource";
+import { chooseOfficialDriveDbSource, fetchOfficialDriveDbCandidate, readOfficialDriveDbSource, saveOfficialDriveDbSourceFromInput, withLastCheckedVersion, writeOfficialDriveDbSource, type OfficialDriveDbSource } from "./pwa/googleDriveDbSource";
 import { chooseWorkingDbFolder, findNewestDatabaseInWorkingFolder, isWorkingDbFolderSupported, loadRememberedWorkingDbFolder, workingDbFolderUnsupportedMessage, writeDatabaseToWorkingFolder, type WorkingDbFolder } from "./pwa/fileSystemDbFolder";
 import { SongsView } from "./views/SongsView";
 import { ImportView } from "./views/ImportView";
@@ -139,6 +139,7 @@ const USER_MANUAL_SECTIONS = [
       "Pracovný DB priečinok môže byť Google Drive for Desktop, OneDrive, Dropbox, USB alebo lokálny priečinok.",
       "Nie je to sync: čítanie a zápis do priečinka spúšťa vždy používateľ.",
       "Google Drive DB zdroj sleduje jeden vybraný oficiálny JSON súbor a kontroluje ho iba po kliknutí.",
+      "Ak Google výber súboru zlyhá, vlož Drive link alebo file ID oficiálneho JSON súboru ručne.",
       "Normálne DBv exporty ostávajú archív; latest kópia má stabilný názov pre kapelu.",
     ],
   },
@@ -1225,6 +1226,17 @@ export default function App() {
     }
   }
 
+  function saveOfficialDriveDatabaseSourceFromInput(input: string) {
+    try {
+      const source = saveOfficialDriveDbSourceFromInput(input);
+      setOfficialDriveDbSource(source);
+      setOfficialDriveDbCheck(null);
+      setOfficialDriveDbStatus("Drive zdroj uložený z odkazu/ID. Skontroluj DB z Google Drive.");
+    } catch (error) {
+      setOfficialDriveDbStatus(error instanceof Error ? error.message : "Drive link/ID sa nepodarilo uložiť.");
+    }
+  }
+
   function disconnectOfficialDriveDatabaseSource() {
     writeOfficialDriveDbSource(null);
     setOfficialDriveDbSource(null);
@@ -1561,6 +1573,7 @@ export default function App() {
             officialDriveDbLastCheckedVersion={officialDriveDbSource?.lastCheckedVersion ?? null}
             officialDriveDbCheckStatus={officialDriveDbCheck?.status ?? null}
             onChooseOfficialDriveDbSource={() => { void chooseOfficialDriveDatabaseSource(); }}
+            onSaveOfficialDriveDbSourceFromInput={saveOfficialDriveDatabaseSourceFromInput}
             onCheckOfficialDriveDbSource={() => { void checkOfficialDriveDatabaseSource(); }}
             onDisconnectOfficialDriveDbSource={disconnectOfficialDriveDatabaseSource}
           />

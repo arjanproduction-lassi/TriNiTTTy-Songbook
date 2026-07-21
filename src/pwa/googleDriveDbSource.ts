@@ -46,6 +46,17 @@ export async function chooseOfficialDriveDbSource(): Promise<OfficialDriveDbSour
   return source;
 }
 
+export function saveOfficialDriveDbSourceFromInput(input: string): OfficialDriveDbSource {
+  const fileId = parseDriveFileId(input);
+  const source: OfficialDriveDbSource = {
+    fileId,
+    fileName: "Drive DB súbor",
+    rememberedAt: new Date().toISOString(),
+  };
+  writeOfficialDriveDbSource(source);
+  return source;
+}
+
 export async function fetchOfficialDriveDbCandidate(source: OfficialDriveDbSource): Promise<OfficialDriveDbCandidate> {
   const state = await loadBackupFromDrive(source.fileId);
   return {
@@ -66,6 +77,33 @@ function driveFileToOfficialSource(file: DriveFileMemory): OfficialDriveDbSource
     fileName: file.fileName,
     rememberedAt: new Date().toISOString(),
   };
+}
+
+function parseDriveFileId(input: string) {
+  const value = input.trim();
+  if (!value) throw new Error("Vlož Drive link alebo file ID oficiálnej databázy.");
+
+  const fromUrl = parseDriveFileIdFromUrl(value);
+  const candidate = fromUrl || value;
+  if (/^[A-Za-z0-9_-]{10,}$/.test(candidate)) return candidate;
+  throw new Error("Drive link neobsahuje platné file ID. Skopíruj odkaz priamo na JSON súbor.");
+}
+
+function parseDriveFileIdFromUrl(value: string) {
+  try {
+    const url = new URL(value);
+    const id = url.searchParams.get("id");
+    if (id) return id.trim();
+
+    const fileMatch = url.pathname.match(/\/file\/d\/([^/]+)/);
+    if (fileMatch?.[1]) return fileMatch[1].trim();
+
+    const documentMatch = url.pathname.match(/\/d\/([^/]+)/);
+    if (documentMatch?.[1]) return documentMatch[1].trim();
+  } catch {
+    // Plain file IDs are accepted below.
+  }
+  return "";
 }
 
 function normalizeOfficialDriveDbSource(value: unknown): OfficialDriveDbSource | null {
