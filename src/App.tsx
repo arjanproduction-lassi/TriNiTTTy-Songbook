@@ -9,10 +9,11 @@ import { normalizeKeyInput, transposeSong } from "./lib/chords";
 import { copyCueColor, hasCueColors, normalizeCueColorId } from "./lib/cueColors";
 import { buildSections, cleanImportText, makeSong, normalizeSongTitle, parseImportText, serializeLines } from "./lib/import";
 import { copyText, downloadSongText, songToClipboardText } from "./lib/export";
-import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
+import { clearState, createSongBeforeSaveBackup, deleteSongBeforeSaveBackup, downloadBackup, downloadLatestDatabaseCopy, formatDatabaseVersion, getSongBeforeSaveBackup, listSongBeforeSaveBackups, loadState, makePersistedBackup, normalizePersistedState, readBackupFile, saveState, type SongBeforeSaveBackup } from "./pwa/db";
 import { SERVICE_WORKER_UPDATE_EVENT, activateWaitingServiceWorker } from "./pwa/registerServiceWorker";
 import { useInstallPrompt } from "./pwa/useInstallPrompt";
 import { chooseDriveFolder, chooseDriveJsonFile, loadBackupFromDrive, saveBackupToDrive } from "./pwa/googleDrive";
+import { chooseOfficialDriveDbSource, fetchOfficialDriveDbCandidate, readOfficialDriveDbSource, withLastCheckedVersion, writeOfficialDriveDbSource, type OfficialDriveDbSource } from "./pwa/googleDriveDbSource";
 import { chooseWorkingDbFolder, findNewestDatabaseInWorkingFolder, isWorkingDbFolderSupported, loadRememberedWorkingDbFolder, workingDbFolderUnsupportedMessage, writeDatabaseToWorkingFolder, type WorkingDbFolder } from "./pwa/fileSystemDbFolder";
 import { SongsView } from "./views/SongsView";
 import { ImportView } from "./views/ImportView";
@@ -46,6 +47,13 @@ type SplitBlockRequest = {
   field: "text" | "chords" | "lyrics";
   caret: number | null;
 } | null;
+
+type OfficialDriveDbCheck = {
+  checkedAt: string;
+  status: "newer" | "same" | "older";
+  fileName: string;
+  state: PersistedState;
+};
 
 const EDITOR_HISTORY_LIMIT = 50;
 
@@ -130,6 +138,8 @@ const USER_MANUAL_SECTIONS = [
       "Medzi zariadeniami je zatiaľ manuálny export/import.",
       "Pracovný DB priečinok môže byť Google Drive for Desktop, OneDrive, Dropbox, USB alebo lokálny priečinok.",
       "Nie je to sync: čítanie a zápis do priečinka spúšťa vždy používateľ.",
+      "Google Drive DB zdroj sleduje jeden vybraný oficiálny JSON súbor a kontroluje ho iba po kliknutí.",
+      "Normálne DBv exporty ostávajú archív; latest kópia má stabilný názov pre kapelu.",
     ],
   },
   {
@@ -183,6 +193,12 @@ export default function App() {
   const workingDbFolderSupported = isWorkingDbFolderSupported();
   const [workingDbFolder, setWorkingDbFolder] = useState<WorkingDbFolder | null>(null);
   const [workingDbFolderStatus, setWorkingDbFolderStatus] = useState(() => workingDbFolderSupported ? "Priečinok nie je nastavený." : workingDbFolderUnsupportedMessage());
+  const [officialDriveDbSource, setOfficialDriveDbSource] = useState<OfficialDriveDbSource | null>(() => readOfficialDriveDbSource());
+  const [officialDriveDbStatus, setOfficialDriveDbStatus] = useState(() => {
+    const source = readOfficialDriveDbSource();
+    return source ? `Drive zdroj: ${source.fileName}` : "Drive zdroj nie je nastavený.";
+  });
+  const [officialDriveDbCheck, setOfficialDriveDbCheck] = useState<OfficialDriveDbCheck | null>(null);
   const [remoteDatabaseUrl, setRemoteDatabaseUrl] = useState(() => readRemoteDatabaseUrl());
   const [remoteDatabaseUrlDraft, setRemoteDatabaseUrlDraft] = useState(() => readRemoteDatabaseUrl());
   const [remoteDatabaseStatus, setRemoteDatabaseStatus] = useState(() => readRemoteDatabaseUrl() ? "Zdroj databázy je uložený lokálne." : "Remote databáza nie je nastavená.");
@@ -566,6 +582,17 @@ export default function App() {
       setStorageStatus(`Kópia databázy stiahnutá: ${formatDatabaseVersion(databaseVersion)} - ${formatShortTime(exportedAt)}.`);
     } catch {
       setStorageStatus("Stiahnutie kópie databázy zlyhalo.");
+    }
+  }
+
+  function downloadOfficialLatestDatabaseCopy() {
+    try {
+      const exportedAt = new Date().toISOString();
+      const latestState = makePersistedBackup({ ...persistedState, databaseVersion }, exportedAt);
+      downloadLatestDatabaseCopy(latestState, projectName);
+      setStorageStatus(`Latest kópia databázy stiahnutá: ${formatDatabaseVersion(databaseVersion)} - ${formatShortTime(exportedAt)}.`);
+    } catch {
+      setStorageStatus("Stiahnutie latest kópie databázy zlyhalo.");
     }
   }
 
@@ -1187,6 +1214,89 @@ export default function App() {
     setRemoteDatabaseStatus(`Remote databáza importovaná: ${formatDatabaseVersion(state.databaseVersion)} · bez lokálnych zmien.`);
   }
 
+  async function chooseOfficialDriveDatabaseSource() {
+    try {
+      const source = await chooseOfficialDriveDbSource();
+      setOfficialDriveDbSource(source);
+      setOfficialDriveDbCheck(null);
+      setOfficialDriveDbStatus(`Drive zdroj: ${source.fileName}`);
+    } catch (error) {
+      setOfficialDriveDbStatus(error instanceof Error ? error.message : "Výber oficiálneho Drive DB súboru zlyhal.");
+    }
+  }
+
+  function disconnectOfficialDriveDatabaseSource() {
+    writeOfficialDriveDbSource(null);
+    setOfficialDriveDbSource(null);
+    setOfficialDriveDbCheck(null);
+    setOfficialDriveDbStatus("Drive zdroj bol odpojený z tohto zariadenia.");
+  }
+
+  async function checkOfficialDriveDatabaseSource() {
+    if (!officialDriveDbSource) {
+      setOfficialDriveDbStatus("Drive zdroj nie je nastavený.");
+      return;
+    }
+
+    try {
+      setOfficialDriveDbStatus("Kontrolujem DB z Google Drive...");
+      const candidate = await fetchOfficialDriveDbCandidate(officialDriveDbSource);
+      const state = candidate.state;
+      const status: OfficialDriveDbCheck["status"] = state.databaseVersion > databaseVersion
+        ? "newer"
+        : state.databaseVersion < databaseVersion ? "older" : "same";
+      const checkedSource = withLastCheckedVersion(officialDriveDbSource, state.databaseVersion);
+      writeOfficialDriveDbSource(checkedSource);
+      setOfficialDriveDbSource(checkedSource);
+      setOfficialDriveDbCheck({ checkedAt: candidate.checkedAt, status, fileName: candidate.fileName, state });
+
+      if (status === "same") {
+        setOfficialDriveDbStatus(`Lokálna DB: ${formatDatabaseVersion(databaseVersion)} · Drive DB: ${formatDatabaseVersion(state.databaseVersion)}. Databáza je rovnaká ako Drive zdroj.`);
+        return;
+      }
+
+      if (status === "older") {
+        setOfficialDriveDbStatus(`Lokálna DB: ${formatDatabaseVersion(databaseVersion)} · Drive DB: ${formatDatabaseVersion(state.databaseVersion)}. Drive DB je staršia ako lokálna DB.`);
+        return;
+      }
+
+      setOfficialDriveDbStatus(`Lokálna DB: ${formatDatabaseVersion(databaseVersion)} · Drive DB: ${formatDatabaseVersion(state.databaseVersion)}. Dostupná novšia DB ${formatDatabaseVersion(state.databaseVersion)}.`);
+      const importSummary = [
+        `Lokálna DB: ${formatDatabaseVersion(databaseVersion)}`,
+        `Drive DB: ${formatDatabaseVersion(state.databaseVersion)}`,
+        `Súbor: ${candidate.fileName}`,
+        `Exportované: ${formatBackupDateTime(state.exportedAt || state.savedAt)}`,
+        `Skladby: ${state.songCount}`,
+        `Setlisty: ${state.setlistCount}`,
+        "",
+        "Pred importom sa vytvorí záloha aktuálnej lokálnej databázy.",
+        "Importovať novšiu databázu z Google Drive?",
+      ].join("\n");
+
+      if (!window.confirm(importSummary)) {
+        setOfficialDriveDbStatus(`Dostupná novšia DB ${formatDatabaseVersion(state.databaseVersion)}. Import zrušený používateľom.`);
+        return;
+      }
+
+      try {
+        const backupAt = new Date().toISOString();
+        downloadBackup(makePersistedBackup({ ...persistedState, databaseVersion }, backupAt), projectName);
+      } catch {
+        setOfficialDriveDbStatus("Import zastavený: nepodarilo sa vytvoriť zálohu aktuálnej databázy.");
+        return;
+      }
+
+      applyPersistedState(state);
+      markImportedDatabaseClean(state);
+      setOfficialDriveDbCheck({ checkedAt: new Date().toISOString(), status: "same", fileName: candidate.fileName, state });
+      setOfficialDriveDbStatus(`Drive DB importovaná: ${formatDatabaseVersion(state.databaseVersion)} · bez lokálnych zmien.`);
+      setStorageStatus(`DB importovaná z Google Drive: ${formatDatabaseVersion(state.databaseVersion)} · bez lokálnych zmien.`);
+    } catch (error) {
+      setOfficialDriveDbCheck(null);
+      setOfficialDriveDbStatus(error instanceof Error ? error.message : "Drive zlyhal. Použi klasický import/export.");
+    }
+  }
+
   async function chooseDriveFile() {
     try {
       const file = await chooseDriveJsonFile();
@@ -1431,6 +1541,7 @@ export default function App() {
             onInstall={() => { void install(); }}
             onExportBackup={exportCanonicalDatabase}
             onDownloadDatabaseCopy={downloadCurrentDatabaseCopy}
+            onDownloadOfficialLatestCopy={downloadOfficialLatestDatabaseCopy}
             onImportBackup={(file) => { void importBackup(file); }}
             isInSetlist={isInSetlist}
             isSongInSetlist={isSongInSetlist}
@@ -1445,6 +1556,13 @@ export default function App() {
             onChooseWorkingDbFolder={() => { void chooseWorkingDatabaseFolder(); }}
             onExportToWorkingDbFolder={() => { void exportDatabaseToWorkingFolder(); }}
             onImportNewestFromWorkingDbFolder={() => { void importNewestDatabaseFromWorkingFolder(); }}
+            officialDriveDbSourceName={officialDriveDbSource?.fileName ?? null}
+            officialDriveDbStatus={officialDriveDbStatus}
+            officialDriveDbLastCheckedVersion={officialDriveDbSource?.lastCheckedVersion ?? null}
+            officialDriveDbCheckStatus={officialDriveDbCheck?.status ?? null}
+            onChooseOfficialDriveDbSource={() => { void chooseOfficialDriveDatabaseSource(); }}
+            onCheckOfficialDriveDbSource={() => { void checkOfficialDriveDatabaseSource(); }}
+            onDisconnectOfficialDriveDbSource={disconnectOfficialDriveDatabaseSource}
           />
         )}
 

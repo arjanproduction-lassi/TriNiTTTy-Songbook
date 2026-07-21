@@ -102,6 +102,16 @@ Základné pravidlo:
 - Synchronizáciu Google Drive/OneDrive/Dropbox rieši operačný systém alebo ich desktopová aplikácia, nie LassiLAB Songbook.
 - Ak prehliadač túto funkciu nepodporuje, použi klasický export/import JSON súboru.
 
+### Google Drive DB zdroj
+
+- Google Drive DB zdroj je voliteľné ručné načítanie jedného oficiálneho JSON súboru.
+- Nie je to sync: appka Drive kontroluje iba po kliknutí na `Skontrolovať DB z Google Drive`.
+- Admin stále robí normálne verzované exporty `DBv###_Projekt_YYYY-MM-DD.json` ako archív.
+- Pre členov kapely môže admin udržiavať stabilnú latest kópiu, napríklad `TriNiTTTy_latest.json`.
+- Súbor `latest` obsahuje normálnu databázu s `databaseVersion` vo vnútri.
+- Ak Drive ukáže novšiu DB, appka importuje až po potvrdení a pred importom vytvorí zálohu.
+- Ak Drive zlyhá, použi klasický export/import alebo pracovný DB priečinok.
+
 ---
 
 ## PWA inštalácia

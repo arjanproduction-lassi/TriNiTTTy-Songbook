@@ -26,6 +26,7 @@ export function SongsView({
   onInstall,
   onExportBackup,
   onDownloadDatabaseCopy,
+  onDownloadOfficialLatestCopy,
   onImportBackup,
   isInSetlist,
   isSongInSetlist,
@@ -40,6 +41,13 @@ export function SongsView({
   onChooseWorkingDbFolder,
   onExportToWorkingDbFolder,
   onImportNewestFromWorkingDbFolder,
+  officialDriveDbSourceName,
+  officialDriveDbStatus,
+  officialDriveDbLastCheckedVersion,
+  officialDriveDbCheckStatus,
+  onChooseOfficialDriveDbSource,
+  onCheckOfficialDriveDbSource,
+  onDisconnectOfficialDriveDbSource,
 }: {
   songs: Song[];
   deletedSongs: Song[];
@@ -61,6 +69,7 @@ export function SongsView({
   onInstall: () => void;
   onExportBackup: () => void;
   onDownloadDatabaseCopy: () => void;
+  onDownloadOfficialLatestCopy: () => void;
   onImportBackup: (file: File) => void;
   isInSetlist: (songId: number) => boolean;
   isSongInSetlist: (songId: number, setlistId: number) => boolean;
@@ -75,6 +84,13 @@ export function SongsView({
   onChooseWorkingDbFolder: () => void;
   onExportToWorkingDbFolder: () => void;
   onImportNewestFromWorkingDbFolder: () => void;
+  officialDriveDbSourceName: string | null;
+  officialDriveDbStatus: string;
+  officialDriveDbLastCheckedVersion: number | null;
+  officialDriveDbCheckStatus: "newer" | "same" | "older" | null;
+  onChooseOfficialDriveDbSource: () => void;
+  onCheckOfficialDriveDbSource: () => void;
+  onDisconnectOfficialDriveDbSource: () => void;
 }) {
   const [openSetlistSongId, setOpenSetlistSongId] = useState<number | null>(null);
   const [quickPreviewZoom, setQuickPreviewZoom] = useState(100);
@@ -269,9 +285,41 @@ export function SongsView({
               <p className="mt-2 text-xs text-zinc-500">Použi klasický export/import nižšie.</p>
             )}
           </div>
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
+            <div className="font-semibold text-zinc-900">Google Drive DB zdroj</div>
+            <p className="mt-1 text-xs leading-snug text-zinc-500">
+              Sleduje jeden vybraný oficiálny JSON súbor. Kontrola je vždy ručná, nie automatický sync.
+            </p>
+            <div className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">
+              {officialDriveDbStatus}
+              {officialDriveDbSourceName && <span className="mt-1 block text-zinc-500">Súbor: {officialDriveDbSourceName}</span>}
+              {officialDriveDbLastCheckedVersion && <span className="mt-1 block text-zinc-500">Naposledy nájdená DB: v{String(officialDriveDbLastCheckedVersion).padStart(3, "0")}</span>}
+              {officialDriveDbCheckStatus === "newer" && <span className="mt-1 block text-emerald-700">Novšia Drive DB bola nájdená.</span>}
+              {officialDriveDbCheckStatus === "same" && <span className="mt-1 block text-zinc-500">Drive DB je zhodná s lokálnou po poslednej kontrole.</span>}
+              {officialDriveDbCheckStatus === "older" && <span className="mt-1 block text-amber-700">Drive DB je staršia než lokálna.</span>}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
+              <SoftButton onClick={onChooseOfficialDriveDbSource}>Vybrať oficiálny DB súbor</SoftButton>
+              <SoftButton
+                onClick={onCheckOfficialDriveDbSource}
+                disabled={!officialDriveDbSourceName}
+                className="disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Skontrolovať DB z Google Drive
+              </SoftButton>
+              <SoftButton
+                onClick={onDisconnectOfficialDriveDbSource}
+                disabled={!officialDriveDbSourceName}
+                className="disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Odpojiť Drive zdroj
+              </SoftButton>
+            </div>
+          </div>
           <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
             {canInstall && <PrimaryButton onClick={onInstall}>Nainštalovať appku</PrimaryButton>}
             <SoftButton onClick={canonicalDirty ? onExportBackup : onDownloadDatabaseCopy}>{canonicalDirty ? "Exportovať databázu" : "Stiahnuť kópiu DB"}</SoftButton>
+            <SoftButton onClick={onDownloadOfficialLatestCopy}>Stiahnuť latest kópiu</SoftButton>
             <label className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
               Importovať backup
               <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => {

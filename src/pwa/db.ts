@@ -332,11 +332,19 @@ export function makePersistedBackup(state: PersistedStateInput, exportedAt = new
 }
 
 export function downloadBackup(state: PersistedState, projectName = DEFAULT_PROJECT_NAME) {
+  downloadPersistedJson(state, backupFileName(state, projectName));
+}
+
+export function downloadLatestDatabaseCopy(state: PersistedState, projectName = DEFAULT_PROJECT_NAME) {
+  downloadPersistedJson(state, latestDatabaseFileName(projectName));
+}
+
+function downloadPersistedJson(state: PersistedState, fileName: string) {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = backupFileName(state, projectName);
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -351,6 +359,10 @@ export function backupFileName(state: Pick<PersistedState, "databaseVersion" | "
   const exportedAt = new Date(state.exportedAt);
   const date = Number.isNaN(exportedAt.getTime()) ? new Date() : exportedAt;
   return `DB${formatDatabaseVersion(state.databaseVersion)}_${sanitizeProjectFileName(projectName)}_${backupDate(date)}.json`;
+}
+
+export function latestDatabaseFileName(projectName = DEFAULT_PROJECT_NAME) {
+  return `${sanitizeProjectFileName(projectName)}_latest.json`;
 }
 
 function sanitizeProjectFileName(value: string) {

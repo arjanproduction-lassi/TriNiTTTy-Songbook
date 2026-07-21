@@ -158,10 +158,25 @@ export async function chooseDriveFolder(): Promise<DriveFolderMemory> {
 
 export async function loadBackupFromDrive(fileId: string): Promise<PersistedState> {
   await ensureGoogleDriveReady();
+  let response = await fetchDriveMedia(fileId);
+  if (response.status === 401) {
+    accessToken = "";
+    response = await fetchDriveMedia(fileId);
+  }
+  return readDriveJsonResponse(response);
+}
+
+async function fetchDriveMedia(fileId: string) {
   const token = await requestAccessToken();
-  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`, {
+  return fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`, {
     headers: { Authorization: `Bearer ${token}` },
   });
+}
+
+async function readDriveJsonResponse(response: Response): Promise<PersistedState> {
+  if (response.status === 401) throw new Error("Drive prístup vypršal. Prihlás sa znova.");
+  if (response.status === 403) throw new Error("Drive súbor nie je povolený pre túto appku alebo účet.");
+  if (response.status === 404) throw new Error("Drive súbor sa nenašiel. Vyber oficiálny DB súbor znova.");
   if (!response.ok) throw new Error("Drive load zlyhal.");
   return normalizePersistedState(await response.json());
 }

@@ -51,6 +51,66 @@ Kazdy zaznam by mal mat:
 
 ## 2026-06-28
 
+### UX / DATA SAFETY - Google Drive official DB file pull v1
+
+Commit:
+
+- `Add Google Drive official DB file pull` (hash je v Git historii tohto commitu)
+
+Problem:
+
+- Niektori clenovia kapely maju problem s manualnym stahovanim DB z Google Drive a naslednym importom.
+- Plny sync nechceme, lebo by priniesol ucty, konflikty, tiche prepisy a zbytocnu zlozitost.
+
+Oprava:
+
+- Do sekcie `PWA / lokalna databaza` pribudol `Google Drive DB zdroj`.
+- V1 sleduje iba jeden vybrany oficialny JSON subor, napr. `TriNiTTTy_latest.json`.
+- Appka si lokalne pamata iba `fileId`, `fileName`, `rememberedAt` a poslednu najdenu DB verziu.
+- Google Drive zdroj sa neuklada do normalneho DB exportu.
+- Tlacidlo `Skontrolovat DB z Google Drive` nacita vybrany subor read-only a porovna `databaseVersion`.
+- Novsia DB sa importuje iba po potvrdeni pouzivatelom.
+- Pred importom sa pouzije existujuci backup-before-import flow.
+- Pribudla pohodlna akcia `Stiahnut latest kopiu`, ktora vytvori stabilny subor `Projekt_latest.json` bez zmeny DB verzie.
+
+Bezpecnost:
+
+- Nie je to sync.
+- Ziadny import na starte.
+- Ziadne polling intervaly.
+- Ziadny Drive upload/write vo v1.
+- Ziadny scan priecinkov.
+- Ziadne mazanie alebo presuvanie Drive suborov.
+- Ziadne tiche prepisanie lokalnej DB.
+- OAuth scope ostava least-privilege `drive.file`.
+
+Nedotknute:
+
+- Parser.
+- Transpozitor.
+- A4 renderer.
+- Print/PDF pipeline.
+- TXT export/copy.
+- DB schema a metadata kompatibilita.
+- Manualny export/import.
+- File System DB Folder helper.
+- Setlisty.
+- Koncertny rezim.
+- Night mode.
+- Wake Lock.
+- Song Notes.
+- Verejne demo data.
+
+Manualne este vhodne otestovat:
+
+- Vercel production s nastavenymi `VITE_GOOGLE_CLIENT_ID` a `VITE_GOOGLE_API_KEY`.
+- Vybrat `TriNiTTTy_latest.json` cez Google Picker.
+- Skontrolovat Drive DB pri rovnakej verzii.
+- Skontrolovat Drive DB pri novsej verzii a potvrdit import.
+- Overit, ze pred importom sa stiahne zaloha aktualnej lokalnej DB.
+- Overit, ze Drive chyba neprepise lokalne data.
+- Overit, ze normalny DBv export ostal nezmeneny a latest kopia nemení DB verziu.
+
 ### UX / DATA SAFETY - Pracovny DB priecinok
 
 Commit:
