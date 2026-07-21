@@ -3,6 +3,7 @@ import { normalizePersistedState } from "./db";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
+const APP_ID = import.meta.env.VITE_GOOGLE_APP_ID || inferGoogleAppId(CLIENT_ID);
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 const DRIVE_DISCOVERY = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
 
@@ -22,6 +23,7 @@ type GooglePickerBuilder = {
   addView: (view: unknown) => GooglePickerBuilder;
   setOAuthToken: (token: string) => GooglePickerBuilder;
   setDeveloperKey: (key: string) => GooglePickerBuilder;
+  setAppId: (appId: string) => GooglePickerBuilder;
   setOrigin: (origin: string) => GooglePickerBuilder;
   setCallback: (callback: (data: GooglePickerData) => void) => GooglePickerBuilder;
   build: () => { setVisible: (visible: boolean) => void };
@@ -66,6 +68,7 @@ declare global {
   interface ImportMetaEnv {
     readonly VITE_GOOGLE_CLIENT_ID?: string;
     readonly VITE_GOOGLE_API_KEY?: string;
+    readonly VITE_GOOGLE_APP_ID?: string;
   }
 
   interface ImportMeta {
@@ -98,7 +101,7 @@ export async function chooseDriveJsonFile(): Promise<DriveFileMemory> {
     view.setIncludeFolders(false);
     view.setSelectFolderEnabled(false);
 
-    new picker.PickerBuilder()
+    const builder = new picker.PickerBuilder()
       .addView(view)
       .setOAuthToken(token)
       .setDeveloperKey(API_KEY)
@@ -113,7 +116,10 @@ export async function chooseDriveJsonFile(): Promise<DriveFileMemory> {
           return;
         }
         resolve({ fileId, fileName, rememberedAt: new Date().toISOString() });
-      })
+      });
+
+    if (APP_ID) builder.setAppId(APP_ID);
+    builder
       .build()
       .setVisible(true);
   });
@@ -135,7 +141,7 @@ export async function chooseDriveFolder(): Promise<DriveFolderMemory> {
     view.setIncludeFolders(true);
     view.setSelectFolderEnabled(true);
 
-    new picker.PickerBuilder()
+    const builder = new picker.PickerBuilder()
       .addView(view)
       .setOAuthToken(token)
       .setDeveloperKey(API_KEY)
@@ -150,7 +156,10 @@ export async function chooseDriveFolder(): Promise<DriveFolderMemory> {
           return;
         }
         resolve({ folderId, folderName, rememberedAt: new Date().toISOString() });
-      })
+      });
+
+    if (APP_ID) builder.setAppId(APP_ID);
+    builder
       .build()
       .setVisible(true);
   });
@@ -236,6 +245,11 @@ function loadScript(src: string) {
     script.onerror = () => reject(new Error(`Nepodarilo sa načítať ${src}.`));
     document.head.appendChild(script);
   });
+}
+
+function inferGoogleAppId(clientId: string) {
+  const match = clientId.match(/^(\d+)-/);
+  return match?.[1] || "";
 }
 
 function requestAccessToken() {
