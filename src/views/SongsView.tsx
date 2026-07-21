@@ -322,11 +322,10 @@ export function SongsView({
                 </SoftButton>
               </div>
               <p className="mt-2 text-xs leading-snug text-zinc-500">
-                Ak výber súboru zlyháva, skopíruj odkaz na oficiálny JSON súbor z Google Drive a vlož ho sem.
+                Skopíruj odkaz na oficiálny JSON súbor z Google Drive a vlož ho sem.
               </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5 md:gap-2">
-              <SoftButton onClick={onChooseOfficialDriveDbSource}>Vybrať oficiálny DB súbor</SoftButton>
               <SoftButton
                 onClick={onCheckOfficialDriveDbSource}
                 disabled={!officialDriveDbSourceName}
