@@ -4,7 +4,8 @@ import { normalizePersistedState } from "./db";
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
 const APP_ID = import.meta.env.VITE_GOOGLE_APP_ID || inferGoogleAppId(CLIENT_ID);
-const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+const DRIVE_READONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
 const DRIVE_DISCOVERY = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
 
 type GooglePickerDoc = {
@@ -29,8 +30,10 @@ type GooglePickerBuilder = {
   build: () => { setVisible: (visible: boolean) => void };
 };
 
-let tokenClient: { requestAccessToken: (options?: { prompt?: string }) => void } | null = null;
-let accessToken = "";
+type DriveScope = typeof DRIVE_FILE_SCOPE | typeof DRIVE_READONLY_SCOPE;
+
+let tokenClients: Partial<Record<DriveScope, { requestAccessToken: (options?: { prompt?: string }) => void }>> = {};
+let accessTokens: Partial<Record<DriveScope, string>> = {};
 let gapiReady: Promise<void> | null = null;
 let gisReady: Promise<void> | null = null;
 
@@ -96,7 +99,7 @@ export function googleDriveAuthConfigMessage() {
 
 export async function chooseDriveJsonFile(): Promise<DriveFileMemory> {
   await ensureGoogleDriveReady();
-  const token = await requestAccessToken();
+  const token = await requestAccessToken(DRIVE_FILE_SCOPE);
 
   return new Promise((resolve, reject) => {
     const picker = window.google?.picker;
@@ -136,7 +139,7 @@ export async function chooseDriveJsonFile(): Promise<DriveFileMemory> {
 
 export async function chooseDriveFolder(): Promise<DriveFolderMemory> {
   await ensureGoogleDriveReady();
-  const token = await requestAccessToken();
+  const token = await requestAccessToken(DRIVE_FILE_SCOPE);
 
   return new Promise((resolve, reject) => {
     const picker = window.google?.picker;
@@ -178,14 +181,14 @@ export async function loadBackupFromDrive(fileId: string): Promise<PersistedStat
   await ensureGoogleDriveAccessReady();
   let response = await fetchDriveMedia(fileId);
   if (response.status === 401) {
-    accessToken = "";
+    accessTokens[DRIVE_READONLY_SCOPE] = "";
     response = await fetchDriveMedia(fileId);
   }
   return readDriveJsonResponse(response);
 }
 
 async function fetchDriveMedia(fileId: string) {
-  const token = await requestAccessToken();
+  const token = await requestAccessToken(DRIVE_READONLY_SCOPE);
   return fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`, {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -201,7 +204,7 @@ async function readDriveJsonResponse(response: Response): Promise<PersistedState
 
 export async function saveBackupToDrive(fileId: string, state: PersistedState) {
   await ensureGoogleDriveAccessReady();
-  const token = await requestAccessToken();
+  const token = await requestAccessToken(DRIVE_FILE_SCOPE);
   const response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(fileId)}?uploadType=media`, {
     method: "PATCH",
     headers: {
@@ -266,23 +269,24 @@ function inferGoogleAppId(clientId: string) {
   return match?.[1] || "";
 }
 
-function requestAccessToken() {
-  if (accessToken) return Promise.resolve(accessToken);
+function requestAccessToken(scope: DriveScope) {
+  const cachedToken = accessTokens[scope];
+  if (cachedToken) return Promise.resolve(cachedToken);
   if (!window.google?.accounts?.oauth2) return Promise.reject(new Error("Google Identity Services nie sú načítané."));
 
   return new Promise<string>((resolve, reject) => {
-    tokenClient = window.google!.accounts.oauth2.initTokenClient({
+    tokenClients[scope] = window.google!.accounts.oauth2.initTokenClient({
       client_id: CLIENT_ID,
-      scope: DRIVE_SCOPE,
+      scope,
       callback: (response) => {
         if (response.error || !response.access_token) {
           reject(new Error(response.error || "Google prihlásenie zlyhalo."));
           return;
         }
-        accessToken = response.access_token;
-        resolve(accessToken);
+        accessTokens[scope] = response.access_token;
+        resolve(response.access_token);
       },
     });
-    tokenClient.requestAccessToken({ prompt: "consent" });
+    tokenClients[scope]?.requestAccessToken({ prompt: "consent" });
   });
 }
