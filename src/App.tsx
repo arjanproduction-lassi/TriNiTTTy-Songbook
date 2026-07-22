@@ -1569,6 +1569,7 @@ export default function App() {
             onExportToWorkingDbFolder={() => { void exportDatabaseToWorkingFolder(); }}
             onImportNewestFromWorkingDbFolder={() => { void importNewestDatabaseFromWorkingFolder(); }}
             officialDriveDbSourceName={officialDriveDbSource?.fileName ?? null}
+            officialDriveDbSourceLabel={officialDriveDbSource?.sourceLabel ?? null}
             officialDriveDbStatus={officialDriveDbStatus}
             officialDriveDbLastCheckedVersion={officialDriveDbSource?.lastCheckedVersion ?? null}
             officialDriveDbCheckStatus={officialDriveDbCheck?.status ?? null}

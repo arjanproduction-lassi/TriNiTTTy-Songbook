@@ -42,6 +42,7 @@ export function SongsView({
   onExportToWorkingDbFolder,
   onImportNewestFromWorkingDbFolder,
   officialDriveDbSourceName,
+  officialDriveDbSourceLabel,
   officialDriveDbStatus,
   officialDriveDbLastCheckedVersion,
   officialDriveDbCheckStatus,
@@ -86,6 +87,7 @@ export function SongsView({
   onExportToWorkingDbFolder: () => void;
   onImportNewestFromWorkingDbFolder: () => void;
   officialDriveDbSourceName: string | null;
+  officialDriveDbSourceLabel: string | null;
   officialDriveDbStatus: string;
   officialDriveDbLastCheckedVersion: number | null;
   officialDriveDbCheckStatus: "newer" | "same" | "older" | null;
@@ -296,6 +298,7 @@ export function SongsView({
             <div className="mt-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-zinc-600 ring-1 ring-zinc-200">
               {officialDriveDbStatus}
               {officialDriveDbSourceName && <span className="mt-1 block text-zinc-500">Súbor: {officialDriveDbSourceName}</span>}
+              {officialDriveDbSourceLabel && <span className="mt-1 block text-zinc-500">Uložené: {officialDriveDbSourceLabel}</span>}
               {officialDriveDbLastCheckedVersion && <span className="mt-1 block text-zinc-500">Naposledy nájdená DB: v{String(officialDriveDbLastCheckedVersion).padStart(3, "0")}</span>}
               {officialDriveDbCheckStatus === "newer" && <span className="mt-1 block text-emerald-700">Novšia Drive DB bola nájdená.</span>}
               {officialDriveDbCheckStatus === "same" && <span className="mt-1 block text-zinc-500">Drive DB je zhodná s lokálnou po poslednej kontrole.</span>}

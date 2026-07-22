@@ -193,8 +193,8 @@ async function fetchDriveMedia(fileId: string) {
 
 async function readDriveJsonResponse(response: Response): Promise<PersistedState> {
   if (response.status === 401) throw new Error("Drive prístup vypršal. Prihlás sa znova.");
-  if (response.status === 403) throw new Error("Drive súbor nie je povolený pre túto appku alebo účet.");
-  if (response.status === 404) throw new Error("Drive súbor sa nenašiel. Vyber oficiálny DB súbor znova.");
+  if (response.status === 403) throw new Error("Drive súbor nie je povolený pre túto appku alebo účet. Skontroluj zdieľanie súboru alebo použi klasický import.");
+  if (response.status === 404) throw new Error("Drive súbor sa nenašiel. Skontroluj Drive link/ID alebo ho vlož znova.");
   if (!response.ok) throw new Error("Drive load zlyhal.");
   return normalizePersistedState(await response.json());
 }

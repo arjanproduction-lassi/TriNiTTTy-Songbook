@@ -6,6 +6,8 @@ const OFFICIAL_DRIVE_DB_SOURCE_KEY = "lassilab-official-drive-db-source";
 export type OfficialDriveDbSource = {
   fileId: string;
   fileName: string;
+  sourceLabel?: string;
+  sourceKind?: "picker" | "manual";
   rememberedAt: string;
   lastCheckedVersion?: number;
 };
@@ -50,7 +52,9 @@ export function saveOfficialDriveDbSourceFromInput(input: string): OfficialDrive
   const fileId = parseDriveFileId(input);
   const source: OfficialDriveDbSource = {
     fileId,
-    fileName: "Drive DB súbor",
+    fileName: "Drive link/ID zdroj",
+    sourceLabel: `ID: ${formatShortDriveFileId(fileId)}`,
+    sourceKind: "manual",
     rememberedAt: new Date().toISOString(),
   };
   writeOfficialDriveDbSource(source);
@@ -75,8 +79,15 @@ function driveFileToOfficialSource(file: DriveFileMemory): OfficialDriveDbSource
   return {
     fileId: file.fileId,
     fileName: file.fileName,
+    sourceLabel: file.fileName,
+    sourceKind: "picker",
     rememberedAt: new Date().toISOString(),
   };
+}
+
+function formatShortDriveFileId(fileId: string) {
+  if (fileId.length <= 14) return fileId;
+  return `${fileId.slice(0, 6)}...${fileId.slice(-6)}`;
 }
 
 function parseDriveFileId(input: string) {
@@ -113,8 +124,10 @@ function normalizeOfficialDriveDbSource(value: unknown): OfficialDriveDbSource |
   const fileName = String(source.fileName || "").trim();
   if (!fileId || !fileName) return null;
   const rememberedAt = String(source.rememberedAt || new Date().toISOString());
+  const sourceLabel = String(source.sourceLabel || "").trim() || `ID: ${formatShortDriveFileId(fileId)}`;
+  const sourceKind = source.sourceKind === "manual" || source.sourceKind === "picker" ? source.sourceKind : undefined;
   const lastCheckedVersion = Number.isFinite(source.lastCheckedVersion) && Number(source.lastCheckedVersion) > 0
     ? Math.floor(Number(source.lastCheckedVersion))
     : undefined;
-  return { fileId, fileName, rememberedAt, lastCheckedVersion };
+  return { fileId, fileName, sourceLabel, sourceKind, rememberedAt, lastCheckedVersion };
 }
