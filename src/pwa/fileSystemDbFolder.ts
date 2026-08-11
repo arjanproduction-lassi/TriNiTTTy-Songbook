@@ -1,5 +1,5 @@
 import type { PersistedState } from "../types";
-import { backupFileName, loadWorkingDbFolder, normalizePersistedState, saveWorkingDbFolder } from "./db";
+import { backupFileName, latestDatabaseFileName, loadWorkingDbFolder, normalizePersistedState, saveWorkingDbFolder } from "./db";
 
 type FileSystemAccessPermission = "granted" | "denied" | "prompt";
 type FileSystemAccessMode = "read" | "readwrite";
@@ -78,10 +78,13 @@ export async function writeDatabaseToWorkingFolder(folder: WorkingDbFolder, stat
   await ensureWorkingDbFolderPermission(folder.handle, "readwrite");
   const fileName = await nextAvailableDbFileName(folder.handle, backupFileName(state, projectName));
   const fileHandle = await folder.handle.getFileHandle(fileName, { create: true });
-  const writable = await fileHandle.createWritable();
-  await writable.write(new Blob([JSON.stringify(state, null, 2)], { type: "application/json;charset=utf-8" }));
-  await writable.close();
-  return { fileName };
+  await writeDatabaseJson(fileHandle, state);
+
+  const latestFileName = latestDatabaseFileName(projectName);
+  const latestFileHandle = await folder.handle.getFileHandle(latestFileName, { create: true });
+  await writeDatabaseJson(latestFileHandle, state);
+
+  return { fileName, latestFileName };
 }
 
 export async function findNewestDatabaseInWorkingFolder(folder: WorkingDbFolder): Promise<WorkingDbCandidate | null> {
@@ -142,6 +145,12 @@ async function nextAvailableDbFileName(directory: DirectoryHandle, preferredName
   }
 
   throw new Error("V pracovnom priečinku sa nepodarilo vytvoriť bezpečný názov súboru.");
+}
+
+async function writeDatabaseJson(fileHandle: FileHandle, state: PersistedState) {
+  const writable = await fileHandle.createWritable();
+  await writable.write(new Blob([JSON.stringify(state, null, 2)], { type: "application/json;charset=utf-8" }));
+  await writable.close();
 }
 
 async function fileExists(directory: DirectoryHandle, fileName: string) {

@@ -627,14 +627,14 @@ export default function App() {
       const exportedAt = new Date().toISOString();
       const nextDatabaseVersion = hasCanonicalChanges ? Math.max(1, databaseVersion + 1) : databaseVersion;
       const exportState = makePersistedBackup({ ...persistedState, databaseVersion: nextDatabaseVersion }, exportedAt);
-      const { fileName } = await writeDatabaseToWorkingFolder(workingDbFolder, exportState, projectName);
+      const { fileName, latestFileName } = await writeDatabaseToWorkingFolder(workingDbFolder, exportState, projectName);
 
       if (hasCanonicalChanges) {
         setDatabaseVersion(nextDatabaseVersion);
         markCanonicalSaved(exportedAt);
       }
 
-      setWorkingDbFolderStatus(`DB uložená do priečinka: ${fileName}`);
+      setWorkingDbFolderStatus(`DB uložená do priečinka: ${fileName}. Latest aktualizovaný: ${latestFileName}`);
       setStorageStatus(`DB uložená do pracovného priečinka: ${formatDatabaseVersion(nextDatabaseVersion)}.`);
     } catch (error) {
       setWorkingDbFolderStatus(error instanceof Error ? error.message : "Uloženie DB do priečinka zlyhalo.");
