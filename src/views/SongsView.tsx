@@ -1,9 +1,33 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { NamedSetlist, Song } from "../types";
 import { FitA4Sheet } from "../components/A4Sheet";
 import { Card, Chip, InfoBox, PrimaryButton, SoftButton } from "../components/ui";
 import { normalizeKeyInput } from "../lib/chords";
 import { buildSections, normalizeSongTitle } from "../lib/import";
+
+function JsonImportButton({
+  children,
+  onImport,
+}: {
+  children: ReactNode;
+  onImport: (file: File) => void;
+}) {
+  return (
+    <label className="inline-flex cursor-pointer items-center rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200 transition hover:bg-zinc-200">
+      {children}
+      <input
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onImport(file);
+          event.currentTarget.value = "";
+        }}
+      />
+    </label>
+  );
+}
 
 export function SongsView({
   songs,
@@ -345,18 +369,20 @@ export function SongsView({
               </SoftButton>
             </div>
           </div>
+          <div className="mt-3 rounded-2xl bg-zinc-50 p-3 text-sm ring-1 ring-zinc-200 md:mt-4 md:p-4">
+            <div className="font-semibold text-zinc-900">Ručný import DB zo súboru</div>
+            <p className="mt-1 text-xs leading-snug text-zinc-500">
+              Keď Google Drive kontrola mešká, stiahni JSON databázu do Stiahnuté / Downloads a vyber ju tu.
+            </p>
+            <div className="mt-3">
+              <JsonImportButton onImport={onImportBackup}>Importovať DB zo súboru</JsonImportButton>
+            </div>
+          </div>
           <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
             {canInstall && <PrimaryButton onClick={onInstall}>Nainštalovať appku</PrimaryButton>}
             <SoftButton onClick={canonicalDirty ? onExportBackup : onDownloadDatabaseCopy}>{canonicalDirty ? "Exportovať databázu" : "Stiahnuť kópiu DB"}</SoftButton>
             <SoftButton onClick={onDownloadOfficialLatestCopy}>Stiahnuť latest kópiu</SoftButton>
-            <label className="rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-800 ring-1 ring-zinc-200">
-              Importovať backup
-              <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) onImportBackup(file);
-                e.currentTarget.value = "";
-              }} />
-            </label>
+            <JsonImportButton onImport={onImportBackup}>Importovať backup</JsonImportButton>
           </div>
           <p className="mt-3 text-sm text-zinc-500">Piesne, setlist a nastavenia sa ukladajú do IndexedDB v tomto zariadení.</p>
         </Card>
